@@ -2,7 +2,6 @@ import React, { useState, useMemo, useCallback } from 'react';
 import './App.css'; // Assuming you have some basic CSS
 
 // Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
-// Removed 'maxScholarshipPercentage' as it will no longer be used.
 const schoolCostsData = [
   { name: 'UWC South East Asia', annualFeesUSD: 68249, avgAdditionalCostsUSD: 7918.91 },
   { name: 'Li Po Chun United World College of Hong Kong', annualFeesUSD: 49883, avgAdditionalCostsUSD: 2613.76 },
@@ -67,7 +66,8 @@ function App() {
     ncCurrentFeesPayableAnnual: 0, // NEW: Annual amount in National Currency
   });
 
-  const [errors, setErrors] = useState({});
+  // 'errors' is not being used to display error messages, so it can be safely removed or commented out
+  // const [errors, setErrors] = useState({});
 
   // Helper function to convert to number, handling empty strings as 0
   const getNum = useCallback((value) => {
@@ -123,16 +123,19 @@ function App() {
       ncScholarshipProvidedTwoYearsUSD: 0,
       ncCurrentFeesPayableAnnual: 0, // Reset the new field
     });
-    setErrors({});
+    // If you remove the errors state, remove this line too:
+    // setErrors({});
   }, []);
 
   const allSchoolResults = useMemo(() => {
     const {
-      ncCurrencySymbol,
+      // Removed from destructuring as they are not used within this useMemo's calculations:
+      // ncCurrencySymbol,
+      // parentsLiveSameHome,
+      // errors, // Also remove if you remove the state above
       exchangeRateToUSD,
       annualReturnOnAssets,
-      parentsLiveSameHome,
-      pg1NumberIndependentAdults,
+      // pg1NumberIndependentAdults, // Used below, keep in context
       pg1NumberFinancialDependents,
       pg1AnnualIncomePrimaryParent,
       pg1AnnualIncomeOtherParent,
@@ -150,21 +153,25 @@ function App() {
       pg2StudentOtherAssets,
       pg2ParentsAnnualDiscretionaryExpenditure,
       pg2OtherHouseholdCosts,
-      pg2AnnualDebtPayment: pg2AnnualDebtPayment_NC, // Renamed to avoid conflict
+      pg2AnnualDebtPayment: pg2AnnualDebtPayment_NC,
       annualLoanRepayment,
       familyAnticipatedAnnualSavings,
       potentialLoanAmount,
       annualTravelCostUSD,
       ncScholarshipProvidedTwoYearsUSD,
-      ncCurrentFeesPayableAnnual, // The new input field
+      ncCurrentFeesPayableAnnual,
     } = formData;
+
+    // Use formData.pg1NumberIndependentAdults directly instead of destructuring
+    const numIndependentAdults = getNum(formData.pg1NumberIndependentAdults);
+
 
     if (getNum(exchangeRateToUSD) <= 0) {
       return {
         allSchoolResults: [],
         annualFundsAvailableForFeesUSD: 0,
         ncCurrentFeesPayableAnnualUSD: 0
-      }; // Return empty results if exchange rate is invalid
+      };
     }
 
     // --- Convert all NC inputs to USD ---
@@ -188,7 +195,7 @@ function App() {
     const annualLoanRepaymentUSD = convertNcToUsd(annualLoanRepayment, exchangeRateToUSD);
     const ncFamilyAnticipatedAnnualSavingsUSD = convertNcToUsd(familyAnticipatedAnnualSavings, exchangeRateToUSD);
     const ncPotentialLoanAmountUSD = convertNcToUsd(potentialLoanAmount, exchangeRateToUSD);
-    const ncCurrentFeesPayableAnnualUSD = convertNcToUsd(ncCurrentFeesPayableAnnual, exchangeRateToUSD); // NEW
+    const ncCurrentFeesPayableAnnualUSD = convertNcToUsd(ncCurrentFeesPayableAnnual, exchangeRateToUSD);
 
     // --- Comprehensive Financial Need Assessment (FNA) Calculations ---
 
@@ -202,8 +209,8 @@ function App() {
 
     // Annual contribution from assets (Formula 1 component)
     const annualReturnOnFamilyAssets = totalCashAssets * getNum(annualReturnOnAssets);
-    const annualReturnOnOtherLiquidAssets = totalOtherLiquidAssets * getNum(annualReturnOnAssets); // Assuming same return rate
-    const homeEquityContribution = totalHomeEquity * 0.01; // Example: 1% contribution from home equity
+    const annualReturnOnOtherLiquidAssets = totalOtherLiquidAssets * getNum(annualReturnOnAssets);
+    const homeEquityContribution = totalHomeEquity * 0.01;
 
     // Total Annual Fixed Expenditure (debts, other household costs, discretionary for formula 3)
     const totalAnnualFixedExpenditure = getNum(pg1AnnualDebtPaymentUSD) + getNum(pg2AnnualDebtPaymentUSD) + getNum(annualLoanRepaymentUSD) + getNum(pg2OtherHouseholdCostsUSD);
@@ -213,41 +220,34 @@ function App() {
 
     // Student's Contribution
     const studentTotalAssets = getNum(pg2StudentCashSavingsUSD) + getNum(pg2StudentOtherAssetsUSD);
-    const annualReturnOnStudentAssets = studentTotalAssets * getNum(annualReturnOnAssets); // Assuming student assets also yield a return
-    const studentAnnualContributionFromIncome = getNum(pg2StudentAnnualIncomeUSD) * 0.25; // Example: 25% of student's income
+    const annualReturnOnStudentAssets = studentTotalAssets * getNum(annualReturnOnAssets);
+    const studentAnnualContributionFromIncome = getNum(pg2StudentAnnualIncomeUSD) * 0.25;
 
     // --- FORMULA CALCULATIONS ---
 
     // Formula 1: Family Contribution from Income & Assets
-    // Simplified, assuming discretionary expenditure is part of what reduces available income for fees.
-    // The core idea is "income - expenses + asset contribution"
     const formula1_familyContributionUSD = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure - discretionaryExpenditureForFormula3 + annualReturnOnFamilyAssets + annualReturnOnOtherLiquidAssets + homeEquityContribution);
 
     // Formula 2: Student Contribution
     const formula2_studentContributionUSD = studentAnnualContributionFromIncome + annualReturnOnStudentAssets;
 
     // Formula 3: Estimated Cost to Educate Student at Home
-    // This is a benchmark for what they would save by sending the child to UWC vs. local education
-    const formula3_estimateCostEducateStudentHome = Math.max(0, discretionaryExpenditureForFormula3 / (pg1NumberFinancialDependents + pg1NumberIndependentAdults)) * 1; // Example: 1 unit of per-person discretionary spending
+    const formula3_estimateCostEducateStudentHome = Math.max(0, discretionaryExpenditureForFormula3 / (getNum(pg1NumberFinancialDependents) + numIndependentAdults)) * 1;
 
     // UWC Family Contribution Required (the highest of the relevant formulas)
-    // This is the family's *assessed capability* before considering current fees payable minimum
     const uwcFamilyContributionRequiredUSD = Math.max(0, formula1_familyContributionUSD, formula2_studentContributionUSD, formula3_estimateCostEducateStudentHome);
 
     // --- Apply "Current Fees Payable" as a Minimum Floor ---
     const suggestedFamilyContributionTwoYearsUSD = (uwcFamilyContributionRequiredUSD * 2) - ncScholarshipProvidedTwoYearsUSD;
 
-    const minimumCurrentFeesContributionTwoYearsUSD = ncCurrentFeesPayableAnnualUSD * 2; // Adjusted for two years
+    const minimumCurrentFeesContributionTwoYearsUSD = ncCurrentFeesPayableAnnualUSD * 2;
 
-    // The final family contribution for two years is the MAX of the calculated contribution OR the minimum current fees payable
     const finalFamilyContributionTwoYearsUSD = Math.max(suggestedFamilyContributionTwoYearsUSD, minimumCurrentFeesContributionTwoYearsUSD);
 
-    // This is the family's assessed annual contribution after considering the 'current fees payable' minimum
     const actualAnnualFamilyContributionUSD = finalFamilyContributionTwoYearsUSD / 2;
 
 
     // --- Annual Funds Available for Fees (for affordability check) ---
-    // This represents the cash flow truly available to the family for fees/savings/loan after all fixed & discretionary expenses.
     const annualDisposableIncome = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure - discretionaryExpenditureForFormula3);
     const annualFundsAvailableForFeesUSD = annualDisposableIncome + ncFamilyAnticipatedAnnualSavingsUSD + (ncPotentialLoanAmountUSD / 2);
 
@@ -255,17 +255,15 @@ function App() {
     const calculatedSchoolResults = schoolCostsData.map(school => {
       const schoolAnnualFeesUSD = school.annualFeesUSD;
       const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
-      // maxScholarshipPercentage is removed
 
       const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
 
-      // The scholarship awarded is now simply what's needed based on the family's actual contribution
+      // The scholarship awarded is now purely based on the difference, no school-specific cap
       const uwcNeedsBasedScholarshipUSD = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - actualAnnualFamilyContributionUSD);
 
-      // The actual amount the family pays is their assessed contribution
-      const finalFamilyPaymentRequiredAnnualUSD = actualAnnualFamilyContributionUSD; // No cap applied here
+      // The actual amount the family pays is their assessed contribution after the current fees minimum
+      const finalFamilyPaymentRequiredAnnualUSD = actualAnnualFamilyContributionUSD;
 
-      // Recalculate percentages based on the uncapped scholarship and family payment
       const percentagePayableBySchool =
         totalGrossAnnualCostOfAttendanceUSD > 0
           ? (uwcNeedsBasedScholarshipUSD / totalGrossAnnualCostOfAttendanceUSD) * 100
@@ -276,19 +274,17 @@ function App() {
           ? (finalFamilyPaymentRequiredAnnualUSD / totalGrossAnnualCostOfAttendanceUSD) * 100
           : 0;
 
-      // --- UPDATED Affordability Status Calculation ---
-      // This now compares the family's annual available funds to the *actual* amount they are required to pay (which is their assessed contribution).
-      let affordabilityStatus = 'red'; // Default to red
+      // --- Affordability Status Calculation ---
+      let affordabilityStatus = 'red';
       const annualGap = finalFamilyPaymentRequiredAnnualUSD - annualFundsAvailableForFeesUSD;
 
       if (annualFundsAvailableForFeesUSD >= finalFamilyPaymentRequiredAnnualUSD) {
-          affordabilityStatus = 'green'; // Family's annual available funds meet or exceed the actual required payment
+          affordabilityStatus = 'green';
       } else if (annualGap <= ANNUAL_AFFORDABILITY_GAP_THRESHOLD) {
-          affordabilityStatus = 'orange'; // Gap is within the defined threshold
+          affordabilityStatus = 'orange';
       } else {
-          affordabilityStatus = 'red'; // Gap is larger than the defined threshold
+          affordabilityStatus = 'red';
       }
-      // --- End UPDATED Affordability Status Calculation ---
 
       return {
         schoolName: school.name,
@@ -297,17 +293,17 @@ function App() {
         totalGrossAnnualCostOfAttendanceUSD: totalGrossAnnualCostOfAttendanceUSD.toFixed(2),
 
         // Values from the Needs Assessment
-        uwcFamilyContributionRequiredUSD: uwcFamilyContributionRequiredUSD.toFixed(2), // Original assessed contribution
-        actualAnnualFamilyContributionUSD: actualAnnualFamilyContributionUSD.toFixed(2), // Assessed + Current Fees Payable floor
+        uwcFamilyContributionRequiredUSD: uwcFamilyContributionRequiredUSD.toFixed(2),
+        actualAnnualFamilyContributionUSD: actualAnnualFamilyContributionUSD.toFixed(2),
 
         // Scholarship calculations (now uncapped)
-        uwcNeedsBasedScholarshipUSD: uwcNeedsBasedScholarshipUSD.toFixed(2), // The full scholarship based on need
-        netUWCAnnualFeesUSD: finalFamilyPaymentRequiredAnnualUSD.toFixed(2), // This is the 'net fees' after full scholarship
+        uwcNeedsBasedScholarshipUSD: uwcNeedsBasedScholarshipUSD.toFixed(2),
+        netUWCAnnualFeesUSD: finalFamilyPaymentRequiredAnnualUSD.toFixed(2), // Net fees are simply family's contribution
 
         // Final amounts family pays/school covers
-        finalFamilyPaymentRequiredAnnualUSD: finalFamilyPaymentRequiredAnnualUSD.toFixed(2), // The actual amount family pays annually
-        amountPayableBySchoolAnnual: uwcNeedsBasedScholarshipUSD.toFixed(2), // This is the full scholarship granted
-        amountPayableByFamilyAnnual: finalFamilyPaymentRequiredAnnualUSD.toFixed(2), // This is the actual amount family pays
+        finalFamilyPaymentRequiredAnnualUSD: finalFamilyPaymentRequiredAnnualUSD.toFixed(2),
+        amountPayableBySchoolAnnual: uwcNeedsBasedScholarshipUSD.toFixed(2),
+        amountPayableByFamilyAnnual: finalFamilyPaymentRequiredAnnualUSD.toFixed(2),
 
         // Percentages
         uwcNeedsBasedScholarshipPercentage: percentagePayableBySchool.toFixed(2),
@@ -337,7 +333,7 @@ function App() {
       ncCurrentFeesPayableAnnualUSD: ncCurrentFeesPayableAnnualUSD.toFixed(2),
       allSchoolResults: sortedSchoolResults,
     };
-  }, [formData, convertNcToUsd, getNum]); // Add getNum to dependencies as well
+  }, [formData, convertNcToUsd, getNum]);
 
   return (
     <div className="App">
