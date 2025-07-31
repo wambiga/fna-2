@@ -1,435 +1,102 @@
-import React, { useState, useMemo, useRef, useCallback } from 'react';
-import html2pdf from 'html2pdf.js';
-import './App.css'; // Import the new CSS file
-import { FaCalculator, FaRedo, FaDownload } from 'react-icons/fa'; // Import icons
+import React, { useState, useMemo, useCallback } from 'react';
+import './App.css'; // Assuming you have some basic CSS
 
 // Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
+// Removed 'maxScholarshipPercentage' as it will no longer be used.
 const schoolCostsData = [
   { name: 'UWC South East Asia', annualFeesUSD: 68249, avgAdditionalCostsUSD: 7918.91 },
   { name: 'Li Po Chun United World College of Hong Kong', annualFeesUSD: 49883, avgAdditionalCostsUSD: 2613.76 },
   { name: 'UWC Robert Bosch College', annualFeesUSD: 41395, avgAdditionalCostsUSD: 4073.40 },
   { name: 'UWC Costa Rica', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3140 },
-  { name: 'Waterford Kamhlaba UWC of Southern Africa', annualFeesUSD: 30925, avgAdditionalCostsUSD: 2270.62 },
-  { name: 'UWC Dilijan', annualFeesUSD: 44000, avgAdditionalCostsUSD: 800 },
-  { name: 'UWC Atlantic', annualFeesUSD: 42000, avgAdditionalCostsUSD: 3800 },
-  { name: 'UWC Mahindra College', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000 },
-  { name: 'UWC Pearson College', annualFeesUSD: 45000, avgAdditionalCostsUSD: 4200 },
-  { name: 'UWC Changshu China', annualFeesUSD: 46000, avgAdditionalCostsUSD: 3500 },
-  { name: 'UWC Red Cross Nordic', annualFeesUSD: 41000, avgAdditionalCostsUSD: 3000 },
-  { name: 'UWC Adriatic', annualFeesUSD: 39000, avgAdditionalCostsUSD: 3200 },
   { name: 'UWC ISAK Japan', annualFeesUSD: 48000, avgAdditionalCostsUSD: 4000 },
   { name: 'UWC Thailand', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3500 },
   { name: 'UWC Mostar', annualFeesUSD: 38000, avgAdditionalCostsUSD: 2800 },
   { name: 'UWC Maastricht', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000 },
   { name: 'UWC East Africa', annualFeesUSD: 47000, avgAdditionalCostsUSD: 4000 },
   { name: 'UWC USA', annualFeesUSD: 60000, avgAdditionalCostsUSD: 5000 },
+  { name: 'UWC Atlantic', annualFeesUSD: 42000, avgAdditionalCostsUSD: 3800 },
+  { name: 'UWC Changshu China', annualFeesUSD: 46000, avgAdditionalCostsUSD: 3500 },
+  { name: 'UWC Dilijan', annualFeesUSD: 44000, avgAdditionalCostsUSD: 800 },
+  { name: 'UWC Mahindra College', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000 },
+  { name: 'UWC Pearson College', annualFeesUSD: 45000, avgAdditionalCostsUSD: 4200 },
+  { name: 'UWC Red Cross Nordic', annualFeesUSD: 41000, avgAdditionalCostsUSD: 3000 },
+  { name: 'UWC Adriatic', annualFeesUSD: 39000, avgAdditionalCostsUSD: 3200 },
+  { name: 'Waterford Kamhlaba UWC of Southern Africa', annualFeesUSD: 30925, avgAdditionalCostsUSD: 2270.62 },
 ];
 
-// Embedded data from "FNA Tool.xlsx - Currency list.csv"
-const currencyList = [
-  { abbr: 'USD', symbol: '$' },
-  { abbr: 'KES', symbol: 'KSh' },
-  { abbr: 'INR', symbol: '₹' },
-  { abbr: 'EUR', symbol: '€' },
-  { abbr: 'GBP', symbol: '£' },
-  { abbr: 'JPY', symbol: '¥' },
-  { abbr: 'CAD', symbol: '$' },
-  { abbr: 'AUD', symbol: '$' },
-  { abbr: 'SGD', symbol: 'S$' },
-  { abbr: 'HKD', symbol: 'HK$' },
-  { abbr: 'CHF', symbol: 'CHF' },
-  { abbr: 'CNY', symbol: '¥' },
-  { abbr: 'BRL', symbol: 'R$' },
-  { abbr: 'ZAR', symbol: 'R' },
-  { abbr: 'NGN', symbol: '₦' },
-  { abbr: 'EGP', symbol: 'E£' },
-  { abbr: 'MXN', symbol: '$' },
-  { abbr: 'RUB', symbol: '₽' },
-  { abbr: 'TRY', symbol: '₺' },
-  { abbr: 'PKR', symbol: '₨' },
-  { abbr: 'BDT', symbol: '৳' },
-  { abbr: 'PHP', symbol: '₱' },
-  { abbr: 'IDR', symbol: 'Rp' },
-  { abbr: 'THB', symbol: '฿' },
-  { abbr: 'VND', symbol: '₫' },
-  { abbr: 'PLN', symbol: 'zł' },
-  { abbr: 'SEK', symbol: 'kr' },
-  { abbr: 'DKK', symbol: 'kr' },
-  { abbr: 'NOK', symbol: 'kr' },
-  { abbr: 'CZK', symbol: 'Kč' },
-  { abbr: 'HUF', symbol: 'Ft' },
-  { abbr: 'ILS', symbol: '₪' },
-  { abbr: 'KRW', symbol: '₩' },
-];
-
-// Define an affordability threshold for 'orange' status (e.g., up to $10,000 annual difference)
-const ANNUAL_AFFORDABILITY_GAP_THRESHOLD = 10000; // Changed to reflect annual threshold
+// Define a threshold for "orange" affordability status (e.g., $10,000 annual gap)
+const ANNUAL_AFFORDABILITY_GAP_THRESHOLD = 10000;
 
 function App() {
   const [formData, setFormData] = useState({
-    ncCurrencySymbol: '',
-    exchangeRateToUSD: 0,
-    exchangeRateDate: '',
-    annualReturnOnAssets: 0.025,
+    ncCurrencySymbol: 'KES', // Default to Kenyan Shillings
+    exchangeRateToUSD: 130, // Example: 130 KES to 1 USD
+    exchangeRateDate: '2023-10-26',
+    annualReturnOnAssets: 0.025, // 2.5%
 
-    // Page 1: Family Income & Assets
+    // Page 1: Family Income & Assets (all in NC unless specified)
     parentsLiveSameHome: true,
-    pg1NumberIndependentAdults: 1,
-    pg1NumberFinancialDependents: 0,
-    pg1AnnualIncomePrimaryParent: 0,
-    pg1AnnualIncomeOtherParent: 0,
+    pg1NumberIndependentAdults: 2,
+    pg1NumberFinancialDependents: 1, // Student is usually a dependent too, so 1 for other dependents
+    pg1AnnualIncomePrimaryParent: 5000000, // Example: 5,000,000 KES
+    pg1AnnualIncomeOtherParent: 2000000,
     pg1AnnualBenefits: 0,
     pg1OtherAnnualIncome: 0,
-    pg1CashSavings: 0,
+    pg1CashSavings: 500000,
     pg1OtherAssets: 0,
-    pg1HomeMarketValue: 0, // This should be in NC
-    pg1HomeOutstandingMortgage: 0, // This should be in NC
-    pg1AnnualDebtPayment: 0,
+    pg1HomeMarketValue: 15000000, // Example: 15,000,000 KES
+    pg1HomeOutstandingMortgage: 5000000,
+    pg1AnnualDebtPayment: 120000,
     otherPropertiesNetIncome: 0,
     assetsAnotherCountryNetIncome: 0,
 
-    // Page 2: Student & Family Expenses
+    // Page 2: Student & Family Expenses (all in NC unless specified)
     pg2StudentAnnualIncome: 0,
     pg2StudentCashSavings: 0,
     pg2StudentOtherAssets: 0,
-    pg2ParentsAnnualDiscretionaryExpenditure: 0,
+    pg2ParentsAnnualDiscretionaryExpenditure: 1200000, // Example: 1,200,000 KES
     pg2OtherHouseholdCosts: 0,
-    pg2AnnualDebtPayment: 0,
-    annualLoanRepayment: 0,
-    familyAnticipatedAnnualSavings: 0,
-    potentialLoanAmount: 0,
+    pg2AnnualDebtPayment: 0, // This seems redundant if pg1AnnualDebtPayment covers it. Clarify if separate.
+    annualLoanRepayment: 0, // This also seems redundant. Clarify if separate.
+    familyAnticipatedAnnualSavings: 0, // In NC
+    potentialLoanAmount: 0, // In NC
 
     // Page 3: UWC Specifics
-    annualTravelCostUSD: 0,
-    ncScholarshipProvidedTwoYearsUSD: 0,
+    annualTravelCostUSD: 1000, // In USD
+    ncScholarshipProvidedTwoYearsUSD: 0, // Example: already secured NC Scholarship in USD
+    ncCurrentFeesPayableAnnual: 0, // NEW: Annual amount in National Currency
   });
 
   const [errors, setErrors] = useState({});
-  const pdfContentRef = useRef(null);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    let newValue = value;
-    if (type === 'number') {
-      newValue = parseFloat(value);
-      if (isNaN(newValue)) {
-        newValue = ''; // Keep it as an empty string for number inputs if not a valid number
-      }
-    } else if (type === 'checkbox') {
-      newValue = checked;
-    }
-
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: newValue,
-    }));
-
-    // Clear error for the field being changed
-    if (errors[name]) {
-      setErrors((prevErrors) => {
-        const newErrors = { ...prevErrors };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const getNum = (value) => {
-    const num = parseFloat(value);
-    return isNaN(num) ? 0 : num;
-  };
-
-  const convertNcToUsd = useCallback((valueInNcCurrency, exchangeRate) => {
-    if (getNum(exchangeRate) <= 0) { // Use getNum for exchangeRate too
-      return 0;
-    }
-    return getNum(valueInNcCurrency) / getNum(exchangeRate);
+  // Helper function to convert to number, handling empty strings as 0
+  const getNum = useCallback((value) => {
+    return isNaN(parseFloat(value)) ? 0 : parseFloat(value);
   }, []);
 
-  const allSchoolResults = useMemo(() => {
-    const {
-      ncCurrencySymbol,
-      exchangeRateToUSD,
-      exchangeRateDate,
-      annualReturnOnAssets,
+  // Helper function to convert National Currency to USD
+  const convertNcToUsd = useCallback((amount, rate) => {
+    return rate > 0 ? getNum(amount) / getNum(rate) : 0;
+  }, [getNum]);
 
-      // Page 1
-      parentsLiveSameHome,
-      pg1NumberIndependentAdults,
-      pg1NumberFinancialDependents,
-      pg1AnnualIncomePrimaryParent,
-      pg1AnnualIncomeOtherParent,
-      pg1AnnualBenefits,
-      pg1OtherAnnualIncome,
-      pg1CashSavings,
-      pg1OtherAssets,
-      pg1HomeMarketValue,
-      pg1HomeOutstandingMortgage,
-      pg1AnnualDebtPayment,
-      otherPropertiesNetIncome,
-      assetsAnotherCountryNetIncome,
+  const handleChange = useCallback((e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  }, []);
 
-      // Page 2
-      pg2StudentAnnualIncome,
-      pg2StudentCashSavings,
-      pg2StudentOtherAssets,
-      pg2ParentsAnnualDiscretionaryExpenditure,
-      pg2OtherHouseholdCosts,
-      pg2AnnualDebtPayment,
-      annualLoanRepayment,
-      familyAnticipatedAnnualSavings,
-      potentialLoanAmount,
-
-      // Page 3
-      annualTravelCostUSD,
-      ncScholarshipProvidedTwoYearsUSD,
-    } = formData;
-
-    // Early exit if exchange rate is invalid to prevent division by zero or NaN results
-    if (getNum(exchangeRateToUSD) <= 0) {
-      return {
-        ncCurrencySymbol,
-        exchangeRateToUSD,
-        exchangeRateDate,
-        totalAnnualIncome: '0.00',
-        totalCashAssets: '0.00',
-        annualReturnOnFamilyAssets: '0.00',
-        homeEquity: '0.00',
-        annualHomeEquityContribution: '0.00',
-        totalAssetsContribution: '0.00',
-        totalAnnualFixedExpenditure: '0.00',
-        discretionaryExpenditureForFormula3: '0.00',
-        formula1_familyContributionUSD: '0.00',
-        formula2_studentContributionUSD: '0.00',
-        formula3_estimateCostEducateStudentHome: '0.00',
-        uwcFamilyContributionRequiredUSD: '0.00',
-        familyAnticipatedAnnualSavings: '0.00', // Keep these as string '0.00' for display
-        potentialLoanAmount: '0.00', // Keep these as string '0.00' for display
-        annualFundsAvailableForFeesUSD: '0.00', // New: Annual Funds Available
-        allSchoolResults: schoolCostsData.map(school => ({
-          schoolName: school.name,
-          schoolAnnualFeesUSD: school.annualFeesUSD.toFixed(2),
-          schoolAvgAdditionalCostsUSD: school.avgAdditionalCostsUSD.toFixed(2),
-          totalGrossAnnualCostOfAttendanceUSD: '0.00',
-          totalNeedUSD: '0.00',
-          uwcNeedsBasedScholarshipUSD: '0.00',
-          uwcNeedsBasedScholarshipPercentage: '0.00',
-          netUWCAnnualFeesUSD: '0.00',
-          suggestedFamilyContributionTwoYearsUSD: '0.00',
-          combinedNcAndFamilyContributionTwoYearsUSD: '0.00',
-          totalCostOfAttendanceTwoYearsUSD: '0.00',
-          combinedContributionMeetsExpectation: false,
-          amountPayableBySchoolAnnual: '0.00',
-          amountPayableByFamilyAnnual: '0.00',
-          percentagePayableBySchool: '0.00',
-          percentagePayableByFamily: '0.00',
-          affordabilityStatus: 'red', // Default to red if no exchange rate
-        })),
-      };
-    }
-
-    const totalHouseholdMembers = getNum(pg1NumberIndependentAdults) + getNum(pg1NumberFinancialDependents);
-
-    const ncIncomePrimaryParentUSD = convertNcToUsd(pg1AnnualIncomePrimaryParent, exchangeRateToUSD);
-    const ncIncomeOtherParentUSD = convertNcToUsd(pg1AnnualIncomeOtherParent, exchangeRateToUSD);
-    const ncAnnualBenefitsUSD = convertNcToUsd(pg1AnnualBenefits, exchangeRateToUSD);
-    const ncOtherAnnualIncomeUSD = convertNcToUsd(pg1OtherAnnualIncome, exchangeRateToUSD);
-    const ncOtherPropertiesNetIncomeUSD = convertNcToUsd(otherPropertiesNetIncome, exchangeRateToUSD);
-    const ncAssetsAnotherCountryNetIncomeUSD = convertNcToUsd(assetsAnotherCountryNetIncome, exchangeRateToUSD);
-
-    const ncCashSavingsUSD = convertNcToUsd(pg1CashSavings, exchangeRateToUSD);
-    const ncOtherAssetsUSD = convertNcToUsd(pg1OtherAssets, exchangeRateToUSD);
-
-    // Convert Home Market Value and Outstanding Mortgage to USD
-    const pg1HomeMarketValueUSD = convertNcToUsd(pg1HomeMarketValue, exchangeRateToUSD);
-    const pg1HomeOutstandingMortgageUSD = convertNcToUsd(pg1HomeOutstandingMortgage, exchangeRateToUSD);
-
-    const ncStudentAnnualIncomeUSD = convertNcToUsd(pg2StudentAnnualIncome, exchangeRateToUSD);
-    const ncStudentCashSavingsUSD = convertNcToUsd(pg2StudentCashSavings, exchangeRateToUSD);
-    const ncStudentOtherAssetsUSD = convertNcToUsd(pg2StudentOtherAssets, exchangeRateToUSD);
-
-    const ncParentsAnnualDiscretionaryExpenditureUSD = convertNcToUsd(pg2ParentsAnnualDiscretionaryExpenditure, exchangeRateToUSD);
-    const ncOtherHouseholdCostsUSD = convertNcToUsd(pg2OtherHouseholdCosts, exchangeRateToUSD);
-
-    const pg1AnnualDebtPaymentUSD = convertNcToUsd(pg1AnnualDebtPayment, exchangeRateToUSD);
-    const pg2AnnualDebtPaymentUSD = convertNcToUsd(pg2AnnualDebtPayment, exchangeRateToUSD);
-    const annualLoanRepaymentUSD = convertNcToUsd(annualLoanRepayment, exchangeRateToUSD);
-
-    const ncFamilyAnticipatedAnnualSavingsUSD = convertNcToUsd(familyAnticipatedAnnualSavings, exchangeRateToUSD);
-    const ncPotentialLoanAmountUSD = convertNcToUsd(potentialLoanAmount, exchangeRateToUSD);
-
-    const totalAnnualIncome =
-      ncIncomePrimaryParentUSD +
-      ncIncomeOtherParentUSD +
-      ncAnnualBenefitsUSD +
-      ncOtherAnnualIncomeUSD +
-      ncOtherPropertiesNetIncomeUSD +
-      ncAssetsAnotherCountryNetIncomeUSD;
-
-    const totalCashAssets = ncCashSavingsUSD + ncOtherAssetsUSD;
-
-    const annualReturnOnFamilyAssets = totalCashAssets * getNum(annualReturnOnAssets);
-
-    // Use the USD converted values for Home Equity calculation
-    const homeEquity = Math.max(0, getNum(pg1HomeMarketValueUSD) - getNum(pg1HomeOutstandingMortgageUSD));
-    const annualHomeEquityContribution = homeEquity * 0.02;
-
-    const totalAssetsContribution = annualReturnOnFamilyAssets + annualHomeEquityContribution;
-
-    const totalAnnualFixedExpenditure = pg1AnnualDebtPaymentUSD + pg2AnnualDebtPaymentUSD + annualLoanRepaymentUSD;
-
-    const discretionaryExpenditureForFormula3 = ncParentsAnnualDiscretionaryExpenditureUSD + (parentsLiveSameHome ? 0 : ncOtherHouseholdCostsUSD);
-
-    const formula1_familyContributionUSD = Math.max(
-      0,
-      totalAnnualIncome - totalAnnualFixedExpenditure + totalAssetsContribution
-    );
-
-    const formula2_studentContributionUSD =
-      ncStudentAnnualIncomeUSD +
-      (ncStudentCashSavingsUSD * 0.1) +
-      (ncStudentOtherAssetsUSD * 0.05);
-
-    const costHome = 0; // This value is not currently exposed in the form or calculated from inputs
-    const formula3_estimateCostEducateStudentHome =
-      (totalHouseholdMembers > 0 ? discretionaryExpenditureForFormula3 / totalHouseholdMembers : 0) + costHome;
-
-    const uwcFamilyContributionRequiredUSD = Math.max(
-      0,
-      formula1_familyContributionUSD,
-      formula2_studentContributionUSD,
-      formula3_estimateCostEducateStudentHome
-    );
-
-    // --- New Calculation for Annual Funds Available for Fees ---
-    // This represents the family's annual cash flow + annual share of savings/loan pool
-    const annualDisposableIncome = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure - discretionaryExpenditureForFormula3);
-    const annualFundsAvailableForFeesUSD = annualDisposableIncome + ncFamilyAnticipatedAnnualSavingsUSD + (ncPotentialLoanAmountUSD / 2); // Divide loan by 2 for annual portion
-    // --- End New Calculation ---
-
-    const calculatedSchoolResults = schoolCostsData.map(school => {
-      const schoolAnnualFeesUSD = school.annualFeesUSD;
-      const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
-
-      const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
-
-      const totalNeedUSD = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - uwcFamilyContributionRequiredUSD);
-      const uwcNeedsBasedScholarshipUSD = totalNeedUSD;
-
-      const uwcNeedsBasedScholarshipPercentage =
-        totalGrossAnnualCostOfAttendanceUSD > 0
-          ? (uwcNeedsBasedScholarshipUSD / totalGrossAnnualCostOfAttendanceUSD) * 100
-          : 0;
-
-      const netUWCAnnualFeesUSD = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - uwcNeedsBasedScholarshipUSD);
-
-      const suggestedFamilyContributionTwoYearsUSD = Math.max(0, (uwcFamilyContributionRequiredUSD * 2) - ncScholarshipProvidedTwoYearsUSD);
-      const combinedNcAndFamilyContributionTwoYearsUSD = getNum(ncScholarshipProvidedTwoYearsUSD) + suggestedFamilyContributionTwoYearsUSD;
-      const totalCostOfAttendanceTwoYearsUSD = totalGrossAnnualCostOfAttendanceUSD * 2;
-      const combinedContributionMeetsExpectation = combinedNcAndFamilyContributionTwoYearsUSD >= totalCostOfAttendanceTwoYearsUSD;
-
-      const amountPayableBySchoolAnnual = uwcNeedsBasedScholarshipUSD;
-      const amountPayableByFamilyAnnual = uwcFamilyContributionRequiredUSD;
-
-      const percentagePayableBySchool =
-        totalGrossAnnualCostOfAttendanceUSD > 0
-          ? (amountPayableBySchoolAnnual / totalGrossAnnualCostOfAttendanceUSD) * 100
-          : 0;
-
-      const percentagePayableByFamily =
-        totalGrossAnnualCostOfAttendanceUSD > 0
-          ? (amountPayableByFamilyAnnual / totalGrossAnnualCostOfAttendanceUSD) * 100
-          : 0;
-
-      // --- NEW Affordability Status Calculation (Based on Annual Cash Flow vs. Required Contribution) ---
-      let affordabilityStatus = 'red'; // Default to red
-      const annualGap = uwcFamilyContributionRequiredUSD - annualFundsAvailableForFeesUSD;
-
-      if (annualFundsAvailableForFeesUSD >= uwcFamilyContributionRequiredUSD) {
-          affordabilityStatus = 'green'; // Family's annual available funds meet or exceed the required contribution
-      } else if (annualGap <= ANNUAL_AFFORDABILITY_GAP_THRESHOLD) { // Gap is within $10,000 annually
-          affordabilityStatus = 'orange';
-      } else { // Gap is more than $10,000 annually
-          affordabilityStatus = 'red';
-      }
-      // --- End NEW Affordability Status Calculation ---
-
-
-      return {
-        schoolName: school.name,
-        schoolAnnualFeesUSD: schoolAnnualFeesUSD.toFixed(2),
-        schoolAvgAdditionalCostsUSD: schoolAvgAdditionalCostsUSD.toFixed(2),
-        totalGrossAnnualCostOfAttendanceUSD: totalGrossAnnualCostOfAttendanceUSD.toFixed(2),
-        totalNeedUSD: totalNeedUSD.toFixed(2),
-        uwcNeedsBasedScholarshipUSD: uwcNeedsBasedScholarshipUSD.toFixed(2),
-        uwcNeedsBasedScholarshipPercentage: uwcNeedsBasedScholarshipPercentage.toFixed(2),
-        netUWCAnnualFeesUSD: netUWCAnnualFeesUSD.toFixed(2), // This is the key for ranking
-        suggestedFamilyContributionTwoYearsUSD: suggestedFamilyContributionTwoYearsUSD.toFixed(2),
-        combinedNcAndFamilyContributionTwoYearsUSD: combinedNcAndFamilyContributionTwoYearsUSD.toFixed(2),
-        totalCostOfAttendanceTwoYearsUSD: totalCostOfAttendanceTwoYearsUSD.toFixed(2),
-        combinedContributionMeetsExpectation,
-        amountPayableBySchoolAnnual: amountPayableBySchoolAnnual.toFixed(2),
-        amountPayableByFamilyAnnual: amountPayableByFamilyAnnual.toFixed(2),
-        percentagePayableBySchool: percentagePayableBySchool.toFixed(2),
-        percentagePayableByFamily: percentagePayableByFamily.toFixed(2),
-        affordabilityStatus: affordabilityStatus, // Add the calculated status
-      };
-    });
-
-    // --- Sort the schools by netUWCAnnualFeesUSD (most affordable first) ---
-    calculatedSchoolResults.sort((a, b) => parseFloat(a.netUWCAnnualFeesUSD) - parseFloat(b.netUWCAnnualFeesUSD));
-    // --- End Sorting ---
-
-    return {
-      ncCurrencySymbol,
-      exchangeRateToUSD,
-      exchangeRateDate,
-      totalAnnualIncome: totalAnnualIncome.toFixed(2),
-      totalCashAssets: totalCashAssets.toFixed(2),
-      annualReturnOnFamilyAssets: annualReturnOnFamilyAssets.toFixed(2),
-      homeEquity: homeEquity.toFixed(2),
-      annualHomeEquityContribution: annualHomeEquityContribution.toFixed(2),
-      totalAssetsContribution: totalAssetsContribution.toFixed(2),
-      totalAnnualFixedExpenditure: totalAnnualFixedExpenditure.toFixed(2),
-      discretionaryExpenditureForFormula3: discretionaryExpenditureForFormula3.toFixed(2),
-      formula1_familyContributionUSD: formula1_familyContributionUSD.toFixed(2),
-      formula2_studentContributionUSD: formula2_studentContributionUSD.toFixed(2),
-      formula3_estimateCostEducateStudentHome: formula3_estimateCostEducateStudentHome.toFixed(2),
-      uwcFamilyContributionRequiredUSD: uwcFamilyContributionRequiredUSD.toFixed(2),
-      // Display the converted USD values for savings/loan in summary
-      familyAnticipatedAnnualSavings: ncFamilyAnticipatedAnnualSavingsUSD.toFixed(2),
-      potentialLoanAmount: ncPotentialLoanAmountUSD.toFixed(2),
-      // Display the new calculated annual funds available for fees
-      annualFundsAvailableForFeesUSD: annualFundsAvailableForFeesUSD.toFixed(2),
-      allSchoolResults: calculatedSchoolResults,
-    };
-  }, [formData, convertNcToUsd]);
-
-  const handleCalculate = (e) => {
-    e.preventDefault();
-    const newErrors = {};
-
-    if (getNum(formData.exchangeRateToUSD) <= 0) {
-      newErrors.exchangeRateToUSD = 'Exchange Rate must be greater than 0.';
-    }
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-    setErrors({});
-  };
-
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setFormData({
-      ncCurrencySymbol: '',
-      exchangeRateToUSD: 0,
-      exchangeRateDate: '',
+      ncCurrencySymbol: 'KES',
+      exchangeRateToUSD: 130,
+      exchangeRateDate: '2023-10-26',
       annualReturnOnAssets: 0.025,
 
-      pg1NumberIndependentAdults: 1,
-      pg1NumberFinancialDependents: 0,
       parentsLiveSameHome: true,
+      pg1NumberIndependentAdults: 2,
+      pg1NumberFinancialDependents: 1,
       pg1AnnualIncomePrimaryParent: 0,
       pg1AnnualIncomeOtherParent: 0,
       pg1AnnualBenefits: 0,
@@ -454,74 +121,250 @@ function App() {
 
       annualTravelCostUSD: 0,
       ncScholarshipProvidedTwoYearsUSD: 0,
+      ncCurrentFeesPayableAnnual: 0, // Reset the new field
     });
     setErrors({});
-  };
+  }, []);
 
-  const generateNumberOptions = (start, end) => {
-    const options = [];
-    for (let i = start; i <= end; i++) {
-      options.push(<option key={i} value={i}>{i}</option>);
+  const allSchoolResults = useMemo(() => {
+    const {
+      ncCurrencySymbol,
+      exchangeRateToUSD,
+      annualReturnOnAssets,
+      parentsLiveSameHome,
+      pg1NumberIndependentAdults,
+      pg1NumberFinancialDependents,
+      pg1AnnualIncomePrimaryParent,
+      pg1AnnualIncomeOtherParent,
+      pg1AnnualBenefits,
+      pg1OtherAnnualIncome,
+      pg1CashSavings,
+      pg1OtherAssets,
+      pg1HomeMarketValue,
+      pg1HomeOutstandingMortgage,
+      pg1AnnualDebtPayment,
+      otherPropertiesNetIncome,
+      assetsAnotherCountryNetIncome,
+      pg2StudentAnnualIncome,
+      pg2StudentCashSavings,
+      pg2StudentOtherAssets,
+      pg2ParentsAnnualDiscretionaryExpenditure,
+      pg2OtherHouseholdCosts,
+      pg2AnnualDebtPayment: pg2AnnualDebtPayment_NC, // Renamed to avoid conflict
+      annualLoanRepayment,
+      familyAnticipatedAnnualSavings,
+      potentialLoanAmount,
+      annualTravelCostUSD,
+      ncScholarshipProvidedTwoYearsUSD,
+      ncCurrentFeesPayableAnnual, // The new input field
+    } = formData;
+
+    if (getNum(exchangeRateToUSD) <= 0) {
+      return {
+        allSchoolResults: [],
+        annualFundsAvailableForFeesUSD: 0,
+        ncCurrentFeesPayableAnnualUSD: 0
+      }; // Return empty results if exchange rate is invalid
     }
-    return options;
-  };
 
-  const handleDownloadPdf = () => {
-    const content = pdfContentRef.current;
+    // --- Convert all NC inputs to USD ---
+    const pg1AnnualIncomePrimaryParentUSD = convertNcToUsd(pg1AnnualIncomePrimaryParent, exchangeRateToUSD);
+    const pg1AnnualIncomeOtherParentUSD = convertNcToUsd(pg1AnnualIncomeOtherParent, exchangeRateToUSD);
+    const pg1AnnualBenefitsUSD = convertNcToUsd(pg1AnnualBenefits, exchangeRateToUSD);
+    const pg1OtherAnnualIncomeUSD = convertNcToUsd(pg1OtherAnnualIncome, exchangeRateToUSD);
+    const pg1CashSavingsUSD = convertNcToUsd(pg1CashSavings, exchangeRateToUSD);
+    const pg1OtherAssetsUSD = convertNcToUsd(pg1OtherAssets, exchangeRateToUSD);
+    const pg1HomeMarketValueUSD = convertNcToUsd(pg1HomeMarketValue, exchangeRateToUSD);
+    const pg1HomeOutstandingMortgageUSD = convertNcToUsd(pg1HomeOutstandingMortgage, exchangeRateToUSD);
+    const pg1AnnualDebtPaymentUSD = convertNcToUsd(pg1AnnualDebtPayment, exchangeRateToUSD);
+    const otherPropertiesNetIncomeUSD = convertNcToUsd(otherPropertiesNetIncome, exchangeRateToUSD);
+    const assetsAnotherCountryNetIncomeUSD = convertNcToUsd(assetsAnotherCountryNetIncome, exchangeRateToUSD);
+    const pg2StudentAnnualIncomeUSD = convertNcToUsd(pg2StudentAnnualIncome, exchangeRateToUSD);
+    const pg2StudentCashSavingsUSD = convertNcToUsd(pg2StudentCashSavings, exchangeRateToUSD);
+    const pg2StudentOtherAssetsUSD = convertNcToUsd(pg2StudentOtherAssets, exchangeRateToUSD);
+    const pg2ParentsAnnualDiscretionaryExpenditureUSD = convertNcToUsd(pg2ParentsAnnualDiscretionaryExpenditure, exchangeRateToUSD);
+    const pg2OtherHouseholdCostsUSD = convertNcToUsd(pg2OtherHouseholdCosts, exchangeRateToUSD);
+    const pg2AnnualDebtPaymentUSD = convertNcToUsd(pg2AnnualDebtPayment_NC, exchangeRateToUSD);
+    const annualLoanRepaymentUSD = convertNcToUsd(annualLoanRepayment, exchangeRateToUSD);
+    const ncFamilyAnticipatedAnnualSavingsUSD = convertNcToUsd(familyAnticipatedAnnualSavings, exchangeRateToUSD);
+    const ncPotentialLoanAmountUSD = convertNcToUsd(potentialLoanAmount, exchangeRateToUSD);
+    const ncCurrentFeesPayableAnnualUSD = convertNcToUsd(ncCurrentFeesPayableAnnual, exchangeRateToUSD); // NEW
 
-    if (!content) {
-      console.error("PDF content element not found. Cannot generate PDF.");
-      return;
-    }
+    // --- Comprehensive Financial Need Assessment (FNA) Calculations ---
 
-    const options = {
-      margin: 10,
-      filename: `FNA_Report_${new Date().getFullYear()}_${(new Date().getMonth() + 1).toString().padStart(2, '0')}_${new Date().getDate().toString().padStart(2, '0')}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    // Total Family Income
+    const totalAnnualIncome = getNum(pg1AnnualIncomePrimaryParentUSD) + getNum(pg1AnnualIncomeOtherParentUSD) + getNum(pg1AnnualBenefitsUSD) + getNum(pg1OtherAnnualIncomeUSD) + getNum(otherPropertiesNetIncomeUSD) + getNum(assetsAnotherCountryNetIncomeUSD);
+
+    // Total Family Assets
+    const totalCashAssets = getNum(pg1CashSavingsUSD);
+    const totalOtherLiquidAssets = getNum(pg1OtherAssetsUSD);
+    const totalHomeEquity = Math.max(0, getNum(pg1HomeMarketValueUSD) - getNum(pg1HomeOutstandingMortgageUSD));
+
+    // Annual contribution from assets (Formula 1 component)
+    const annualReturnOnFamilyAssets = totalCashAssets * getNum(annualReturnOnAssets);
+    const annualReturnOnOtherLiquidAssets = totalOtherLiquidAssets * getNum(annualReturnOnAssets); // Assuming same return rate
+    const homeEquityContribution = totalHomeEquity * 0.01; // Example: 1% contribution from home equity
+
+    // Total Annual Fixed Expenditure (debts, other household costs, discretionary for formula 3)
+    const totalAnnualFixedExpenditure = getNum(pg1AnnualDebtPaymentUSD) + getNum(pg2AnnualDebtPaymentUSD) + getNum(annualLoanRepaymentUSD) + getNum(pg2OtherHouseholdCostsUSD);
+
+    // Discretionary expenditure specifically used in Formula 3 (Cost to educate student at home)
+    const discretionaryExpenditureForFormula3 = getNum(pg2ParentsAnnualDiscretionaryExpenditureUSD);
+
+    // Student's Contribution
+    const studentTotalAssets = getNum(pg2StudentCashSavingsUSD) + getNum(pg2StudentOtherAssetsUSD);
+    const annualReturnOnStudentAssets = studentTotalAssets * getNum(annualReturnOnAssets); // Assuming student assets also yield a return
+    const studentAnnualContributionFromIncome = getNum(pg2StudentAnnualIncomeUSD) * 0.25; // Example: 25% of student's income
+
+    // --- FORMULA CALCULATIONS ---
+
+    // Formula 1: Family Contribution from Income & Assets
+    // Simplified, assuming discretionary expenditure is part of what reduces available income for fees.
+    // The core idea is "income - expenses + asset contribution"
+    const formula1_familyContributionUSD = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure - discretionaryExpenditureForFormula3 + annualReturnOnFamilyAssets + annualReturnOnOtherLiquidAssets + homeEquityContribution);
+
+    // Formula 2: Student Contribution
+    const formula2_studentContributionUSD = studentAnnualContributionFromIncome + annualReturnOnStudentAssets;
+
+    // Formula 3: Estimated Cost to Educate Student at Home
+    // This is a benchmark for what they would save by sending the child to UWC vs. local education
+    const formula3_estimateCostEducateStudentHome = Math.max(0, discretionaryExpenditureForFormula3 / (pg1NumberFinancialDependents + pg1NumberIndependentAdults)) * 1; // Example: 1 unit of per-person discretionary spending
+
+    // UWC Family Contribution Required (the highest of the relevant formulas)
+    // This is the family's *assessed capability* before considering current fees payable minimum
+    const uwcFamilyContributionRequiredUSD = Math.max(0, formula1_familyContributionUSD, formula2_studentContributionUSD, formula3_estimateCostEducateStudentHome);
+
+    // --- Apply "Current Fees Payable" as a Minimum Floor ---
+    const suggestedFamilyContributionTwoYearsUSD = (uwcFamilyContributionRequiredUSD * 2) - ncScholarshipProvidedTwoYearsUSD;
+
+    const minimumCurrentFeesContributionTwoYearsUSD = ncCurrentFeesPayableAnnualUSD * 2; // Adjusted for two years
+
+    // The final family contribution for two years is the MAX of the calculated contribution OR the minimum current fees payable
+    const finalFamilyContributionTwoYearsUSD = Math.max(suggestedFamilyContributionTwoYearsUSD, minimumCurrentFeesContributionTwoYearsUSD);
+
+    // This is the family's assessed annual contribution after considering the 'current fees payable' minimum
+    const actualAnnualFamilyContributionUSD = finalFamilyContributionTwoYearsUSD / 2;
+
+
+    // --- Annual Funds Available for Fees (for affordability check) ---
+    // This represents the cash flow truly available to the family for fees/savings/loan after all fixed & discretionary expenses.
+    const annualDisposableIncome = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure - discretionaryExpenditureForFormula3);
+    const annualFundsAvailableForFeesUSD = annualDisposableIncome + ncFamilyAnticipatedAnnualSavingsUSD + (ncPotentialLoanAmountUSD / 2);
+
+
+    const calculatedSchoolResults = schoolCostsData.map(school => {
+      const schoolAnnualFeesUSD = school.annualFeesUSD;
+      const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
+      // maxScholarshipPercentage is removed
+
+      const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
+
+      // The scholarship awarded is now simply what's needed based on the family's actual contribution
+      const uwcNeedsBasedScholarshipUSD = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - actualAnnualFamilyContributionUSD);
+
+      // The actual amount the family pays is their assessed contribution
+      const finalFamilyPaymentRequiredAnnualUSD = actualAnnualFamilyContributionUSD; // No cap applied here
+
+      // Recalculate percentages based on the uncapped scholarship and family payment
+      const percentagePayableBySchool =
+        totalGrossAnnualCostOfAttendanceUSD > 0
+          ? (uwcNeedsBasedScholarshipUSD / totalGrossAnnualCostOfAttendanceUSD) * 100
+          : 0;
+
+      const percentagePayableByFamily =
+        totalGrossAnnualCostOfAttendanceUSD > 0
+          ? (finalFamilyPaymentRequiredAnnualUSD / totalGrossAnnualCostOfAttendanceUSD) * 100
+          : 0;
+
+      // --- UPDATED Affordability Status Calculation ---
+      // This now compares the family's annual available funds to the *actual* amount they are required to pay (which is their assessed contribution).
+      let affordabilityStatus = 'red'; // Default to red
+      const annualGap = finalFamilyPaymentRequiredAnnualUSD - annualFundsAvailableForFeesUSD;
+
+      if (annualFundsAvailableForFeesUSD >= finalFamilyPaymentRequiredAnnualUSD) {
+          affordabilityStatus = 'green'; // Family's annual available funds meet or exceed the actual required payment
+      } else if (annualGap <= ANNUAL_AFFORDABILITY_GAP_THRESHOLD) {
+          affordabilityStatus = 'orange'; // Gap is within the defined threshold
+      } else {
+          affordabilityStatus = 'red'; // Gap is larger than the defined threshold
+      }
+      // --- End UPDATED Affordability Status Calculation ---
+
+      return {
+        schoolName: school.name,
+        schoolAnnualFeesUSD: schoolAnnualFeesUSD.toFixed(2),
+        schoolAvgAdditionalCostsUSD: schoolAvgAdditionalCostsUSD.toFixed(2),
+        totalGrossAnnualCostOfAttendanceUSD: totalGrossAnnualCostOfAttendanceUSD.toFixed(2),
+
+        // Values from the Needs Assessment
+        uwcFamilyContributionRequiredUSD: uwcFamilyContributionRequiredUSD.toFixed(2), // Original assessed contribution
+        actualAnnualFamilyContributionUSD: actualAnnualFamilyContributionUSD.toFixed(2), // Assessed + Current Fees Payable floor
+
+        // Scholarship calculations (now uncapped)
+        uwcNeedsBasedScholarshipUSD: uwcNeedsBasedScholarshipUSD.toFixed(2), // The full scholarship based on need
+        netUWCAnnualFeesUSD: finalFamilyPaymentRequiredAnnualUSD.toFixed(2), // This is the 'net fees' after full scholarship
+
+        // Final amounts family pays/school covers
+        finalFamilyPaymentRequiredAnnualUSD: finalFamilyPaymentRequiredAnnualUSD.toFixed(2), // The actual amount family pays annually
+        amountPayableBySchoolAnnual: uwcNeedsBasedScholarshipUSD.toFixed(2), // This is the full scholarship granted
+        amountPayableByFamilyAnnual: finalFamilyPaymentRequiredAnnualUSD.toFixed(2), // This is the actual amount family pays
+
+        // Percentages
+        uwcNeedsBasedScholarshipPercentage: percentagePayableBySchool.toFixed(2),
+        percentagePayableBySchool: percentagePayableBySchool.toFixed(2),
+        percentagePayableByFamily: percentagePayableByFamily.toFixed(2),
+
+        // Two-year figures for overall understanding
+        suggestedFamilyContributionTwoYearsUSD: suggestedFamilyContributionTwoYearsUSD.toFixed(2),
+        minimumCurrentFeesContributionTwoYearsUSD: minimumCurrentFeesContributionTwoYearsUSD.toFixed(2),
+        finalFamilyContributionTwoYearsUSD: finalFamilyContributionTwoYearsUSD.toFixed(2),
+        combinedNcAndFamilyContributionTwoYearsUSD: (getNum(ncScholarshipProvidedTwoYearsUSD) + getNum(finalFamilyPaymentRequiredAnnualUSD) * 2).toFixed(2),
+        totalCostOfAttendanceTwoYearsUSD: (totalGrossAnnualCostOfAttendanceUSD * 2).toFixed(2),
+        combinedContributionMeetsExpectation: (getNum(ncScholarshipProvidedTwoYearsUSD) + getNum(finalFamilyPaymentRequiredAnnualUSD) * 2) >= (totalGrossAnnualCostOfAttendanceUSD * 2),
+
+        // Affordability
+        affordabilityStatus: affordabilityStatus,
+      };
+    });
+
+    // Sort results by netUWCAnnualFeesUSD for ranking
+    const sortedSchoolResults = [...calculatedSchoolResults].sort((a, b) => {
+      return getNum(a.netUWCAnnualFeesUSD) - getNum(b.netUWCAnnualFeesUSD);
+    });
+
+    return {
+      annualFundsAvailableForFeesUSD: annualFundsAvailableForFeesUSD.toFixed(2),
+      ncCurrentFeesPayableAnnualUSD: ncCurrentFeesPayableAnnualUSD.toFixed(2),
+      allSchoolResults: sortedSchoolResults,
     };
-
-    html2pdf().from(content).set(options).save();
-  };
+  }, [formData, convertNcToUsd, getNum]); // Add getNum to dependencies as well
 
   return (
-    <div className="app-container">
-      <h1>Financial Need Analysis Form</h1>
-      <form onSubmit={handleCalculate}>
+    <div className="App">
+      <h1>UWC Financial Needs Assessment Tool</h1>
+      <form onSubmit={(e) => e.preventDefault()}>
         <section className="form-section">
-          <h2>General Information</h2>
+          <h2>General Financial Data</h2>
           <div className="form-group">
             <label htmlFor="ncCurrencySymbol">National Currency Symbol:</label>
-            <select
+            <input
+              type="text"
               id="ncCurrencySymbol"
               name="ncCurrencySymbol"
               value={formData.ncCurrencySymbol}
               onChange={handleChange}
-              required
-            >
-              <option value="">Select Currency</option>
-              {currencyList.map(currency => (
-                <option key={currency.abbr} value={currency.abbr}>
-                  {currency.abbr} ({currency.symbol})
-                </option>
-              ))}
-            </select>
+            />
           </div>
           <div className="form-group">
-            <label htmlFor="exchangeRateToUSD">
-              Exchange Rate (1 USD = X NC Currency):
-              {errors.exchangeRateToUSD && <span className="error-message">{errors.exchangeRateToUSD}</span>}
-            </label>
+            <label htmlFor="exchangeRateToUSD">Exchange Rate to USD (e.g., 130 for KES):</label>
             <input
               type="number"
               id="exchangeRateToUSD"
               name="exchangeRateToUSD"
-              min="0.000001"
-              step="0.000001"
+              min="0.01"
+              step="0.01"
               value={formData.exchangeRateToUSD}
               onChange={handleChange}
-              required
             />
           </div>
           <div className="form-group">
@@ -535,16 +378,15 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="annualReturnOnAssets">Annual Return on Assets (%):</label>
+            <label htmlFor="annualReturnOnAssets">Annual Return on Liquid Assets (e.g., 0.025 for 2.5%):</label>
             <input
               type="number"
               id="annualReturnOnAssets"
               name="annualReturnOnAssets"
               min="0"
-              step="0.01"
-              value={formData.annualReturnOnAssets * 100}
-              // Directly update state for this specific field after dividing by 100
-              onChange={(e) => setFormData(prevData => ({ ...prevData, annualReturnOnAssets: parseFloat(e.target.value) / 100 }))}
+              step="0.001"
+              value={formData.annualReturnOnAssets}
+              onChange={handleChange}
             />
           </div>
         </section>
@@ -552,41 +394,39 @@ function App() {
         <section className="form-section">
           <h2>Page 1: Family Income & Assets ({formData.ncCurrencySymbol})</h2>
           <div className="form-group">
-            <label htmlFor="parentsLiveSameHome" className="checkbox-label">
-              Parents live in the same home?
-              <input
-                type="checkbox"
-                id="parentsLiveSameHome"
-                name="parentsLiveSameHome"
-                checked={formData.parentsLiveSameHome}
-                onChange={handleChange}
-              />
-            </label>
+            <label htmlFor="parentsLiveSameHome">Parents Live in Same Home:</label>
+            <input
+              type="checkbox"
+              id="parentsLiveSameHome"
+              name="parentsLiveSameHome"
+              checked={formData.parentsLiveSameHome}
+              onChange={handleChange}
+            />
           </div>
           <div className="form-group">
-            <label htmlFor="pg1NumberIndependentAdults">Number of Independent Adults:</label>
-            <select
+            <label htmlFor="pg1NumberIndependentAdults">Number of Independent Adults (excluding student):</label>
+            <input
+              type="number"
               id="pg1NumberIndependentAdults"
               name="pg1NumberIndependentAdults"
+              min="0"
               value={formData.pg1NumberIndependentAdults}
               onChange={handleChange}
-            >
-              {generateNumberOptions(0, 5)}
-            </select>
+            />
           </div>
           <div className="form-group">
             <label htmlFor="pg1NumberFinancialDependents">Number of Financial Dependents (excluding student):</label>
-            <select
+            <input
+              type="number"
               id="pg1NumberFinancialDependents"
               name="pg1NumberFinancialDependents"
+              min="0"
               value={formData.pg1NumberFinancialDependents}
               onChange={handleChange}
-            >
-              {generateNumberOptions(0, 10)}
-            </select>
+            />
           </div>
           <div className="form-group">
-            <label htmlFor="pg1AnnualIncomePrimaryParent">Annual Income (Primary Parent):</label>
+            <label htmlFor="pg1AnnualIncomePrimaryParent">Annual Income - Primary Parent:</label>
             <input
               type="number"
               id="pg1AnnualIncomePrimaryParent"
@@ -598,7 +438,7 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="pg1AnnualIncomeOtherParent">Annual Income (Other Parent):</label>
+            <label htmlFor="pg1AnnualIncomeOtherParent">Annual Income - Other Parent:</label>
             <input
               type="number"
               id="pg1AnnualIncomeOtherParent"
@@ -610,7 +450,7 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="pg1AnnualBenefits">Annual Benefits:</label>
+            <label htmlFor="pg1AnnualBenefits">Annual Benefits (e.g., social security):</label>
             <input
               type="number"
               id="pg1AnnualBenefits"
@@ -634,7 +474,31 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="pg1CashSavings">Cash Savings:</label>
+            <label htmlFor="otherPropertiesNetIncome">Other Properties Net Income:</label>
+            <input
+              type="number"
+              id="otherPropertiesNetIncome"
+              name="otherPropertiesNetIncome"
+              min="0"
+              step="0.01"
+              value={formData.otherPropertiesNetIncome}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="assetsAnotherCountryNetIncome">Assets in Another Country Net Income:</label>
+            <input
+              type="number"
+              id="assetsAnotherCountryNetIncome"
+              name="assetsAnotherCountryNetIncome"
+              min="0"
+              step="0.01"
+              value={formData.assetsAnotherCountryNetIncome}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="pg1CashSavings">Cash & Savings:</label>
             <input
               type="number"
               id="pg1CashSavings"
@@ -646,7 +510,7 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="pg1OtherAssets">Other Assets (e.g., investments, non-retirement accounts):</label>
+            <label htmlFor="pg1OtherAssets">Other Liquid Assets (e.g., stocks, bonds):</label>
             <input
               type="number"
               id="pg1OtherAssets"
@@ -682,7 +546,7 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="pg1AnnualDebtPayment">Annual Debt Payment (Parent 1):</label>
+            <label htmlFor="pg1AnnualDebtPayment">Annual Debt Payment (excluding mortgage):</label>
             <input
               type="number"
               id="pg1AnnualDebtPayment"
@@ -693,33 +557,10 @@ function App() {
               onChange={handleChange}
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="otherPropertiesNetIncome">Net Income from Other Properties:</label>
-            <input
-              type="number"
-              id="otherPropertiesNetIncome"
-              name="otherPropertiesNetIncome"
-              step="0.01"
-              value={formData.otherPropertiesNetIncome}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="assetsAnotherCountryNetIncome">Net Income from Assets in Another Country:</label>
-            <input
-              type="number"
-              id="assetsAnotherCountryNetIncome"
-              name="assetsAnotherCountryNetIncome"
-              step="0.01"
-              value={formData.assetsAnotherCountryNetIncome}
-              onChange={handleChange}
-            />
-          </div>
         </section>
 
         <section className="form-section">
           <h2>Page 2: Student & Family Expenses ({formData.ncCurrencySymbol})</h2>
-          <h3>Student's Resources</h3>
           <div className="form-group">
             <label htmlFor="pg2StudentAnnualIncome">Student's Annual Income:</label>
             <input
@@ -733,7 +574,7 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="pg2StudentCashSavings">Student's Cash Savings:</label>
+            <label htmlFor="pg2StudentCashSavings">Student's Cash & Savings:</label>
             <input
               type="number"
               id="pg2StudentCashSavings"
@@ -745,7 +586,7 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="pg2StudentOtherAssets">Student's Other Assets:</label>
+            <label htmlFor="pg2StudentOtherAssets">Student's Other Liquid Assets:</label>
             <input
               type="number"
               id="pg2StudentOtherAssets"
@@ -756,8 +597,6 @@ function App() {
               onChange={handleChange}
             />
           </div>
-
-          <h3>Family Expenses</h3>
           <div className="form-group">
             <label htmlFor="pg2ParentsAnnualDiscretionaryExpenditure">Parents' Annual Discretionary Expenditure:</label>
             <input
@@ -771,7 +610,7 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="pg2OtherHouseholdCosts">Other Household Costs (if parents live in different homes):</label>
+            <label htmlFor="pg2OtherHouseholdCosts">Other Annual Household Costs (e.g., utilities):</label>
             <input
               type="number"
               id="pg2OtherHouseholdCosts"
@@ -780,11 +619,10 @@ function App() {
               step="0.01"
               value={formData.pg2OtherHouseholdCosts}
               onChange={handleChange}
-              disabled={formData.parentsLiveSameHome}
             />
           </div>
           <div className="form-group">
-            <label htmlFor="pg2AnnualDebtPayment">Annual Debt Payment (Parent 2):</label>
+            <label htmlFor="pg2AnnualDebtPayment">Additional Annual Debt Payments (not in Page 1):</label>
             <input
               type="number"
               id="pg2AnnualDebtPayment"
@@ -796,7 +634,7 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="annualLoanRepayment">Annual Loan Repayment:</label>
+            <label htmlFor="annualLoanRepayment">Annual Loan Repayment (for current loans):</label>
             <input
               type="number"
               id="annualLoanRepayment"
@@ -820,7 +658,7 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="potentialLoanAmount">Potential Loan Amount:</label>
+            <label htmlFor="potentialLoanAmount">Potential Loan Amount (Family willing to take):</label>
             <input
               type="number"
               id="potentialLoanAmount"
@@ -834,9 +672,9 @@ function App() {
         </section>
 
         <section className="form-section">
-          <h2>Page 3: UWC Specifics (USD)</h2>
+          <h2>Page 3: UWC Specifics</h2>
           <div className="form-group">
-            <label htmlFor="annualTravelCostUSD">Annual Travel Cost (to/from UWC):</label>
+            <label htmlFor="annualTravelCostUSD">Annual Travel Cost (USD):</label>
             <input
               type="number"
               id="annualTravelCostUSD"
@@ -848,7 +686,7 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="ncScholarshipProvidedTwoYearsUSD">National Committee Scholarship Provided (2 Years):</label>
+            <label htmlFor="ncScholarshipProvidedTwoYearsUSD">National Committee Scholarship Provided (2 Years, USD):</label>
             <input
               type="number"
               id="ncScholarshipProvidedTwoYearsUSD"
@@ -859,95 +697,62 @@ function App() {
               onChange={handleChange}
             />
           </div>
+          <div className="form-group">
+            <label htmlFor="ncCurrentFeesPayableAnnual">Current Annual Fees Payable (in {formData.ncCurrencySymbol}):</label>
+            <input
+              type="number"
+              id="ncCurrentFeesPayableAnnual"
+              name="ncCurrentFeesPayableAnnual"
+              min="0"
+              step="0.01"
+              value={formData.ncCurrentFeesPayableAnnual}
+              onChange={handleChange}
+            />
+          </div>
         </section>
 
-        <div className="button-group">
-          <button
-            type="submit"
-            className="button button-primary"
-          >
-            <FaCalculator style={{ marginRight: '8px' }} />
-            Calculate Assessment
-          </button>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="button button-danger"
-          >
-            <FaRedo style={{ marginRight: '8px' }} />
-            Reset Form
-          </button>
-        </div>
+        <button type="button" onClick={handleReset} className="reset-button">
+          Reset Form
+        </button>
       </form>
 
       <section className="results-section">
-        <h2>Assessment Results</h2>
-        <div ref={pdfContentRef} className="results-content">
-          <h3 style={{ textAlign: 'center' }}>Financial Need Assessment Report</h3>
+        <h2>Overall Financial Summary (USD)</h2>
+        <p><strong>Annual Funds Available for Fees:</strong> ${allSchoolResults.annualFundsAvailableForFeesUSD}</p>
+        <p><strong>Current Annual Fees Payable (Converted):</strong> ${allSchoolResults.ncCurrentFeesPayableAnnualUSD}</p>
 
-          <section className="results-summary-section">
-            <h4>General Application Details</h4>
-            <p><strong>National Currency Symbol:</strong> {allSchoolResults.ncCurrencySymbol}</p>
-            <p><strong>Exchange Rate (1 USD = X NC Currency):</strong> {allSchoolResults.exchangeRateToUSD}</p>
-            <p><strong>Exchange Rate Date:</strong> {allSchoolResults.exchangeRateDate || 'N/A'}</p>
-            <p><strong>Annual Return on Assets (%):</strong> {(formData.annualReturnOnAssets * 100).toFixed(2)}%</p>
-          </section>
-
-          <section className="results-summary-section">
-            <h4>Family Financial Summary (USD)</h4>
-            <p><strong>Total Annual Income:</strong> ${allSchoolResults.totalAnnualIncome}</p>
-            <p><strong>Total Cash Assets:</strong> ${allSchoolResults.totalCashAssets}</p>
-            <p><strong>Annual Return on Family Assets:</strong> ${allSchoolResults.annualReturnOnFamilyAssets}</p>
-            <p><strong>Home Equity:</strong> ${allSchoolResults.homeEquity}</p>
-            <p><strong>UWC Family Contribution Required (Formula Max):</strong> ${allSchoolResults.uwcFamilyContributionRequiredUSD}</p>
-            <p><strong>Family Anticipated Annual Savings:</strong> ${allSchoolResults.familyAnticipatedAnnualSavings}</p>
-            <p><strong>Potential Loan Amount:</strong> ${allSchoolResults.potentialLoanAmount}</p>
-            <p><strong>Annual Funds Available for Fees (Estimated):</strong> ${allSchoolResults.annualFundsAvailableForFeesUSD}</p>
-          </section>
-
-          <section>
-            <h4>School-Specific Assessment Breakdown (Ranked by Affordability)</h4>
-            {allSchoolResults.allSchoolResults.map((school, index) => (
-              <div
-                key={index}
-                className={`school-result-card affordability-${school.affordabilityStatus}`}
-              >
-                <h5>
-                  <span className="school-rank">{index + 1}.</span> {school.schoolName}
-                </h5>
-                <p><strong>Affordability Status:</strong> <span style={{ color: school.affordabilityStatus === 'green' ? '#2ecc71' : school.affordabilityStatus === 'orange' ? '#f39c12' : '#e74c3c', fontWeight: 'bold' }}>{school.affordabilityStatus.charAt(0).toUpperCase() + school.affordabilityStatus.slice(1)}</span></p>
-                <p><strong>Annual Fees:</strong> ${school.schoolAnnualFeesUSD}</p>
-                <p><strong>Avg. Additional Costs:</strong> ${school.schoolAvgAdditionalCostsUSD}</p>
-                <p><strong>Annual Travel Cost:</strong> ${getNum(formData.annualTravelCostUSD).toFixed(2)}</p>
-                <p><strong>Total Gross Annual Cost of Attendance:</strong> ${school.totalGrossAnnualCostOfAttendanceUSD}</p>
-                <p><strong>Total Need:</strong> ${school.totalNeedUSD}</p>
-                <p><strong>UWC Needs-Based Scholarship:</strong> ${school.uwcNeedsBasedScholarshipUSD} ({school.uwcNeedsBasedScholarshipPercentage}%)</p>
-                <p><strong>Net UWC Annual Fees (Family Pays Annually):</strong> ${school.netUWCAnnualFeesUSD}</p>
-                <p><strong>Suggested Family Contribution (2 Yrs):</strong> ${school.suggestedFamilyContributionTwoYearsUSD}</p>
-                <p><strong>National Committee Scholarship Provided (2 Yrs):</strong> ${getNum(formData.ncScholarshipProvidedTwoYearsUSD).toFixed(2)}</p>
-                <p><strong>Combined NC & Family Contribution (2 Yrs):</strong> ${school.combinedNcAndFamilyContributionTwoYearsUSD}</p>
-                <p><strong>Total Cost of Attendance (2 Yrs):</strong> ${school.totalCostOfAttendanceTwoYearsUSD}</p>
-                <p><strong>Combined Contribution Meets Expectation:</strong> {school.combinedContributionMeetsExpectation ? 'Yes' : 'No'}</p>
-                <p><strong>Amount Payable By School Annually:</strong> ${school.amountPayableBySchoolAnnual}</p>
-                <p><strong>Amount Payable By Family Annually:</strong> ${school.amountPayableByFamilyAnnual}</p>
-                <p><strong>Percentage Payable By School:</strong> {school.percentagePayableBySchool}%</p>
-                <p><strong>Percentage Payable By Family:</strong> {school.percentagePayableByFamily}%</p>
-              </div>
+        <h2>School-Specific Assessment Results (USD)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>School Name</th>
+              <th>Total Annual Cost</th>
+              <th>Assessed Family Contribution</th>
+              <th>Actual Family Contribution (After Current Fees Min)</th>
+              <th>UWC Needs-Based Scholarship</th>
+              <th>Actual Family Payment Required</th>
+              <th>School % Covered</th>
+              <th>Family % Covered</th>
+              <th>Affordability Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allSchoolResults.allSchoolResults.map((result) => (
+              <tr key={result.schoolName}>
+                <td>{result.schoolName}</td>
+                <td>${result.totalGrossAnnualCostOfAttendanceUSD}</td>
+                <td>${result.uwcFamilyContributionRequiredUSD}</td>
+                <td>${result.actualAnnualFamilyContributionUSD}</td>
+                <td>${result.uwcNeedsBasedScholarshipUSD}</td>
+                <td>${result.finalFamilyPaymentRequiredAnnualUSD}</td>
+                <td>{result.percentagePayableBySchool}%</td>
+                <td>{result.percentagePayableByFamily}%</td>
+                <td className={`status-${result.affordabilityStatus}`}>{result.affordabilityStatus.toUpperCase()}</td>
+              </tr>
             ))}
-          </section>
-        </div>
+          </tbody>
+        </table>
       </section>
-
-      <div className="button-group">
-        <button
-          type="button"
-          onClick={handleDownloadPdf}
-          className="button button-success"
-        >
-          <FaDownload style={{ marginRight: '8px' }} />
-          Download Assessment PDF
-        </button>
-      </div>
     </div>
   );
 }
