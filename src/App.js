@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react'; // Added useRef here
+import React, { useState, useMemo, useRef } from 'react';
 import html2pdf from 'html2pdf.js'; // Import html2pdf.js
 
 // Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
@@ -82,7 +82,7 @@ function App() {
     pg1OtherAssets: 0,
     pg1HomeMarketValue: 0,
     pg1HomeOutstandingMortgage: 0,
-    pg1TotalOutstandingDebt: 0,
+    // Removed pg1TotalOutstandingDebt as it was unused
     pg1AnnualDebtPayment: 0,
     otherPropertiesNetIncome: 0,
     assetsAnotherCountryNetIncome: 0,
@@ -93,7 +93,7 @@ function App() {
     pg2StudentOtherAssets: 0,
     pg2ParentsAnnualDiscretionaryExpenditure: 0,
     pg2OtherHouseholdCosts: 0,
-    pg2TotalOutstandingDebt: 0,
+    // Removed pg2TotalOutstandingDebt as it was unused
     pg2AnnualDebtPayment: 0,
     annualLoanRepayment: 0,
     familyAnticipatedAnnualSavings: 0,
@@ -184,7 +184,6 @@ function App() {
       pg1OtherAssets,
       pg1HomeMarketValue,
       pg1HomeOutstandingMortgage,
-      pg1TotalOutstandingDebt,
       pg1AnnualDebtPayment,
       otherPropertiesNetIncome,
       assetsAnotherCountryNetIncome,
@@ -195,7 +194,6 @@ function App() {
       pg2StudentOtherAssets,
       pg2ParentsAnnualDiscretionaryExpenditure,
       pg2OtherHouseholdCosts,
-      pg2TotalOutstandingDebt,
       pg2AnnualDebtPayment,
       annualLoanRepayment,
       familyAnticipatedAnnualSavings,
@@ -394,7 +392,10 @@ function App() {
       potentialLoanAmount: getNum(potentialLoanAmount).toFixed(2),
       allSchoolResults: calculatedSchoolResults, // <<-- Using the renamed variable here
     };
-  }, [formData]);
+  }, [
+    formData,
+    convertNcToUsd, // Added the missing dependency here
+  ]);
 
   const handleCalculate = (e) => {
     e.preventDefault();
@@ -428,7 +429,7 @@ function App() {
       pg1OtherAssets: 0,
       pg1HomeMarketValue: 0,
       pg1HomeOutstandingMortgage: 0,
-      pg1TotalOutstandingDebt: 0,
+      // Removed pg1TotalOutstandingDebt
       pg1AnnualDebtPayment: 0,
       otherPropertiesNetIncome: 0,
       assetsAnotherCountryNetIncome: 0,
@@ -438,7 +439,7 @@ function App() {
       pg2StudentOtherAssets: 0,
       pg2ParentsAnnualDiscretionaryExpenditure: 0,
       pg2OtherHouseholdCosts: 0,
-      pg2TotalOutstandingDebt: 0,
+      // Removed pg2TotalOutstandingDebt
       pg2AnnualDebtPayment: 0,
       annualLoanRepayment: 0,
       familyAnticipatedAnnualSavings: 0,
@@ -689,19 +690,7 @@ function App() {
               style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1TotalOutstandingDebt" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Total Outstanding Debt (Parent 1):</label>
-            <input
-              type="number"
-              id="pg1TotalOutstandingDebt"
-              name="pg1TotalOutstandingDebt"
-              min="0"
-              step="0.01"
-              value={formData.pg1TotalOutstandingDebt}
-              onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-            />
-          </div>
+          {/* Removed pg1TotalOutstandingDebt as it was unused */}
           <div style={{ marginBottom: '15px' }}>
             <label htmlFor="pg1AnnualDebtPayment" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Debt Payment (Parent 1):</label>
             <input
@@ -812,19 +801,7 @@ function App() {
               style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: formData.parentsLiveSameHome ? '#e9ecef' : 'white' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg2TotalOutstandingDebt" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Total Outstanding Debt (Parent 2):</label>
-            <input
-              type="number"
-              id="pg2TotalOutstandingDebt"
-              name="pg2TotalOutstandingDebt"
-              min="0"
-              step="0.01"
-              value={formData.pg2TotalOutstandingDebt}
-              onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-            />
-          </div>
+          {/* Removed pg2TotalOutstandingDebt as it was unused */}
           <div style={{ marginBottom: '15px' }}>
             <label htmlFor="pg2AnnualDebtPayment" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Debt Payment (Parent 2):</label>
             <input
