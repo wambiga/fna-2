@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useRef, useCallback } from 'react'; // Added useCallback
-import html2pdf from 'html2pdf.js'; // Import html2pdf.js
+import React, { useState, useMemo, useRef, useCallback } from 'react';
+import html2pdf from 'html2pdf.js';
+import './App.css'; // Import the new CSS file
+import { FaCalculator, FaRedo, FaDownload } from 'react-icons/fa'; // Import icons
 
 // Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
-// Note: 'annualFeesUSD' and 'avgAdditionalCostsUSD' are taken from the USD converted columns in the CSV snippet.
-// This list now includes 18 UWC schools for comprehensive assessment.
 const schoolCostsData = [
   { name: 'UWC South East Asia', annualFeesUSD: 68249, avgAdditionalCostsUSD: 7918.91 },
   { name: 'Li Po Chun United World College of Hong Kong', annualFeesUSD: 49883, avgAdditionalCostsUSD: 2613.76 },
@@ -11,21 +11,21 @@ const schoolCostsData = [
   { name: 'UWC Costa Rica', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3140 },
   { name: 'Waterford Kamhlaba UWC of Southern Africa', annualFeesUSD: 30925, avgAdditionalCostsUSD: 2270.62 },
   { name: 'UWC Dilijan', annualFeesUSD: 44000, avgAdditionalCostsUSD: 800 },
-  { name: 'UWC Atlantic', annualFeesUSD: 42000, avgAdditionalCostsUSD: 3800 }, // Estimated USD conversion
-  { name: 'UWC Mahindra College', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000 }, // Estimated USD conversion
-  { name: 'UWC Pearson College', annualFeesUSD: 45000, avgAdditionalCostsUSD: 4200 }, // Estimated USD conversion
-  { name: 'UWC Changshu China', annualFeesUSD: 46000, avgAdditionalCostsUSD: 3500 }, // Estimated USD conversion
-  { name: 'UWC Red Cross Nordic', annualFeesUSD: 41000, avgAdditionalCostsUSD: 3000 }, // Estimated USD conversion
-  { name: 'UWC Adriatic', annualFeesUSD: 39000, avgAdditionalCostsUSD: 3200 }, // Estimated USD conversion
-  { name: 'UWC ISAK Japan', annualFeesUSD: 48000, avgAdditionalCostsUSD: 4000 }, // Estimated USD conversion
-  { name: 'UWC Thailand', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3500 }, // Estimated USD conversion
-  { name: 'UWC Mostar', annualFeesUSD: 38000, avgAdditionalCostsUSD: 2800 }, // Estimated USD conversion
-  { name: 'UWC Maastricht', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000 }, // Estimated USD conversion
-  { name: 'UWC East Africa', annualFeesUSD: 47000, avgAdditionalCostsUSD: 4000 }, // Estimated USD conversion
-  { name: 'UWC USA', annualFeesUSD: 60000, avgAdditionalCostsUSD: 5000 }, // Example, assuming a US-based UWC
+  { name: 'UWC Atlantic', annualFeesUSD: 42000, avgAdditionalCostsUSD: 3800 },
+  { name: 'UWC Mahindra College', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000 },
+  { name: 'UWC Pearson College', annualFeesUSD: 45000, avgAdditionalCostsUSD: 4200 },
+  { name: 'UWC Changshu China', annualFeesUSD: 46000, avgAdditionalCostsUSD: 3500 },
+  { name: 'UWC Red Cross Nordic', annualFeesUSD: 41000, avgAdditionalCostsUSD: 3000 },
+  { name: 'UWC Adriatic', annualFeesUSD: 39000, avgAdditionalCostsUSD: 3200 },
+  { name: 'UWC ISAK Japan', annualFeesUSD: 48000, avgAdditionalCostsUSD: 4000 },
+  { name: 'UWC Thailand', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3500 },
+  { name: 'UWC Mostar', annualFeesUSD: 38000, avgAdditionalCostsUSD: 2800 },
+  { name: 'UWC Maastricht', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000 },
+  { name: 'UWC East Africa', annualFeesUSD: 47000, avgAdditionalCostsUSD: 4000 },
+  { name: 'UWC USA', annualFeesUSD: 60000, avgAdditionalCostsUSD: 5000 },
 ];
 
-// Embedded data from "FNA Tool.xlsx - Currency list.csv" (a subset for demonstration)
+// Embedded data from "FNA Tool.xlsx - Currency list.csv"
 const currencyList = [
   { abbr: 'USD', symbol: '$' },
   { abbr: 'KES', symbol: 'KSh' },
@@ -40,26 +40,26 @@ const currencyList = [
   { abbr: 'CHF', symbol: 'CHF' },
   { abbr: 'CNY', symbol: '¥' },
   { abbr: 'BRL', symbol: 'R$' },
-  { abbr: 'ZAR', symbol: 'R' }, // South African Rand
-  { abbr: 'NGN', symbol: '₦' }, // Nigerian Naira
-  { abbr: 'EGP', symbol: 'E£' }, // Egyptian Pound
-  { abbr: 'MXN', symbol: '$' }, // Mexican Peso
-  { abbr: 'RUB', symbol: '₽' }, // Russian Ruble
-  { abbr: 'TRY', symbol: '₺' }, // Turkish Lira
-  { abbr: 'PKR', symbol: '₨' }, // Pakistani Rupee
-  { abbr: 'BDT', symbol: '৳' }, // Bangladeshi Taka
-  { abbr: 'PHP', symbol: '₱' }, // Philippine Peso
-  { abbr: 'IDR', symbol: 'Rp' }, // Indonesian Rupiah
-  { abbr: 'THB', symbol: '฿' }, // Thai Baht
-  { abbr: 'VND', symbol: '₫' }, // Vietnamese Dong
-  { abbr: 'PLN', symbol: 'zł' }, // Polish Zloty
-  { abbr: 'SEK', symbol: 'kr' }, // Swedish Krona
-  { abbr: 'DKK', symbol: 'kr' }, // Danish Krone
-  { abbr: 'NOK', symbol: 'kr' }, // Norwegian Krone
-  { abbr: 'CZK', symbol: 'Kč' }, // Czech Koruna
-  { abbr: 'HUF', symbol: 'Ft' }, // Hungarian Forint
-  { abbr: 'ILS', symbol: '₪' }, // Israeli New Shekel
-  { abbr: 'KRW', symbol: '₩' }, // South Korean Won
+  { abbr: 'ZAR', symbol: 'R' },
+  { abbr: 'NGN', symbol: '₦' },
+  { abbr: 'EGP', symbol: 'E£' },
+  { abbr: 'MXN', symbol: '$' },
+  { abbr: 'RUB', symbol: '₽' },
+  { abbr: 'TRY', symbol: '₺' },
+  { abbr: 'PKR', symbol: '₨' },
+  { abbr: 'BDT', symbol: '৳' },
+  { abbr: 'PHP', symbol: '₱' },
+  { abbr: 'IDR', symbol: 'Rp' },
+  { abbr: 'THB', symbol: '฿' },
+  { abbr: 'VND', symbol: '₫' },
+  { abbr: 'PLN', symbol: 'zł' },
+  { abbr: 'SEK', symbol: 'kr' },
+  { abbr: 'DKK', symbol: 'kr' },
+  { abbr: 'NOK', symbol: 'kr' },
+  { abbr: 'CZK', symbol: 'Kč' },
+  { abbr: 'HUF', symbol: 'Ft' },
+  { abbr: 'ILS', symbol: '₪' },
+  { abbr: 'KRW', symbol: '₩' },
 ];
 
 
@@ -68,7 +68,7 @@ function App() {
     ncCurrencySymbol: '',
     exchangeRateToUSD: 0,
     exchangeRateDate: '',
-    annualReturnOnAssets: 0.025, // Adjusted to 2.5% as per discussion
+    annualReturnOnAssets: 0.025,
 
     // Page 1: Family Income & Assets
     parentsLiveSameHome: true,
@@ -102,10 +102,7 @@ function App() {
     ncScholarshipProvidedTwoYearsUSD: 0,
   });
 
-  // State for input errors
   const [errors, setErrors] = useState({});
-
-  // Ref for the content you want to convert to PDF
   const pdfContentRef = useRef(null);
 
   const handleChange = (e) => {
@@ -115,7 +112,7 @@ function App() {
     if (type === 'number') {
       newValue = parseFloat(value);
       if (isNaN(newValue)) {
-        newValue = ''; // Allow empty string for temporary user input
+        newValue = '';
       }
     } else if (type === 'checkbox') {
       newValue = checked;
@@ -126,7 +123,6 @@ function App() {
       [name]: newValue,
     }));
 
-    // Clear error for this field when it's being edited
     if (errors[name]) {
       setErrors((prevErrors) => {
         const newErrors = { ...prevErrors };
@@ -141,15 +137,13 @@ function App() {
     return isNaN(num) ? 0 : num;
   };
 
-  // Helper function to convert NC currency to USD - now wrapped in useCallback
   const convertNcToUsd = useCallback((valueInNcCurrency, exchangeRate) => {
     if (exchangeRate <= 0) {
-      return 0; // Prevent division by zero or negative rates
+      return 0;
     }
     return getNum(valueInNcCurrency) / getNum(exchangeRate);
-  }, []); // Empty dependency array means this function is memoized and stable
+  }, []);
 
-  // Main financial need calculation logic, memoized for performance
   const allSchoolResults = useMemo(() => {
     const {
       ncCurrencySymbol,
@@ -189,7 +183,6 @@ function App() {
       ncScholarshipProvidedTwoYearsUSD,
     } = formData;
 
-    // Defensive check: If exchange rate is not valid, return a default state to prevent errors
     if (getNum(exchangeRateToUSD) <= 0) {
       return {
         ncCurrencySymbol,
@@ -230,8 +223,6 @@ function App() {
       };
     }
 
-    // --- Calculations for Family Contribution (these are constant across all schools for one applicant) ---
-
     const totalHouseholdMembers = getNum(pg1NumberIndependentAdults) + getNum(pg1NumberFinancialDependents);
 
     const ncIncomePrimaryParentUSD = convertNcToUsd(pg1AnnualIncomePrimaryParent, exchangeRateToUSD);
@@ -264,7 +255,6 @@ function App() {
 
     const totalCashAssets = ncCashSavingsUSD + ncOtherAssetsUSD;
 
-    // This line uses the 'annualReturnOnAssets' value, which is now 0.025 by default
     const annualReturnOnFamilyAssets = totalCashAssets * getNum(annualReturnOnAssets);
 
     const homeEquity = Math.max(0, getNum(pg1HomeMarketValue) - getNum(pg1HomeOutstandingMortgage));
@@ -297,8 +287,7 @@ function App() {
       formula3_estimateCostEducateStudentHome
     );
 
-    // --- Calculations per School ---
-    const calculatedSchoolResults = schoolCostsData.map(school => { // <<-- Renamed this variable
+    const calculatedSchoolResults = schoolCostsData.map(school => {
       const schoolAnnualFeesUSD = school.annualFeesUSD;
       const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
 
@@ -352,7 +341,6 @@ function App() {
       };
     });
 
-    // Return common results and results per school
     return {
       ncCurrencySymbol,
       exchangeRateToUSD,
@@ -373,7 +361,7 @@ function App() {
       potentialLoanAmount: getNum(potentialLoanAmount).toFixed(2),
       allSchoolResults: calculatedSchoolResults,
     };
-  }, [formData, convertNcToUsd]); // Added convertNcToUsd to dependencies
+  }, [formData, convertNcToUsd]);
 
   const handleCalculate = (e) => {
     e.preventDefault();
@@ -427,7 +415,6 @@ function App() {
     setErrors({});
   };
 
-  // Helper to generate options for number dropdowns
   const generateNumberOptions = (start, end) => {
     const options = [];
     for (let i = start; i <= end; i++) {
@@ -436,7 +423,6 @@ function App() {
     return options;
   };
 
-  // New PDF Download Function
   const handleDownloadPdf = () => {
     const content = pdfContentRef.current;
 
@@ -456,21 +442,20 @@ function App() {
     html2pdf().from(content).set(options).save();
   };
 
-
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '800px', margin: 'auto', padding: '20px', backgroundColor: '#ffffff', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
-      <h1 style={{ textAlign: 'center', color: '#333', marginBottom: '30px' }}>Financial Need Analysis Form</h1>
+    <div className="app-container">
+      <h1>Financial Need Analysis Form</h1>
       <form onSubmit={handleCalculate}>
-        <section style={{ marginBottom: '20px', border: '1px solid #e0e0e0', padding: '15px', borderRadius: '8px', backgroundColor: '#fdfdfd' }}>
-          <h2 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>General Information</h2>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="ncCurrencySymbol" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>National Currency Symbol:</label>
+        <section className="form-section">
+          <h2>General Information</h2>
+          <div className="form-group">
+            <label htmlFor="ncCurrencySymbol">National Currency Symbol:</label>
             <select
               id="ncCurrencySymbol"
               name="ncCurrencySymbol"
               value={formData.ncCurrencySymbol}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+              required
             >
               <option value="">Select Currency</option>
               {currencyList.map(currency => (
@@ -480,10 +465,10 @@ function App() {
               ))}
             </select>
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="exchangeRateToUSD" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          <div className="form-group">
+            <label htmlFor="exchangeRateToUSD">
               Exchange Rate (1 USD = X NC Currency):
-              {errors.exchangeRateToUSD && <span style={{ color: 'red', marginLeft: '10px', fontSize: '0.9em' }}>{errors.exchangeRateToUSD}</span>}
+              {errors.exchangeRateToUSD && <span className="error-message">{errors.exchangeRateToUSD}</span>}
             </label>
             <input
               type="number"
@@ -494,22 +479,20 @@ function App() {
               value={formData.exchangeRateToUSD}
               onChange={handleChange}
               required
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="exchangeRateDate" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Exchange Rate Date:</label>
+          <div className="form-group">
+            <label htmlFor="exchangeRateDate">Exchange Rate Date:</label>
             <input
               type="date"
               id="exchangeRateDate"
               name="exchangeRateDate"
               value={formData.exchangeRateDate}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="annualReturnOnAssets" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Return on Assets (%):</label>
+          <div className="form-group">
+            <label htmlFor="annualReturnOnAssets">Annual Return on Assets (%):</label>
             <input
               type="number"
               id="annualReturnOnAssets"
@@ -518,15 +501,14 @@ function App() {
               step="0.01"
               value={formData.annualReturnOnAssets * 100}
               onChange={(e) => handleChange({ ...e, target: { ...e.target, value: parseFloat(e.target.value) / 100 } })}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
         </section>
 
-        <section style={{ marginBottom: '20px', border: '1px solid #e0e0e0', padding: '15px', borderRadius: '8px', backgroundColor: '#fdfdfd' }}>
-          <h2 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>Page 1: Family Income & Assets ({formData.ncCurrencySymbol})</h2>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="parentsLiveSameHome" style={{ display: 'flex', alignItems: 'center', marginBottom: '5px', fontWeight: 'bold' }}>
+        <section className="form-section">
+          <h2>Page 1: Family Income & Assets ({formData.ncCurrencySymbol})</h2>
+          <div className="form-group">
+            <label htmlFor="parentsLiveSameHome" className="checkbox-label">
               Parents live in the same home?
               <input
                 type="checkbox"
@@ -534,36 +516,33 @@ function App() {
                 name="parentsLiveSameHome"
                 checked={formData.parentsLiveSameHome}
                 onChange={handleChange}
-                style={{ marginLeft: '10px' }}
               />
             </label>
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1NumberIndependentAdults" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Number of Independent Adults:</label>
+          <div className="form-group">
+            <label htmlFor="pg1NumberIndependentAdults">Number of Independent Adults:</label>
             <select
               id="pg1NumberIndependentAdults"
               name="pg1NumberIndependentAdults"
               value={formData.pg1NumberIndependentAdults}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             >
               {generateNumberOptions(0, 5)}
             </select>
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1NumberFinancialDependents" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Number of Financial Dependents (excluding student):</label>
+          <div className="form-group">
+            <label htmlFor="pg1NumberFinancialDependents">Number of Financial Dependents (excluding student):</label>
             <select
               id="pg1NumberFinancialDependents"
               name="pg1NumberFinancialDependents"
               value={formData.pg1NumberFinancialDependents}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             >
               {generateNumberOptions(0, 10)}
             </select>
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1AnnualIncomePrimaryParent" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Income (Primary Parent):</label>
+          <div className="form-group">
+            <label htmlFor="pg1AnnualIncomePrimaryParent">Annual Income (Primary Parent):</label>
             <input
               type="number"
               id="pg1AnnualIncomePrimaryParent"
@@ -572,11 +551,10 @@ function App() {
               step="0.01"
               value={formData.pg1AnnualIncomePrimaryParent}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1AnnualIncomeOtherParent" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Income (Other Parent):</label>
+          <div className="form-group">
+            <label htmlFor="pg1AnnualIncomeOtherParent">Annual Income (Other Parent):</label>
             <input
               type="number"
               id="pg1AnnualIncomeOtherParent"
@@ -585,11 +563,10 @@ function App() {
               step="0.01"
               value={formData.pg1AnnualIncomeOtherParent}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1AnnualBenefits" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Benefits:</label>
+          <div className="form-group">
+            <label htmlFor="pg1AnnualBenefits">Annual Benefits:</label>
             <input
               type="number"
               id="pg1AnnualBenefits"
@@ -598,11 +575,10 @@ function App() {
               step="0.01"
               value={formData.pg1AnnualBenefits}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1OtherAnnualIncome" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Other Annual Income:</label>
+          <div className="form-group">
+            <label htmlFor="pg1OtherAnnualIncome">Other Annual Income:</label>
             <input
               type="number"
               id="pg1OtherAnnualIncome"
@@ -611,11 +587,10 @@ function App() {
               step="0.01"
               value={formData.pg1OtherAnnualIncome}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1CashSavings" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Cash Savings:</label>
+          <div className="form-group">
+            <label htmlFor="pg1CashSavings">Cash Savings:</label>
             <input
               type="number"
               id="pg1CashSavings"
@@ -624,11 +599,10 @@ function App() {
               step="0.01"
               value={formData.pg1CashSavings}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1OtherAssets" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Other Assets (e.g., investments, non-retirement accounts):</label>
+          <div className="form-group">
+            <label htmlFor="pg1OtherAssets">Other Assets (e.g., investments, non-retirement accounts):</label>
             <input
               type="number"
               id="pg1OtherAssets"
@@ -637,11 +611,10 @@ function App() {
               step="0.01"
               value={formData.pg1OtherAssets}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1HomeMarketValue" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Home Market Value:</label>
+          <div className="form-group">
+            <label htmlFor="pg1HomeMarketValue">Home Market Value:</label>
             <input
               type="number"
               id="pg1HomeMarketValue"
@@ -650,11 +623,10 @@ function App() {
               step="0.01"
               value={formData.pg1HomeMarketValue}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1HomeOutstandingMortgage" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Home Outstanding Mortgage:</label>
+          <div className="form-group">
+            <label htmlFor="pg1HomeOutstandingMortgage">Home Outstanding Mortgage:</label>
             <input
               type="number"
               id="pg1HomeOutstandingMortgage"
@@ -663,11 +635,10 @@ function App() {
               step="0.01"
               value={formData.pg1HomeOutstandingMortgage}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1AnnualDebtPayment" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Debt Payment (Parent 1):</label>
+          <div className="form-group">
+            <label htmlFor="pg1AnnualDebtPayment">Annual Debt Payment (Parent 1):</label>
             <input
               type="number"
               id="pg1AnnualDebtPayment"
@@ -676,11 +647,10 @@ function App() {
               step="0.01"
               value={formData.pg1AnnualDebtPayment}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="otherPropertiesNetIncome" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Net Income from Other Properties:</label>
+          <div className="form-group">
+            <label htmlFor="otherPropertiesNetIncome">Net Income from Other Properties:</label>
             <input
               type="number"
               id="otherPropertiesNetIncome"
@@ -688,11 +658,10 @@ function App() {
               step="0.01"
               value={formData.otherPropertiesNetIncome}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="assetsAnotherCountryNetIncome" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Net Income from Assets in Another Country:</label>
+          <div className="form-group">
+            <label htmlFor="assetsAnotherCountryNetIncome">Net Income from Assets in Another Country:</label>
             <input
               type="number"
               id="assetsAnotherCountryNetIncome"
@@ -700,16 +669,15 @@ function App() {
               step="0.01"
               value={formData.assetsAnotherCountryNetIncome}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
         </section>
 
-        <section style={{ marginBottom: '20px', border: '1px solid #e0e0e0', padding: '15px', borderRadius: '8px', backgroundColor: '#fdfdfd' }}>
-          <h2 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>Page 2: Student & Family Expenses ({formData.ncCurrencySymbol})</h2>
-          <h3 style={{ color: '#666', marginBottom: '15px' }}>Student's Resources</h3>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg2StudentAnnualIncome" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Student's Annual Income:</label>
+        <section className="form-section">
+          <h2>Page 2: Student & Family Expenses ({formData.ncCurrencySymbol})</h2>
+          <h3>Student's Resources</h3>
+          <div className="form-group">
+            <label htmlFor="pg2StudentAnnualIncome">Student's Annual Income:</label>
             <input
               type="number"
               id="pg2StudentAnnualIncome"
@@ -718,11 +686,10 @@ function App() {
               step="0.01"
               value={formData.pg2StudentAnnualIncome}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg2StudentCashSavings" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Student's Cash Savings:</label>
+          <div className="form-group">
+            <label htmlFor="pg2StudentCashSavings">Student's Cash Savings:</label>
             <input
               type="number"
               id="pg2StudentCashSavings"
@@ -731,11 +698,10 @@ function App() {
               step="0.01"
               value={formData.pg2StudentCashSavings}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg2StudentOtherAssets" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Student's Other Assets:</label>
+          <div className="form-group">
+            <label htmlFor="pg2StudentOtherAssets">Student's Other Assets:</label>
             <input
               type="number"
               id="pg2StudentOtherAssets"
@@ -744,13 +710,12 @@ function App() {
               step="0.01"
               value={formData.pg2StudentOtherAssets}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
 
-          <h3 style={{ color: '#666', marginBottom: '15px', marginTop: '30px' }}>Family Expenses</h3>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg2ParentsAnnualDiscretionaryExpenditure" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Parents' Annual Discretionary Expenditure:</label>
+          <h3>Family Expenses</h3>
+          <div className="form-group">
+            <label htmlFor="pg2ParentsAnnualDiscretionaryExpenditure">Parents' Annual Discretionary Expenditure:</label>
             <input
               type="number"
               id="pg2ParentsAnnualDiscretionaryExpenditure"
@@ -759,11 +724,10 @@ function App() {
               step="0.01"
               value={formData.pg2ParentsAnnualDiscretionaryExpenditure}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg2OtherHouseholdCosts" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Other Household Costs (if parents live in different homes):</label>
+          <div className="form-group">
+            <label htmlFor="pg2OtherHouseholdCosts">Other Household Costs (if parents live in different homes):</label>
             <input
               type="number"
               id="pg2OtherHouseholdCosts"
@@ -772,12 +736,11 @@ function App() {
               step="0.01"
               value={formData.pg2OtherHouseholdCosts}
               onChange={handleChange}
-              disabled={formData.parentsLiveSameHome} // Disable if parents live in the same home
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: formData.parentsLiveSameHome ? '#e9ecef' : 'white' }}
+              disabled={formData.parentsLiveSameHome}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg2AnnualDebtPayment" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Debt Payment (Parent 2):</label>
+          <div className="form-group">
+            <label htmlFor="pg2AnnualDebtPayment">Annual Debt Payment (Parent 2):</label>
             <input
               type="number"
               id="pg2AnnualDebtPayment"
@@ -786,11 +749,10 @@ function App() {
               step="0.01"
               value={formData.pg2AnnualDebtPayment}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="annualLoanRepayment" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Loan Repayment:</label>
+          <div className="form-group">
+            <label htmlFor="annualLoanRepayment">Annual Loan Repayment:</label>
             <input
               type="number"
               id="annualLoanRepayment"
@@ -799,11 +761,10 @@ function App() {
               step="0.01"
               value={formData.annualLoanRepayment}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="familyAnticipatedAnnualSavings" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Family Anticipated Annual Savings:</label>
+          <div className="form-group">
+            <label htmlFor="familyAnticipatedAnnualSavings">Family Anticipated Annual Savings:</label>
             <input
               type="number"
               id="familyAnticipatedAnnualSavings"
@@ -812,11 +773,10 @@ function App() {
               step="0.01"
               value={formData.familyAnticipatedAnnualSavings}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="potentialLoanAmount" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Potential Loan Amount:</label>
+          <div className="form-group">
+            <label htmlFor="potentialLoanAmount">Potential Loan Amount:</label>
             <input
               type="number"
               id="potentialLoanAmount"
@@ -825,15 +785,14 @@ function App() {
               step="0.01"
               value={formData.potentialLoanAmount}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
         </section>
 
-        <section style={{ marginBottom: '20px', border: '1px solid #e0e0e0', padding: '15px', borderRadius: '8px', backgroundColor: '#fdfdfd' }}>
-          <h2 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>Page 3: UWC Specifics (USD)</h2>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="annualTravelCostUSD" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Travel Cost (to/from UWC):</label>
+        <section className="form-section">
+          <h2>Page 3: UWC Specifics (USD)</h2>
+          <div className="form-group">
+            <label htmlFor="annualTravelCostUSD">Annual Travel Cost (to/from UWC):</label>
             <input
               type="number"
               id="annualTravelCostUSD"
@@ -842,11 +801,10 @@ function App() {
               step="0.01"
               value={formData.annualTravelCostUSD}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="ncScholarshipProvidedTwoYearsUSD" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>National Committee Scholarship Provided (2 Years):</label>
+          <div className="form-group">
+            <label htmlFor="ncScholarshipProvidedTwoYearsUSD">National Committee Scholarship Provided (2 Years):</label>
             <input
               type="number"
               id="ncScholarshipProvidedTwoYearsUSD"
@@ -855,49 +813,44 @@ function App() {
               step="0.01"
               value={formData.ncScholarshipProvidedTwoYearsUSD}
               onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
         </section>
 
-        {/* Action Buttons (Calculate & Reset) */}
-        <div style={{ textAlign: 'center', marginTop: '30px' }}>
+        <div className="button-group">
           <button
             type="submit"
-            style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', marginRight: '10px' }}
+            className="button button-primary"
           >
+            <FaCalculator style={{ marginRight: '8px' }} />
             Calculate Assessment
           </button>
           <button
             type="button"
             onClick={handleReset}
-            style={{ padding: '10px 20px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px' }}
+            className="button button-danger"
           >
+            <FaRedo style={{ marginRight: '8px' }} />
             Reset Form
           </button>
         </div>
       </form>
 
-      {/* --- Assessment Results Display Section (now wrapped for PDF export) --- */}
-      <section style={{ marginTop: '30px', border: '1px solid #e0e0e0', padding: '15px', borderRadius: '8px', backgroundColor: '#fdfdfd' }}>
-        <h2 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>Assessment Results</h2>
+      <section className="results-section">
+        <h2>Assessment Results</h2>
+        <div ref={pdfContentRef} className="results-content">
+          <h3 style={{ textAlign: 'center' }}>Financial Need Assessment Report</h3>
 
-        {/* This div is the key for PDF content, attached with ref={pdfContentRef} */}
-        <div ref={pdfContentRef} style={{ padding: '10px', backgroundColor: '#fff', fontSize: '12px', lineHeight: '1.6' }}>
-          <h3 style={{ textAlign: 'center', color: '#333', marginBottom: '20px', fontSize: '18px' }}>Financial Need Assessment Report</h3>
-
-          {/* General Information for PDF */}
-          <section style={{ marginBottom: '15px', padding: '10px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-            <h4 style={{ color: '#0056b3', marginBottom: '10px', fontSize: '14px' }}>General Application Details</h4>
+          <section className="results-summary-section">
+            <h4>General Application Details</h4>
             <p><strong>National Currency Symbol:</strong> {allSchoolResults.ncCurrencySymbol}</p>
             <p><strong>Exchange Rate (1 USD = X NC Currency):</strong> {allSchoolResults.exchangeRateToUSD}</p>
             <p><strong>Exchange Rate Date:</strong> {allSchoolResults.exchangeRateDate || 'N/A'}</p>
             <p><strong>Annual Return on Assets (%):</strong> {(formData.annualReturnOnAssets * 100).toFixed(2)}%</p>
           </section>
 
-          {/* Family Income & Assets Summary */}
-          <section style={{ marginBottom: '15px', padding: '10px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-            <h4 style={{ color: '#0056b3', marginBottom: '10px', fontSize: '14px' }}>Family Financial Summary (USD)</h4>
+          <section className="results-summary-section">
+            <h4>Family Financial Summary (USD)</h4>
             <p><strong>Total Annual Income:</strong> ${allSchoolResults.totalAnnualIncome}</p>
             <p><strong>Total Cash Assets:</strong> ${allSchoolResults.totalCashAssets}</p>
             <p><strong>Annual Return on Family Assets:</strong> ${allSchoolResults.annualReturnOnFamilyAssets}</p>
@@ -907,12 +860,11 @@ function App() {
             <p><strong>Potential Loan Amount:</strong> ${allSchoolResults.potentialLoanAmount}</p>
           </section>
 
-          {/* School-Specific Results */}
           <section>
-            <h4 style={{ color: '#0056b3', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px', fontSize: '16px' }}>School-Specific Assessment Breakdown</h4>
+            <h4>School-Specific Assessment Breakdown</h4>
             {allSchoolResults.allSchoolResults.map((school, index) => (
-              <div key={index} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#fcfcfc' }}>
-                <h5 style={{ color: '#444', marginBottom: '10px', fontSize: '14px' }}>{school.schoolName}</h5>
+              <div key={index} className="school-result-card">
+                <h5>{school.schoolName}</h5>
                 <p><strong>Annual Fees:</strong> ${school.schoolAnnualFeesUSD}</p>
                 <p><strong>Avg. Additional Costs:</strong> ${school.schoolAvgAdditionalCostsUSD}</p>
                 <p><strong>Annual Travel Cost:</strong> ${formData.annualTravelCostUSD.toFixed(2)}</p>
@@ -935,13 +887,13 @@ function App() {
         </div>
       </section>
 
-      {/* New PDF Download Button */}
-      <div style={{ textAlign: 'center', marginTop: '20px' }}>
+      <div className="button-group">
         <button
           type="button"
           onClick={handleDownloadPdf}
-          style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', marginLeft: '10px' }}
+          className="button button-success"
         >
+          <FaDownload style={{ marginRight: '8px' }} />
           Download Assessment PDF
         </button>
       </div>

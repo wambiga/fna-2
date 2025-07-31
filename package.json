@@ -10,9 +10,9 @@
     "html2pdf.js": "^0.10.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-scripts": "^5.0.0",
+    "react-icons": "^5.5.0",
+    "react-scripts": "^5.0.1",
     "web-vitals": "^2.1.4"
-    
   },
   "scripts": {
     "start": "react-scripts start",
