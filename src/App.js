@@ -214,7 +214,7 @@ function App() {
           combinedNcAndFamilyContributionTwoYearsUSD: '0.00',
           totalCostOfAttendanceTwoYearsUSD: '0.00',
           contributionStatus: 'N/A',
-          contributionColor: 'black',
+          contributionColor: 'grey',
           amountPayableBySchoolAnnual: '0.00',
           amountPayableByFamilyAnnual: '0.00',
           percentagePayableBySchool: '0.00',
@@ -312,13 +312,13 @@ function App() {
 
       if (shortfall <= 0) {
         contributionStatus = 'Contribution Meets or Exceeds Cost';
-        contributionColor = 'green';
+        contributionColor = '#d4edda'; // Green for success
       } else if (shortfall <= 10000) {
         contributionStatus = `Shortfall of $${shortfall.toFixed(2)}`;
-        contributionColor = 'orange';
+        contributionColor = '#fff3cd'; // Orange for warning
       } else {
         contributionStatus = `Shortfall of $${shortfall.toFixed(2)}`;
-        contributionColor = 'red';
+        contributionColor = '#f8d7da'; // Red for danger
       }
 
       const amountPayableBySchoolAnnual = uwcNeedsBasedScholarshipUSD;
@@ -932,7 +932,16 @@ function App() {
           <section>
             <h4 style={{ color: '#0056b3', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px', fontSize: '16px' }}>School-Specific Assessment Breakdown</h4>
             {allSchoolResults.allSchoolResults.map((school, index) => (
-              <div key={index} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#fcfcfc' }}>
+              <div
+                key={index}
+                style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  border: `1px solid ${school.contributionColor}`,
+                  borderRadius: '8px',
+                  backgroundColor: school.contributionColor,
+                }}
+              >
                 <h5 style={{ color: '#444', marginBottom: '10px', fontSize: '14px' }}>{school.schoolName}</h5>
                 <p><strong>Annual Fees:</strong> ${school.schoolAnnualFeesUSD}</p>
                 <p><strong>Avg. Additional Costs:</strong> ${school.schoolAvgAdditionalCostsUSD}</p>
@@ -946,8 +955,8 @@ function App() {
                 <p><strong>Combined NC & Family Contribution (2 Yrs):</strong> ${school.combinedNcAndFamilyContributionTwoYearsUSD}</p>
                 <p><strong>Total Cost of Attendance (2 Yrs):</strong> ${school.totalCostOfAttendanceTwoYearsUSD}</p>
                 <p>
-                  <strong>Contribution Status: </strong>
-                  <span style={{ color: school.contributionColor, fontWeight: 'bold' }}>
+                  <strong>Affordability Status: </strong>
+                  <span style={{ fontWeight: 'bold' }}>
                     {school.contributionStatus}
                   </span>
                 </p>
