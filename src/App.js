@@ -1,9 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
-import html2pdf from 'html2pdf.js'; // Import html2pdf.js
+import html2pdf from 'html2pdf.js';
 
-// Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
-// Note: 'annualFeesUSD' and 'avgAdditionalCostsUSD' are taken from the USD converted columns in the CSV snippet.
-// This list now includes 18 UWC schools for comprehensive assessment.
 const schoolCostsData = [
   { name: 'UWC South East Asia', annualFeesUSD: 68249, avgAdditionalCostsUSD: 7918.91 },
   { name: 'Li Po Chun United World College of Hong Kong', annualFeesUSD: 49883, avgAdditionalCostsUSD: 2613.76 },
@@ -11,21 +8,20 @@ const schoolCostsData = [
   { name: 'UWC Costa Rica', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3140 },
   { name: 'Waterford Kamhlaba UWC of Southern Africa', annualFeesUSD: 30925, avgAdditionalCostsUSD: 2270.62 },
   { name: 'UWC Dilijan', annualFeesUSD: 44000, avgAdditionalCostsUSD: 800 },
-  { name: 'UWC Atlantic', annualFeesUSD: 42000, avgAdditionalCostsUSD: 3800 }, // Estimated USD conversion
-  { name: 'UWC Mahindra College', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000 }, // Estimated USD conversion
-  { name: 'UWC Pearson College', annualFeesUSD: 45000, avgAdditionalCostsUSD: 4200 }, // Estimated USD conversion
-  { name: 'UWC Changshu China', annualFeesUSD: 46000, avgAdditionalCostsUSD: 3500 }, // Estimated USD conversion
-  { name: 'UWC Red Cross Nordic', annualFeesUSD: 41000, avgAdditionalCostsUSD: 3000 }, // Estimated USD conversion
-  { name: 'UWC Adriatic', annualFeesUSD: 39000, avgAdditionalCostsUSD: 3200 }, // Estimated USD conversion
-  { name: 'UWC ISAK Japan', annualFeesUSD: 48000, avgAdditionalCostsUSD: 4000 }, // Estimated USD conversion
-  { name: 'UWC Thailand', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3500 }, // Estimated USD conversion
-  { name: 'UWC Mostar', annualFeesUSD: 38000, avgAdditionalCostsUSD: 2800 }, // Estimated USD conversion
-  { name: 'UWC Maastricht', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000 }, // Estimated USD conversion
-  { name: 'UWC East Africa', annualFeesUSD: 47000, avgAdditionalCostsUSD: 4000 }, // Estimated USD conversion
-  { name: 'UWC USA', annualFeesUSD: 60000, avgAdditionalCostsUSD: 5000 }, // Example, assuming a US-based UWC
+  { name: 'UWC Atlantic', annualFeesUSD: 42000, avgAdditionalCostsUSD: 3800 },
+  { name: 'UWC Mahindra College', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000 },
+  { name: 'UWC Pearson College', annualFeesUSD: 45000, avgAdditionalCostsUSD: 4200 },
+  { name: 'UWC Changshu China', annualFeesUSD: 46000, avgAdditionalCostsUSD: 3500 },
+  { name: 'UWC Red Cross Nordic', annualFeesUSD: 41000, avgAdditionalCostsUSD: 3000 },
+  { name: 'UWC Adriatic', annualFeesUSD: 39000, avgAdditionalCostsUSD: 3200 },
+  { name: 'UWC ISAK Japan', annualFeesUSD: 48000, avgAdditionalCostsUSD: 4000 },
+  { name: 'UWC Thailand', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3500 },
+  { name: 'UWC Mostar', annualFeesUSD: 38000, avgAdditionalCostsUSD: 2800 },
+  { name: 'UWC Maastricht', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000 },
+  { name: 'UWC East Africa', annualFeesUSD: 47000, avgAdditionalCostsUSD: 4000 },
+  { name: 'UWC USA', annualFeesUSD: 60000, avgAdditionalCostsUSD: 5000 },
 ];
 
-// Embedded data from "FNA Tool.xlsx - Currency list.csv" (a subset for demonstration)
 const currencyList = [
   { abbr: 'USD', symbol: '$' },
   { abbr: 'KES', symbol: 'KSh' },
@@ -40,26 +36,26 @@ const currencyList = [
   { abbr: 'CHF', symbol: 'CHF' },
   { abbr: 'CNY', symbol: '¥' },
   { abbr: 'BRL', symbol: 'R$' },
-  { abbr: 'ZAR', symbol: 'R' }, // South African Rand
-  { abbr: 'NGN', symbol: '₦' }, // Nigerian Naira
-  { abbr: 'EGP', symbol: 'E£' }, // Egyptian Pound
-  { abbr: 'MXN', symbol: '$' }, // Mexican Peso
-  { abbr: 'RUB', symbol: '₽' }, // Russian Ruble
-  { abbr: 'TRY', symbol: '₺' }, // Turkish Lira
-  { abbr: 'PKR', symbol: '₨' }, // Pakistani Rupee
-  { abbr: 'BDT', symbol: '৳' }, // Bangladeshi Taka
-  { abbr: 'PHP', symbol: '₱' }, // Philippine Peso
-  { abbr: 'IDR', symbol: 'Rp' }, // Indonesian Rupiah
-  { abbr: 'THB', symbol: '฿' }, // Thai Baht
-  { abbr: 'VND', symbol: '₫' }, // Vietnamese Dong
-  { abbr: 'PLN', symbol: 'zł' }, // Polish Zloty
-  { abbr: 'SEK', symbol: 'kr' }, // Swedish Krona
-  { abbr: 'DKK', symbol: 'kr' }, // Danish Krone
-  { abbr: 'NOK', symbol: 'kr' }, // Norwegian Krone
-  { abbr: 'CZK', symbol: 'Kč' }, // Czech Koruna
-  { abbr: 'HUF', symbol: 'Ft' }, // Hungarian Forint
-  { abbr: 'ILS', symbol: '₪' }, // Israeli New Shekel
-  { abbr: 'KRW', symbol: '₩' }, // South Korean Won
+  { abbr: 'ZAR', symbol: 'R' },
+  { abbr: 'NGN', symbol: '₦' },
+  { abbr: 'EGP', symbol: 'E£' },
+  { abbr: 'MXN', symbol: '$' },
+  { abbr: 'RUB', symbol: '₽' },
+  { abbr: 'TRY', symbol: '₺' },
+  { abbr: 'PKR', symbol: '₨' },
+  { abbr: 'BDT', symbol: '৳' },
+  { abbr: 'PHP', symbol: '₱' },
+  { abbr: 'IDR', symbol: 'Rp' },
+  { abbr: 'THB', symbol: '฿' },
+  { abbr: 'VND', symbol: '₫' },
+  { abbr: 'PLN', symbol: 'zł' },
+  { abbr: 'SEK', symbol: 'kr' },
+  { abbr: 'DKK', symbol: 'kr' },
+  { abbr: 'NOK', symbol: 'kr' },
+  { abbr: 'CZK', symbol: 'Kč' },
+  { abbr: 'HUF', symbol: 'Ft' },
+  { abbr: 'ILS', symbol: '₪' },
+  { abbr: 'KRW', symbol: '₩' },
 ];
 
 
@@ -68,9 +64,8 @@ function App() {
     ncCurrencySymbol: '',
     exchangeRateToUSD: 0,
     exchangeRateDate: '',
-    annualReturnOnAssets: 0.025, // Adjusted to 2.5% as per discussion
+    annualReturnOnAssets: 0.025,
 
-    // Page 1: Family Income & Assets
     parentsLiveSameHome: true,
     pg1NumberIndependentAdults: 1,
     pg1NumberFinancialDependents: 0,
@@ -82,32 +77,25 @@ function App() {
     pg1OtherAssets: 0,
     pg1HomeMarketValue: 0,
     pg1HomeOutstandingMortgage: 0,
-    // Removed pg1TotalOutstandingDebt as it was unused
     pg1AnnualDebtPayment: 0,
     otherPropertiesNetIncome: 0,
     assetsAnotherCountryNetIncome: 0,
 
-    // Page 2: Student & Family Expenses
     pg2StudentAnnualIncome: 0,
     pg2StudentCashSavings: 0,
     pg2StudentOtherAssets: 0,
     pg2ParentsAnnualDiscretionaryExpenditure: 0,
     pg2OtherHouseholdCosts: 0,
-    // Removed pg2TotalOutstandingDebt as it was unused
     pg2AnnualDebtPayment: 0,
     annualLoanRepayment: 0,
     familyAnticipatedAnnualSavings: 0,
     potentialLoanAmount: 0,
 
-    // Page 3: UWC Specifics
     annualTravelCostUSD: 0,
     ncScholarshipProvidedTwoYearsUSD: 0,
   });
 
-  // State for input errors
   const [errors, setErrors] = useState({});
-
-  // Ref for the content you want to convert to PDF
   const pdfContentRef = useRef(null);
 
   const handleChange = (e) => {
@@ -117,7 +105,7 @@ function App() {
     if (type === 'number') {
       newValue = parseFloat(value);
       if (isNaN(newValue)) {
-        newValue = ''; // Allow empty string for temporary user input
+        newValue = '';
       }
     } else if (type === 'checkbox') {
       newValue = checked;
@@ -128,7 +116,6 @@ function App() {
       [name]: newValue,
     }));
 
-    // Clear error for this field when it's being edited
     if (errors[name]) {
       setErrors((prevErrors) => {
         const newErrors = { ...prevErrors };
@@ -143,10 +130,8 @@ function App() {
     return isNaN(num) ? 0 : num;
   };
 
-  // Helper function to determine the color status based on your updated rules
   const getSchoolStatus = (combinedNcAndFamilyContributionTwoYearsUSD, totalCostOfAttendanceTwoYearsUSD) => {
     const gap = totalCostOfAttendanceTwoYearsUSD - combinedNcAndFamilyContributionTwoYearsUSD;
-
     if (gap <= 0) {
       return 'green';
     } else if (gap <= 10000) {
@@ -156,23 +141,19 @@ function App() {
     }
   };
 
-  // Helper function to convert NC currency to USD
   const convertNcToUsd = (valueInNcCurrency, exchangeRate) => {
     if (exchangeRate <= 0) {
-      return 0; // Prevent division by zero or negative rates
+      return 0;
     }
     return getNum(valueInNcCurrency) / getNum(exchangeRate);
   };
 
-  // Main financial need calculation logic, memoized for performance
   const allSchoolResults = useMemo(() => {
     const {
       ncCurrencySymbol,
       exchangeRateToUSD,
       exchangeRateDate,
-      annualReturnOnAssets, // This will now be 0.025 by default
-
-      // Page 1
+      annualReturnOnAssets,
       parentsLiveSameHome,
       pg1NumberIndependentAdults,
       pg1NumberFinancialDependents,
@@ -187,8 +168,6 @@ function App() {
       pg1AnnualDebtPayment,
       otherPropertiesNetIncome,
       assetsAnotherCountryNetIncome,
-
-      // Page 2
       pg2StudentAnnualIncome,
       pg2StudentCashSavings,
       pg2StudentOtherAssets,
@@ -198,13 +177,10 @@ function App() {
       annualLoanRepayment,
       familyAnticipatedAnnualSavings,
       potentialLoanAmount,
-
-      // Page 3
       annualTravelCostUSD,
       ncScholarshipProvidedTwoYearsUSD,
     } = formData;
 
-    // Defensive check: If exchange rate is not valid, return a default state to prevent errors
     if (getNum(exchangeRateToUSD) <= 0) {
       return {
         ncCurrencySymbol,
@@ -245,10 +221,7 @@ function App() {
       };
     }
 
-    // --- Calculations for Family Contribution (these are constant across all schools for one applicant) ---
-
     const totalHouseholdMembers = getNum(pg1NumberIndependentAdults) + getNum(pg1NumberFinancialDependents);
-
     const ncIncomePrimaryParentUSD = convertNcToUsd(pg1AnnualIncomePrimaryParent, exchangeRateToUSD);
     const ncIncomeOtherParentUSD = convertNcToUsd(pg1AnnualIncomeOtherParent, exchangeRateToUSD);
     const ncAnnualBenefitsUSD = convertNcToUsd(pg1AnnualBenefits, exchangeRateToUSD);
@@ -257,14 +230,11 @@ function App() {
     const ncOtherAssetsUSD = convertNcToUsd(pg1OtherAssets, exchangeRateToUSD);
     const ncOtherPropertiesNetIncomeUSD = convertNcToUsd(otherPropertiesNetIncome, exchangeRateToUSD);
     const ncAssetsAnotherCountryNetIncomeUSD = convertNcToUsd(assetsAnotherCountryNetIncome, exchangeRateToUSD);
-
     const ncStudentAnnualIncomeUSD = convertNcToUsd(pg2StudentAnnualIncome, exchangeRateToUSD);
     const ncStudentCashSavingsUSD = convertNcToUsd(pg2StudentCashSavings, exchangeRateToUSD);
     const ncStudentOtherAssetsUSD = convertNcToUsd(pg2StudentOtherAssets, exchangeRateToUSD);
-
     const ncParentsAnnualDiscretionaryExpenditureUSD = convertNcToUsd(pg2ParentsAnnualDiscretionaryExpenditure, exchangeRateToUSD);
     const ncOtherHouseholdCostsUSD = convertNcToUsd(pg2OtherHouseholdCosts, exchangeRateToUSD);
-
     const pg1AnnualDebtPaymentUSD = convertNcToUsd(pg1AnnualDebtPayment, exchangeRateToUSD);
     const pg2AnnualDebtPaymentUSD = convertNcToUsd(pg2AnnualDebtPayment, exchangeRateToUSD);
     const annualLoanRepaymentUSD = convertNcToUsd(annualLoanRepayment, exchangeRateToUSD);
@@ -276,79 +246,36 @@ function App() {
       ncOtherAnnualIncomeUSD +
       ncOtherPropertiesNetIncomeUSD +
       ncAssetsAnotherCountryNetIncomeUSD;
-
     const totalCashAssets = ncCashSavingsUSD + ncOtherAssetsUSD;
-
-    // This line uses the 'annualReturnOnAssets' value, which is now 0.025 by default
     const annualReturnOnFamilyAssets = totalCashAssets * getNum(annualReturnOnAssets);
-
     const homeEquity = Math.max(0, getNum(pg1HomeMarketValue) - getNum(pg1HomeOutstandingMortgage));
     const annualHomeEquityContribution = homeEquity * 0.02;
-
     const totalAssetsContribution = annualReturnOnFamilyAssets + annualHomeEquityContribution;
-
     const totalAnnualFixedExpenditure = pg1AnnualDebtPaymentUSD + pg2AnnualDebtPaymentUSD + annualLoanRepaymentUSD;
-
     const discretionaryExpenditureForFormula3 = ncParentsAnnualDiscretionaryExpenditureUSD + (parentsLiveSameHome ? 0 : ncOtherHouseholdCostsUSD);
-
-    const formula1_familyContributionUSD = Math.max(
-      0,
-      totalAnnualIncome - totalAnnualFixedExpenditure + totalAssetsContribution
-    );
-
-    const formula2_studentContributionUSD =
-      ncStudentAnnualIncomeUSD +
-      (ncStudentCashSavingsUSD * 0.1) +
-      (ncStudentOtherAssetsUSD * 0.05);
-
+    const formula1_familyContributionUSD = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure + totalAssetsContribution);
+    const formula2_studentContributionUSD = ncStudentAnnualIncomeUSD + (ncStudentCashSavingsUSD * 0.1) + (ncStudentOtherAssetsUSD * 0.05);
     const costHome = 0;
-    const formula3_estimateCostEducateStudentHome =
-      (totalHouseholdMembers > 0 ? discretionaryExpenditureForFormula3 / totalHouseholdMembers : 0) + costHome;
+    const formula3_estimateCostEducateStudentHome = (totalHouseholdMembers > 0 ? discretionaryExpenditureForFormula3 / totalHouseholdMembers : 0) + costHome;
+    const uwcFamilyContributionRequiredUSD = Math.max(0, formula1_familyContributionUSD, formula2_studentContributionUSD, formula3_estimateCostEducateStudentHome);
 
-    const uwcFamilyContributionRequiredUSD = Math.max(
-      0,
-      formula1_familyContributionUSD,
-      formula2_studentContributionUSD,
-      formula3_estimateCostEducateStudentHome
-    );
-
-    // --- Calculations per School ---
-    const calculatedSchoolResults = schoolCostsData.map(school => { // <<-- Renamed this variable
+    const calculatedSchoolResults = schoolCostsData.map(school => {
       const schoolAnnualFeesUSD = school.annualFeesUSD;
       const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
-
       const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
-
       const totalNeedUSD = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - uwcFamilyContributionRequiredUSD);
       const uwcNeedsBasedScholarshipUSD = totalNeedUSD;
-
-      const uwcNeedsBasedScholarshipPercentage =
-        totalGrossAnnualCostOfAttendanceUSD > 0
-          ? (uwcNeedsBasedScholarshipUSD / totalGrossAnnualCostOfAttendanceUSD) * 100
-          : 0;
-
+      const uwcNeedsBasedScholarshipPercentage = totalGrossAnnualCostOfAttendanceUSD > 0 ? (uwcNeedsBasedScholarshipUSD / totalGrossAnnualCostOfAttendanceUSD) * 100 : 0;
       const netUWCAnnualFeesUSD = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - uwcNeedsBasedScholarshipUSD);
-
       const suggestedFamilyContributionTwoYearsUSD = Math.max(0, (uwcFamilyContributionRequiredUSD * 2) - ncScholarshipProvidedTwoYearsUSD);
       const combinedNcAndFamilyContributionTwoYearsUSD = getNum(ncScholarshipProvidedTwoYearsUSD) + suggestedFamilyContributionTwoYearsUSD;
       const totalCostOfAttendanceTwoYearsUSD = totalGrossAnnualCostOfAttendanceUSD * 2;
       const combinedContributionMeetsExpectation = combinedNcAndFamilyContributionTwoYearsUSD >= totalCostOfAttendanceTwoYearsUSD;
-
       const amountPayableBySchoolAnnual = uwcNeedsBasedScholarshipUSD;
       const amountPayableByFamilyAnnual = uwcFamilyContributionRequiredUSD;
-
-      const percentagePayableBySchool =
-        totalGrossAnnualCostOfAttendanceUSD > 0
-          ? (amountPayableBySchoolAnnual / totalGrossAnnualCostOfAttendanceUSD) * 100
-          : 0;
-
-      const percentagePayableByFamily =
-        totalGrossAnnualCostOfAttendanceUSD > 0
-          ? (amountPayableByFamilyAnnual / totalGrossAnnualCostOfAttendanceUSD) * 100
-          : 0;
-
+      const percentagePayableBySchool = totalGrossAnnualCostOfAttendanceUSD > 0 ? (amountPayableBySchoolAnnual / totalGrossAnnualCostOfAttendanceUSD) * 100 : 0;
+      const percentagePayableByFamily = totalGrossAnnualCostOfAttendanceUSD > 0 ? (amountPayableByFamilyAnnual / totalGrossAnnualCostOfAttendanceUSD) * 100 : 0;
       const status = getSchoolStatus(combinedNcAndFamilyContributionTwoYearsUSD, totalCostOfAttendanceTwoYearsUSD);
-
 
       return {
         schoolName: school.name,
@@ -367,11 +294,10 @@ function App() {
         amountPayableByFamilyAnnual: amountPayableByFamilyAnnual.toFixed(2),
         percentagePayableBySchool: percentagePayableBySchool.toFixed(2),
         percentagePayableByFamily: percentagePayableByFamily.toFixed(2),
-        status, // Added the status field
+        status,
       };
     });
 
-    // Return common results and results per school
     return {
       ncCurrencySymbol,
       exchangeRateToUSD,
@@ -390,12 +316,9 @@ function App() {
       uwcFamilyContributionRequiredUSD: uwcFamilyContributionRequiredUSD.toFixed(2),
       familyAnticipatedAnnualSavings: getNum(familyAnticipatedAnnualSavings).toFixed(2),
       potentialLoanAmount: getNum(potentialLoanAmount).toFixed(2),
-      allSchoolResults: calculatedSchoolResults, // <<-- Using the renamed variable here
+      allSchoolResults: calculatedSchoolResults,
     };
-  }, [
-    formData,
-    convertNcToUsd, // Added the missing dependency here
-  ]);
+  }, [formData, convertNcToUsd]);
 
   const handleCalculate = (e) => {
     e.preventDefault();
@@ -416,11 +339,10 @@ function App() {
       ncCurrencySymbol: '',
       exchangeRateToUSD: 0,
       exchangeRateDate: '',
-      annualReturnOnAssets: 0.025, // Adjusted to 2.5% here too
-
+      annualReturnOnAssets: 0.025,
+      parentsLiveSameHome: true,
       pg1NumberIndependentAdults: 1,
       pg1NumberFinancialDependents: 0,
-      parentsLiveSameHome: true,
       pg1AnnualIncomePrimaryParent: 0,
       pg1AnnualIncomeOtherParent: 0,
       pg1AnnualBenefits: 0,
@@ -429,29 +351,24 @@ function App() {
       pg1OtherAssets: 0,
       pg1HomeMarketValue: 0,
       pg1HomeOutstandingMortgage: 0,
-      // Removed pg1TotalOutstandingDebt
       pg1AnnualDebtPayment: 0,
       otherPropertiesNetIncome: 0,
       assetsAnotherCountryNetIncome: 0,
-
       pg2StudentAnnualIncome: 0,
       pg2StudentCashSavings: 0,
       pg2StudentOtherAssets: 0,
       pg2ParentsAnnualDiscretionaryExpenditure: 0,
       pg2OtherHouseholdCosts: 0,
-      // Removed pg2TotalOutstandingDebt
       pg2AnnualDebtPayment: 0,
       annualLoanRepayment: 0,
       familyAnticipatedAnnualSavings: 0,
       potentialLoanAmount: 0,
-
       annualTravelCostUSD: 0,
       ncScholarshipProvidedTwoYearsUSD: 0,
     });
     setErrors({});
   };
 
-  // Helper to generate options for number dropdowns
   const generateNumberOptions = (start, end) => {
     const options = [];
     for (let i = start; i <= end; i++) {
@@ -460,10 +377,8 @@ function App() {
     return options;
   };
 
-  // New PDF Download Function
   const handleDownloadPdf = () => {
     const content = pdfContentRef.current;
-
     if (!content) {
       console.error("PDF content element not found. Cannot generate PDF.");
       return;
@@ -476,10 +391,8 @@ function App() {
       html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-
     html2pdf().from(content).set(options).save();
   };
-
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '800px', margin: 'auto', padding: '20px', backgroundColor: '#ffffff', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
@@ -690,7 +603,6 @@ function App() {
               style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
-          {/* Removed pg1TotalOutstandingDebt as it was unused */}
           <div style={{ marginBottom: '15px' }}>
             <label htmlFor="pg1AnnualDebtPayment" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Debt Payment (Parent 1):</label>
             <input
@@ -797,11 +709,10 @@ function App() {
               step="0.01"
               value={formData.pg2OtherHouseholdCosts}
               onChange={handleChange}
-              disabled={formData.parentsLiveSameHome} // Disable if parents live in the same home
+              disabled={formData.parentsLiveSameHome}
               style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: formData.parentsLiveSameHome ? '#e9ecef' : 'white' }}
             />
           </div>
-          {/* Removed pg2TotalOutstandingDebt as it was unused */}
           <div style={{ marginBottom: '15px' }}>
             <label htmlFor="pg2AnnualDebtPayment" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Debt Payment (Parent 2):</label>
             <input
@@ -886,7 +797,6 @@ function App() {
           </div>
         </section>
 
-        {/* Action Buttons (Calculate & Reset) */}
         <div style={{ textAlign: 'center', marginTop: '30px' }}>
           <button
             type="submit"
@@ -904,15 +814,10 @@ function App() {
         </div>
       </form>
 
-      {/* --- Assessment Results Display Section (now wrapped for PDF export) --- */}
       <section style={{ marginTop: '30px', border: '1px solid #e0e0e0', padding: '15px', borderRadius: '8px', backgroundColor: '#fdfdfd' }}>
         <h2 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>Assessment Results</h2>
-
-        {/* This div is the key for PDF content, attached with ref={pdfContentRef} */}
         <div ref={pdfContentRef} style={{ padding: '10px', backgroundColor: '#fff', fontSize: '12px', lineHeight: '1.6' }}>
           <h3 style={{ textAlign: 'center', color: '#333', marginBottom: '20px', fontSize: '18px' }}>Financial Need Assessment Report</h3>
-
-          {/* General Information for PDF */}
           <section style={{ marginBottom: '15px', padding: '10px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
             <h4 style={{ color: '#0056b3', marginBottom: '10px', fontSize: '14px' }}>General Application Details</h4>
             <p><strong>National Currency Symbol:</strong> {allSchoolResults.ncCurrencySymbol}</p>
@@ -920,8 +825,6 @@ function App() {
             <p><strong>Exchange Rate Date:</strong> {allSchoolResults.exchangeRateDate || 'N/A'}</p>
             <p><strong>Annual Return on Assets (%):</strong> {(formData.annualReturnOnAssets * 100).toFixed(2)}%</p>
           </section>
-
-          {/* Family Income & Assets Summary */}
           <section style={{ marginBottom: '15px', padding: '10px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
             <h4 style={{ color: '#0056b3', marginBottom: '10px', fontSize: '14px' }}>Family Financial Summary (USD)</h4>
             <p><strong>Total Annual Income:</strong> ${allSchoolResults.totalAnnualIncome}</p>
@@ -932,8 +835,6 @@ function App() {
             <p><strong>Family Anticipated Annual Savings:</strong> ${allSchoolResults.familyAnticipatedAnnualSavings}</p>
             <p><strong>Potential Loan Amount:</strong> ${allSchoolResults.potentialLoanAmount}</p>
           </section>
-
-          {/* School-Specific Results */}
           <section>
             <h4 style={{ color: '#0056b3', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px', fontSize: '16px' }}>School-Specific Assessment Breakdown</h4>
             {allSchoolResults.allSchoolResults.map((school, index) => (
@@ -963,7 +864,6 @@ function App() {
         </div>
       </section>
 
-      {/* New PDF Download Button */}
       <div style={{ textAlign: 'center', marginTop: '20px' }}>
         <button
           type="button"
