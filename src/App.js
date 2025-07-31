@@ -178,8 +178,8 @@ function App() {
       pg2OtherHouseholdCosts,
       pg2AnnualDebtPayment,
       annualLoanRepayment,
-      familyAnticipatedAnnualSavings,
-      potentialLoanAmount,
+      familyAnticipatedAnnualSavings, // This is still in NC
+      potentialLoanAmount, // This is still in NC
 
       // Page 3
       annualTravelCostUSD,
@@ -204,8 +204,8 @@ function App() {
         formula2_studentContributionUSD: '0.00',
         formula3_estimateCostEducateStudentHome: '0.00',
         uwcFamilyContributionRequiredUSD: '0.00',
-        familyAnticipatedAnnualSavings: '0.00',
-        potentialLoanAmount: '0.00',
+        familyAnticipatedAnnualSavings: '0.00', // Keep these as string '0.00' for display
+        potentialLoanAmount: '0.00', // Keep these as string '0.00' for display
         allSchoolResults: schoolCostsData.map(school => ({
           schoolName: school.name,
           schoolAnnualFeesUSD: school.annualFeesUSD.toFixed(2),
@@ -251,6 +251,10 @@ function App() {
     const pg2AnnualDebtPaymentUSD = convertNcToUsd(pg2AnnualDebtPayment, exchangeRateToUSD);
     const annualLoanRepaymentUSD = convertNcToUsd(annualLoanRepayment, exchangeRateToUSD);
 
+    // Convert these two fields from NC to USD
+    const ncFamilyAnticipatedAnnualSavingsUSD = convertNcToUsd(familyAnticipatedAnnualSavings, exchangeRateToUSD);
+    const ncPotentialLoanAmountUSD = convertNcToUsd(potentialLoanAmount, exchangeRateToUSD);
+
     const totalAnnualIncome =
       ncIncomePrimaryParentUSD +
       ncIncomeOtherParentUSD +
@@ -282,7 +286,7 @@ function App() {
       (ncStudentCashSavingsUSD * 0.1) +
       (ncStudentOtherAssetsUSD * 0.05);
 
-    const costHome = 0;
+    const costHome = 0; // This value is not currently exposed in the form or calculated from inputs
     const formula3_estimateCostEducateStudentHome =
       (totalHouseholdMembers > 0 ? discretionaryExpenditureForFormula3 / totalHouseholdMembers : 0) + costHome;
 
@@ -328,7 +332,7 @@ function App() {
           : 0;
 
       // --- Affordability Status Calculation ---
-      const totalFamilyAvailableFundsTwoYears = (getNum(familyAnticipatedAnnualSavings) * 2) + getNum(potentialLoanAmount);
+      const totalFamilyAvailableFundsTwoYears = (ncFamilyAnticipatedAnnualSavingsUSD * 2) + ncPotentialLoanAmountUSD;
       let affordabilityStatus = 'red'; // Default to red
 
       if (suggestedFamilyContributionTwoYearsUSD <= totalFamilyAvailableFundsTwoYears) {
@@ -383,8 +387,9 @@ function App() {
       formula2_studentContributionUSD: formula2_studentContributionUSD.toFixed(2),
       formula3_estimateCostEducateStudentHome: formula3_estimateCostEducateStudentHome.toFixed(2),
       uwcFamilyContributionRequiredUSD: uwcFamilyContributionRequiredUSD.toFixed(2),
-      familyAnticipatedAnnualSavings: getNum(familyAnticipatedAnnualSavings).toFixed(2),
-      potentialLoanAmount: getNum(potentialLoanAmount).toFixed(2),
+      // Display the converted USD values here
+      familyAnticipatedAnnualSavings: ncFamilyAnticipatedAnnualSavingsUSD.toFixed(2),
+      potentialLoanAmount: ncPotentialLoanAmountUSD.toFixed(2),
       allSchoolResults: calculatedSchoolResults,
     };
   }, [formData, convertNcToUsd]);
@@ -526,7 +531,7 @@ function App() {
               min="0"
               step="0.01"
               value={formData.annualReturnOnAssets * 100}
-              // MODIFIED THIS LINE: Directly update state for this specific field
+              // Directly update state for this specific field after dividing by 100
               onChange={(e) => setFormData(prevData => ({ ...prevData, annualReturnOnAssets: parseFloat(e.target.value) / 100 }))}
             />
           </div>
@@ -827,7 +832,7 @@ function App() {
               min="0"
               step="0.01"
               value={formData.annualTravelCostUSD}
-              onChange={handleChange} // This remains the standard handleChange
+              onChange={handleChange}
             />
           </div>
           <div className="form-group">
@@ -900,7 +905,7 @@ function App() {
                 <p><strong>Affordability Status:</strong> <span style={{ color: school.affordabilityStatus === 'green' ? '#2ecc71' : school.affordabilityStatus === 'orange' ? '#f39c12' : '#e74c3c', fontWeight: 'bold' }}>{school.affordabilityStatus.charAt(0).toUpperCase() + school.affordabilityStatus.slice(1)}</span></p>
                 <p><strong>Annual Fees:</strong> ${school.schoolAnnualFeesUSD}</p>
                 <p><strong>Avg. Additional Costs:</strong> ${school.schoolAvgAdditionalCostsUSD}</p>
-                <p><strong>Annual Travel Cost:</strong> ${getNum(formData.annualTravelCostUSD).toFixed(2)}</p> {/* Ensure getNum is used here */}
+                <p><strong>Annual Travel Cost:</strong> ${getNum(formData.annualTravelCostUSD).toFixed(2)}</p>
                 <p><strong>Total Gross Annual Cost of Attendance:</strong> ${school.totalGrossAnnualCostOfAttendanceUSD}</p>
                 <p><strong>Total Need:</strong> ${school.totalNeedUSD}</p>
                 <p><strong>UWC Needs-Based Scholarship:</strong> ${school.uwcNeedsBasedScholarshipUSD} ({school.uwcNeedsBasedScholarshipPercentage}%)</p>
