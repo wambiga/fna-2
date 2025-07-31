@@ -114,7 +114,7 @@ function App() {
     if (type === 'number') {
       newValue = parseFloat(value);
       if (isNaN(newValue)) {
-        newValue = '';
+        newValue = ''; // Keep it as an empty string for number inputs if not a valid number
       }
     } else if (type === 'checkbox') {
       newValue = checked;
@@ -125,6 +125,7 @@ function App() {
       [name]: newValue,
     }));
 
+    // Clear error for the field being changed
     if (errors[name]) {
       setErrors((prevErrors) => {
         const newErrors = { ...prevErrors };
@@ -140,7 +141,7 @@ function App() {
   };
 
   const convertNcToUsd = useCallback((valueInNcCurrency, exchangeRate) => {
-    if (exchangeRate <= 0) {
+    if (getNum(exchangeRate) <= 0) { // Use getNum for exchangeRate too
       return 0;
     }
     return getNum(valueInNcCurrency) / getNum(exchangeRate);
@@ -185,6 +186,7 @@ function App() {
       ncScholarshipProvidedTwoYearsUSD,
     } = formData;
 
+    // Early exit if exchange rate is invalid to prevent division by zero or NaN results
     if (getNum(exchangeRateToUSD) <= 0) {
       return {
         ncCurrencySymbol,
@@ -391,7 +393,7 @@ function App() {
     e.preventDefault();
     const newErrors = {};
 
-    if (formData.exchangeRateToUSD <= 0) {
+    if (getNum(formData.exchangeRateToUSD) <= 0) {
       newErrors.exchangeRateToUSD = 'Exchange Rate must be greater than 0.';
     }
     if (Object.keys(newErrors).length > 0) {
@@ -524,7 +526,8 @@ function App() {
               min="0"
               step="0.01"
               value={formData.annualReturnOnAssets * 100}
-              onChange={(e) => handleChange({ ...e, target: { ...e.target, value: parseFloat(e.target.value) / 100 } })}
+              // MODIFIED THIS LINE: Directly update state for this specific field
+              onChange={(e) => setFormData(prevData => ({ ...prevData, annualReturnOnAssets: parseFloat(e.target.value) / 100 }))}
             />
           </div>
         </section>
@@ -824,7 +827,7 @@ function App() {
               min="0"
               step="0.01"
               value={formData.annualTravelCostUSD}
-              onChange={handleChange}
+              onChange={handleChange} // This remains the standard handleChange
             />
           </div>
           <div className="form-group">
@@ -897,13 +900,13 @@ function App() {
                 <p><strong>Affordability Status:</strong> <span style={{ color: school.affordabilityStatus === 'green' ? '#2ecc71' : school.affordabilityStatus === 'orange' ? '#f39c12' : '#e74c3c', fontWeight: 'bold' }}>{school.affordabilityStatus.charAt(0).toUpperCase() + school.affordabilityStatus.slice(1)}</span></p>
                 <p><strong>Annual Fees:</strong> ${school.schoolAnnualFeesUSD}</p>
                 <p><strong>Avg. Additional Costs:</strong> ${school.schoolAvgAdditionalCostsUSD}</p>
-                <p><strong>Annual Travel Cost:</strong> ${formData.annualTravelCostUSD.toFixed(2)}</p>
+                <p><strong>Annual Travel Cost:</strong> ${getNum(formData.annualTravelCostUSD).toFixed(2)}</p> {/* Ensure getNum is used here */}
                 <p><strong>Total Gross Annual Cost of Attendance:</strong> ${school.totalGrossAnnualCostOfAttendanceUSD}</p>
                 <p><strong>Total Need:</strong> ${school.totalNeedUSD}</p>
                 <p><strong>UWC Needs-Based Scholarship:</strong> ${school.uwcNeedsBasedScholarshipUSD} ({school.uwcNeedsBasedScholarshipPercentage}%)</p>
                 <p><strong>Net UWC Annual Fees (Family Pays Annually):</strong> ${school.netUWCAnnualFeesUSD}</p>
                 <p><strong>Suggested Family Contribution (2 Yrs):</strong> ${school.suggestedFamilyContributionTwoYearsUSD}</p>
-                <p><strong>National Committee Scholarship Provided (2 Yrs):</strong> ${formData.ncScholarshipProvidedTwoYearsUSD.toFixed(2)}</p>
+                <p><strong>National Committee Scholarship Provided (2 Yrs):</strong> ${getNum(formData.ncScholarshipProvidedTwoYearsUSD).toFixed(2)}</p>
                 <p><strong>Combined NC & Family Contribution (2 Yrs):</strong> ${school.combinedNcAndFamilyContributionTwoYearsUSD}</p>
                 <p><strong>Total Cost of Attendance (2 Yrs):</strong> ${school.totalCostOfAttendanceTwoYearsUSD}</p>
                 <p><strong>Combined Contribution Meets Expectation:</strong> {school.combinedContributionMeetsExpectation ? 'Yes' : 'No'}</p>
