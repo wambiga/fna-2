@@ -82,8 +82,8 @@ function App() {
     pg1OtherAnnualIncome: 0,
     pg1CashSavings: 0,
     pg1OtherAssets: 0,
-    pg1HomeMarketValue: 0,
-    pg1HomeOutstandingMortgage: 0,
+    pg1HomeMarketValue: 0, // This should be in NC
+    pg1HomeOutstandingMortgage: 0, // This should be in NC
     pg1AnnualDebtPayment: 0,
     otherPropertiesNetIncome: 0,
     assetsAnotherCountryNetIncome: 0,
@@ -178,8 +178,8 @@ function App() {
       pg2OtherHouseholdCosts,
       pg2AnnualDebtPayment,
       annualLoanRepayment,
-      familyAnticipatedAnnualSavings, // This is still in NC
-      potentialLoanAmount, // This is still in NC
+      familyAnticipatedAnnualSavings,
+      potentialLoanAmount,
 
       // Page 3
       annualTravelCostUSD,
@@ -240,6 +240,10 @@ function App() {
     const ncCashSavingsUSD = convertNcToUsd(pg1CashSavings, exchangeRateToUSD);
     const ncOtherAssetsUSD = convertNcToUsd(pg1OtherAssets, exchangeRateToUSD);
 
+    // Convert Home Market Value and Outstanding Mortgage to USD
+    const pg1HomeMarketValueUSD = convertNcToUsd(pg1HomeMarketValue, exchangeRateToUSD);
+    const pg1HomeOutstandingMortgageUSD = convertNcToUsd(pg1HomeOutstandingMortgage, exchangeRateToUSD);
+
     const ncStudentAnnualIncomeUSD = convertNcToUsd(pg2StudentAnnualIncome, exchangeRateToUSD);
     const ncStudentCashSavingsUSD = convertNcToUsd(pg2StudentCashSavings, exchangeRateToUSD);
     const ncStudentOtherAssetsUSD = convertNcToUsd(pg2StudentOtherAssets, exchangeRateToUSD);
@@ -251,7 +255,6 @@ function App() {
     const pg2AnnualDebtPaymentUSD = convertNcToUsd(pg2AnnualDebtPayment, exchangeRateToUSD);
     const annualLoanRepaymentUSD = convertNcToUsd(annualLoanRepayment, exchangeRateToUSD);
 
-    // Convert these two fields from NC to USD
     const ncFamilyAnticipatedAnnualSavingsUSD = convertNcToUsd(familyAnticipatedAnnualSavings, exchangeRateToUSD);
     const ncPotentialLoanAmountUSD = convertNcToUsd(potentialLoanAmount, exchangeRateToUSD);
 
@@ -267,7 +270,8 @@ function App() {
 
     const annualReturnOnFamilyAssets = totalCashAssets * getNum(annualReturnOnAssets);
 
-    const homeEquity = Math.max(0, getNum(pg1HomeMarketValue) - getNum(pg1HomeOutstandingMortgage));
+    // Use the USD converted values for Home Equity calculation
+    const homeEquity = Math.max(0, getNum(pg1HomeMarketValueUSD) - getNum(pg1HomeOutstandingMortgageUSD));
     const annualHomeEquityContribution = homeEquity * 0.02;
 
     const totalAssetsContribution = annualReturnOnFamilyAssets + annualHomeEquityContribution;
