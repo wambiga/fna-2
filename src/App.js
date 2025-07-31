@@ -213,7 +213,8 @@ function App() {
           suggestedFamilyContributionTwoYearsUSD: '0.00',
           combinedNcAndFamilyContributionTwoYearsUSD: '0.00',
           totalCostOfAttendanceTwoYearsUSD: '0.00',
-          combinedContributionMeetsExpectation: false,
+          contributionStatus: 'N/A',
+          contributionColor: 'black',
           amountPayableBySchoolAnnual: '0.00',
           amountPayableByFamilyAnnual: '0.00',
           percentagePayableBySchool: '0.00',
@@ -304,7 +305,21 @@ function App() {
       const suggestedFamilyContributionTwoYearsUSD = Math.max(0, (uwcFamilyContributionRequiredUSD * 2) - ncScholarshipProvidedTwoYearsUSD);
       const combinedNcAndFamilyContributionTwoYearsUSD = getNum(ncScholarshipProvidedTwoYearsUSD) + suggestedFamilyContributionTwoYearsUSD;
       const totalCostOfAttendanceTwoYearsUSD = totalGrossAnnualCostOfAttendanceUSD * 2;
-      const combinedContributionMeetsExpectation = combinedNcAndFamilyContributionTwoYearsUSD >= totalCostOfAttendanceTwoYearsUSD;
+      
+      let contributionStatus = '';
+      let contributionColor = '';
+      const shortfall = totalCostOfAttendanceTwoYearsUSD - combinedNcAndFamilyContributionTwoYearsUSD;
+
+      if (shortfall <= 0) {
+        contributionStatus = 'Contribution Meets or Exceeds Cost';
+        contributionColor = 'green';
+      } else if (shortfall <= 10000) {
+        contributionStatus = `Shortfall of $${shortfall.toFixed(2)}`;
+        contributionColor = 'orange';
+      } else {
+        contributionStatus = `Shortfall of $${shortfall.toFixed(2)}`;
+        contributionColor = 'red';
+      }
 
       const amountPayableBySchoolAnnual = uwcNeedsBasedScholarshipUSD;
       const amountPayableByFamilyAnnual = uwcFamilyContributionRequiredUSD;
@@ -331,7 +346,8 @@ function App() {
         suggestedFamilyContributionTwoYearsUSD: suggestedFamilyContributionTwoYearsUSD.toFixed(2),
         combinedNcAndFamilyContributionTwoYearsUSD: combinedNcAndFamilyContributionTwoYearsUSD.toFixed(2),
         totalCostOfAttendanceTwoYearsUSD: totalCostOfAttendanceTwoYearsUSD.toFixed(2),
-        combinedContributionMeetsExpectation,
+        contributionStatus,
+        contributionColor,
         amountPayableBySchoolAnnual: amountPayableBySchoolAnnual.toFixed(2),
         amountPayableByFamilyAnnual: amountPayableByFamilyAnnual.toFixed(2),
         percentagePayableBySchool: percentagePayableBySchool.toFixed(2),
@@ -929,7 +945,12 @@ function App() {
                 <p><strong>National Committee Scholarship Provided (2 Yrs):</strong> ${formData.ncScholarshipProvidedTwoYearsUSD.toFixed(2)}</p>
                 <p><strong>Combined NC & Family Contribution (2 Yrs):</strong> ${school.combinedNcAndFamilyContributionTwoYearsUSD}</p>
                 <p><strong>Total Cost of Attendance (2 Yrs):</strong> ${school.totalCostOfAttendanceTwoYearsUSD}</p>
-                <p><strong>Combined Contribution Meets Expectation:</strong> {school.combinedContributionMeetsExpectation ? 'Yes' : 'No'}</p>
+                <p>
+                  <strong>Contribution Status: </strong>
+                  <span style={{ color: school.contributionColor, fontWeight: 'bold' }}>
+                    {school.contributionStatus}
+                  </span>
+                </p>
                 <p><strong>Amount Payable By School Annually:</strong> ${school.amountPayableBySchoolAnnual}</p>
                 <p><strong>Amount Payable By Family Annually:</strong> ${school.amountPayableByFamilyAnnual}</p>
                 <p><strong>Percentage Payable By School:</strong> {school.percentagePayableBySchool}%</p>
