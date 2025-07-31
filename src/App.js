@@ -62,8 +62,8 @@ const currencyList = [
   { abbr: 'KRW', symbol: '₩' },
 ];
 
-// Define an affordability threshold for 'orange' status (e.g., up to $10,000 difference over two years)
-const ORANGE_AFFORDABILITY_THRESHOLD = 10000;
+// Define an affordability threshold for 'orange' status (e.g., up to $20,000 difference over two years)
+const ORANGE_AFFORDABILITY_THRESHOLD = 20000; // Changed from 10000 to 20000
 
 function App() {
   const [formData, setFormData] = useState({
