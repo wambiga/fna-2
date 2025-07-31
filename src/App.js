@@ -1,5 +1,171 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import './App.css'; // Assuming you have some basic CSS
+import './App.css'; // Ensure this CSS file is linked
+
+// A comprehensive list of world currencies (ISO 4217 codes and names)
+// Sorted alphabetically for better user experience in the dropdown.
+const worldCurrencies = [
+    { code: 'AED', name: 'United Arab Emirates Dirham' },
+    { code: 'AFN', name: 'Afghan Afghani' },
+    { code: 'ALL', name: 'Albanian Lek' },
+    { code: 'AMD', name: 'Armenian Dram' },
+    { code: 'AOA', name: 'Angolan Kwanza' },
+    { code: 'ARS', name: 'Argentine Peso' },
+    { code: 'AUD', name: 'Australian Dollar' },
+    { code: 'AWG', name: 'Aruban Florin' },
+    { code: 'AZN', name: 'Azerbaijani Manat' },
+    { code: 'BAM', name: 'Bosnia and Herzegovina Convertible Mark' },
+    { code: 'BBD', name: 'Barbadian Dollar' },
+    { code: 'BDT', name: 'Bangladeshi Taka' },
+    { code: 'BGN', name: 'Bulgarian Lev' },
+    { code: 'BHD', name: 'Bahraini Dinar' },
+    { code: 'BIF', name: 'Burundian Franc' },
+    { code: 'BMD', name: 'Bermudian Dollar' },
+    { code: 'BND', name: 'Brunei Dollar' },
+    { code: 'BOB', name: 'Bolivian Boliviano' },
+    { code: 'BRL', name: 'Brazilian Real' },
+    { code: 'BSD', name: 'Bahamian Dollar' },
+    { code: 'BTN', name: 'Bhutanese Ngultrum' },
+    { code: 'BWP', name: 'Botswana Pula' },
+    { code: 'BYN', name: 'Belarusian Ruble' },
+    { code: 'BZD', name: 'Belize Dollar' },
+    { code: 'CAD', name: 'Canadian Dollar' },
+    { code: 'CDF', name: 'Congolese Franc' },
+    { code: 'CHF', name: 'Swiss Franc' },
+    { code: 'CLP', name: 'Chilean Peso' },
+    { code: 'CNY', name: 'Chinese Yuan' },
+    { code: 'COP', name: 'Colombian Peso' },
+    { code: 'CRC', name: 'Costa Rican Colón' },
+    { code: 'CUC', name: 'Cuban Convertible Peso' },
+    { code: 'CUP', name: 'Cuban Peso' },
+    { code: 'CVE', name: 'Cape Verdean Escudo' },
+    { code: 'CZK', name: 'Czech Koruna' },
+    { code: 'DJF', name: 'Djiboutian Franc' },
+    { code: 'DKK', name: 'Danish Krone' },
+    { code: 'DOP', name: 'Dominican Peso' },
+    { code: 'DZD', name: 'Algerian Dinar' },
+    { code: 'EGP', name: 'Egyptian Pound' },
+    { code: 'ERN', name: 'Eritrean Nakfa' },
+    { code: 'ETB', name: 'Ethiopian Birr' },
+    { code: 'EUR', name: 'Euro' },
+    { code: 'FJD', name: 'Fijian Dollar' },
+    { code: 'FKP', name: 'Falkland Islands Pound' },
+    { code: 'GBP', name: 'British Pound Sterling' },
+    { code: 'GEL', name: 'Georgian Lari' },
+    { code: 'GGP', name: 'Guernsey Pound' },
+    { code: 'GHS', name: 'Ghanaian Cedi' },
+    { code: 'GIP', name: 'Gibraltar Pound' },
+    { code: 'GMD', name: 'Gambian Dalasi' },
+    { code: 'GNF', name: 'Guinean Franc' },
+    { code: 'GTQ', name: 'Guatemalan Quetzal' },
+    { code: 'GYD', name: 'Guyanese Dollar' },
+    { code: 'HKD', name: 'Hong Kong Dollar' },
+    { code: 'HNL', name: 'Honduran Lempira' },
+    { code: 'HRK', name: 'Croatian Kuna' },
+    { code: 'HTG', name: 'Haitian Gourde' },
+    { code: 'HUF', name: 'Hungarian Forint' },
+    { code: 'IDR', name: 'Indonesian Rupiah' },
+    { code: 'ILS', name: 'Israeli New Shekel' },
+    { code: 'IMP', name: 'Isle of Man Pound' },
+    { code: 'INR', name: 'Indian Rupee' },
+    { code: 'IQD', name: 'Iraqi Dinar' },
+    { code: 'IRR', name: 'Iranian Rial' },
+    { code: 'ISK', name: 'Icelandic Króna' },
+    { code: 'JEP', name: 'Jersey Pound' },
+    { code: 'JMD', name: 'Jamaican Dollar' },
+    { code: 'JOD', name: 'Jordanian Dinar' },
+    { code: 'JPY', name: 'Japanese Yen' },
+    { code: 'KES', name: 'Kenyan Shilling' },
+    { code: 'KGS', name: 'Kyrgyzstani Som' },
+    { code: 'KHR', name: 'Cambodian Riel' },
+    { code: 'KMF', name: 'Comorian Franc' },
+    { code: 'KPW', name: 'North Korean Won' },
+    { code: 'KRW', name: 'South Korean Won' },
+    { code: 'KWD', name: 'Kuwaiti Dinar' },
+    { code: 'KYD', name: 'Cayman Islands Dollar' },
+    { code: 'KZT', name: 'Kazakhstani Tenge' },
+    { code: 'LAK', name: 'Lao Kip' },
+    { code: 'LBP', name: 'Lebanese Pound' },
+    { code: 'LKR', name: 'Sri Lankan Rupee' },
+    { code: 'LRD', name: 'Liberian Dollar' },
+    { code: 'LSL', name: 'Lesotho Loti' },
+    { code: 'LTL', name: 'Lithuanian Litas' }, // Historical, replaced by EUR
+    { code: 'LVL', name: 'Latvian Lats' }, // Historical, replaced by EUR
+    { code: 'LYD', name: 'Libyan Dinar' },
+    { code: 'MAD', name: 'Moroccan Dirham' },
+    { code: 'MDL', name: 'Moldovan Leu' },
+    { code: 'MGA', name: 'Malagasy Ariary' },
+    { code: 'MKD', name: 'Macedonian Denar' },
+    { code: 'MMK', name: 'Myanmar Kyat' },
+    { code: 'MNT', name: 'Mongolian Tögrög' },
+    { code: 'MOP', name: 'Macanese Pataca' },
+    { code: 'MRU', name: 'Mauritanian Ouguiya' }, // Updated from MRO
+    { code: 'MUR', name: 'Mauritian Rupee' },
+    { code: 'MVR', name: 'Maldivian Rufiyaa' },
+    { code: 'MWK', name: 'Malawian Kwacha' },
+    { code: 'MXN', name: 'Mexican Peso' },
+    { code: 'MYR', name: 'Malaysian Ringgit' },
+    { code: 'MZN', name: 'Mozambican Metical' },
+    { code: 'NAD', name: 'Namibian Dollar' },
+    { code: 'NGN', name: 'Nigerian Naira' },
+    { code: 'NIO', name: 'Nicaraguan Córdoba' },
+    { code: 'NOK', name: 'Norwegian Krone' },
+    { code: 'NPR', name: 'Nepalese Rupee' },
+    { code: 'NZD', name: 'New Zealand Dollar' },
+    { code: 'OMR', name: 'Omani Rial' },
+    { code: 'PAB', name: 'Panamanian Balboa' },
+    { code: 'PEN', name: 'Peruvian Sol' },
+    { code: 'PGK', name: 'Papua New Guinean Kina' },
+    { code: 'PHP', name: 'Philippine Peso' },
+    { code: 'PKR', name: 'Pakistani Rupee' },
+    { code: 'PLN', name: 'Polish Złoty' },
+    { code: 'PYG', name: 'Paraguayan Guaraní' },
+    { code: 'QAR', name: 'Qatari Riyal' },
+    { code: 'RON', name: 'Romanian Leu' },
+    { code: 'RSD', name: 'Serbian Dinar' },
+    { code: 'RUB', name: 'Russian Ruble' },
+    { code: 'RWF', name: 'Rwandan Franc' },
+    { code: 'SAR', name: 'Saudi Riyal' },
+    { code: 'SBD', name: 'Solomon Islands Dollar' },
+    { code: 'SCR', name: 'Seychellois Rupee' },
+    { code: 'SDG', name: 'Sudanese Pound' },
+    { code: 'SEK', name: 'Swedish Krona' },
+    { code: 'SGD', name: 'Singapore Dollar' },
+    { code: 'SHP', name: 'Saint Helena Pound' },
+    { code: 'SLL', name: 'Sierra Leonean Leone' }, // Note: SLL is old, now SLE. Using SLL for common usage.
+    { code: 'SOS', name: 'Somali Shilling' },
+    { code: 'SRD', name: 'Surinamese Dollar' },
+    { code: 'SSP', name: 'South Sudanese Pound' },
+    { code: 'STN', name: 'São Tomé and Príncipe Dobra' }, // Updated from STD
+    { code: 'SVC', name: 'Salvadoran Colón' },
+    { code: 'SYP', name: 'Syrian Pound' },
+    { code: 'SZL', name: 'Swazi Lilangeni' },
+    { code: 'THB', name: 'Thai Baht' },
+    { code: 'TJS', name: 'Tajikistani Somoni' },
+    { code: 'TMT', name: 'Turkmenistan Manat' },
+    { code: 'TND', name: 'Tunisian Dinar' },
+    { code: 'TOP', name: 'Tongan Paʻanga' },
+    { code: 'TRY', name: 'Turkish Lira' },
+    { code: 'TTD', name: 'Trinidad and Tobago Dollar' },
+    { code: 'TWD', name: 'New Taiwan Dollar' },
+    { code: 'TZS', name: 'Tanzanian Shilling' },
+    { code: 'UAH', name: 'Ukrainian Hryvnia' },
+    { code: 'UGX', name: 'Ugandan Shilling' },
+    { code: 'USD', name: 'United States Dollar' },
+    { code: 'UYU', name: 'Uruguayan Peso' },
+    { code: 'UZS', name: 'Uzbekistani Soʻm' },
+    { code: 'VND', name: 'Vietnamese Đồng' },
+    { code: 'VUV', name: 'Vanuatu Vatu' },
+    { code: 'WST', name: 'Samoan Tala' },
+    { code: 'XAF', name: 'CFA Franc BEAC' },
+    { code: 'XCD', name: 'East Caribbean Dollar' },
+    { code: 'XOF', name: 'CFA Franc BCEAO' },
+    { code: 'XPF', name: 'CFP Franc' },
+    { code: 'YER', name: 'Yemeni Rial' },
+    { code: 'ZAR', name: 'South African Rand' },
+    { code: 'ZMW', name: 'Zambian Kwacha' },
+    { code: 'ZWL', name: 'Zimbabwean Dollar' }
+];
+
 
 // Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
 const schoolCostsData = [
@@ -28,7 +194,7 @@ const ANNUAL_AFFORDABILITY_GAP_THRESHOLD = 10000;
 
 function App() {
   const [formData, setFormData] = useState({
-    ncCurrencySymbol: '', // Empty
+    ncCurrencySymbol: '', // Empty - will be selected from dropdown
     exchangeRateToUSD: 0, // Zero
     exchangeRateDate: '', // Empty
     annualReturnOnAssets: 0, // Zero
@@ -65,9 +231,6 @@ function App() {
     ncScholarshipProvidedTwoYearsUSD: 0, // Zero
     ncCurrentFeesPayableAnnual: 0, // Zero
   });
-
-  // 'errors' is not being used to display error messages, so it can be safely removed or commented out
-  // const [errors, setErrors] = useState({});
 
   // Helper function to convert to number, handling empty strings as 0
   const getNum = useCallback((value) => {
@@ -123,8 +286,6 @@ function App() {
       ncScholarshipProvidedTwoYearsUSD: 0,
       ncCurrentFeesPayableAnnual: 0,
     });
-    // If you remove the errors state, remove this line too:
-    // setErrors({});
   }, []);
 
   const allSchoolResults = useMemo(() => {
@@ -335,24 +496,31 @@ function App() {
           <h2>General Financial Data</h2>
           <div className="form-group">
             <label htmlFor="ncCurrencySymbol">National Currency Symbol:</label>
-            <input
-              type="text"
+            <select
               id="ncCurrencySymbol"
               name="ncCurrencySymbol"
               value={formData.ncCurrencySymbol}
               onChange={handleChange}
-            />
+            >
+              <option value="">-- Select Currency --</option>
+              {worldCurrencies.map((currency) => (
+                <option key={currency.code} value={currency.code}>
+                  {currency.code} - {currency.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="form-group">
-            <label htmlFor="exchangeRateToUSD">Exchange Rate to USD (e.g., 130 for KES):</label>
+            <label htmlFor="exchangeRateToUSD">Exchange Rate to USD:</label>
             <input
               type="number"
               id="exchangeRateToUSD"
               name="exchangeRateToUSD"
-              min="0.01"
-              step="0.01"
+              min="0.000001" // Allow very small rates, but not zero
+              step="0.000001"
               value={formData.exchangeRateToUSD}
               onChange={handleChange}
+              placeholder="e.g., 130 for KES to USD"
             />
           </div>
           <div className="form-group">
@@ -713,12 +881,12 @@ function App() {
             <p><strong>Current Annual Fees Payable (Converted):</strong> ${allSchoolResults.ncCurrentFeesPayableAnnualUSD}</p>
           </>
         ) : (
-          <p className="warning-message">Please enter an exchange rate to see financial summaries.</p>
+          <p className="warning-message">Please enter an exchange rate (e.g., 1 for USD) to see financial summaries.</p>
         )}
 
 
         <h2>School-Specific Assessment Results (USD)</h2>
-        {getNum(formData.exchangeRateToUSD) > 0 ? (
+        {getNum(formData.exchangeRateToUSD) > 0 && formData.ncCurrencySymbol ? ( // Also check if currency is selected
             <table>
             <thead>
                 <tr>
@@ -750,7 +918,7 @@ function App() {
             </tbody>
             </table>
         ) : (
-            <p className="warning-message">Enter an exchange rate to calculate school results.</p>
+            <p className="warning-message">Enter an exchange rate and select a National Currency to calculate school results.</p>
         )}
       </section>
     </div>

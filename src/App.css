@@ -1,264 +1,135 @@
-/* General Body and Container Styles */
-body {
-  margin: 0;
-  background-color: #f4f7f6; /* Light background for the whole page */
-  font-family: 'Open Sans', sans-serif; /* A professional, readable font */
+/* Basic styling for the app container */
+.App {
+  font-family: Arial, sans-serif;
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: #f9f9f9;
+}
+
+h1, h2 {
   color: #333;
-  line-height: 1.6;
-}
-
-.app-container {
-  max-width: 900px; /* Slightly wider container */
-  margin: 30px auto;
-  padding: 30px;
-  background-color: #ffffff;
-  border-radius: 12px; /* Softer rounded corners */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); /* More pronounced shadow */
-}
-
-/* Headings */
-h1 {
   text-align: center;
-  color: #2c3e50; /* Darker, professional blue/grey */
-  margin-bottom: 40px;
-  font-size: 2.2em;
-  font-weight: 700;
 }
 
-h2 {
-  color: #34495e;
-  border-bottom: 1px solid #e0e6ea; /* Subtle separator */
-  padding-bottom: 15px;
-  margin-bottom: 25px;
-  font-size: 1.8em;
-  font-weight: 600;
-}
-
-h3 {
-  color: #5d6d7e;
-  margin-bottom: 20px;
-  font-size: 1.4em;
-  font-weight: 600;
-}
-
-h4 {
-  color: #1a5276; /* A slightly more vibrant blue for subsections */
-  margin-bottom: 12px;
-  font-size: 1.2em;
-  font-weight: 600;
-}
-
-h5 {
-  color: #2e86c1; /* Even lighter blue for inner school names */
-  margin-bottom: 8px;
-  font-size: 1.1em;
-  font-weight: 600;
-}
-
-/* Section Styling (Cards) */
+/* Form Sections */
 .form-section {
-  margin-bottom: 30px;
-  border: 1px solid #e9edf1;
-  padding: 25px;
-  border-radius: 10px;
-  background-color: #fefefe;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Lighter shadow for sections */
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
 }
 
-/* Form Elements */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
 }
 
 .form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #4a4a4a;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555;
 }
 
 .form-group input[type="text"],
 .form-group input[type="number"],
 .form-group input[type="date"],
 .form-group select {
-  width: calc(100% - 20px); /* Account for padding */
   padding: 10px;
-  border: 1px solid #d4dce0;
-  border-radius: 6px;
-  font-size: 1em;
-  color: #555;
-  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.form-group input[type="text"]:focus,
-.form-group input[type="number"]:focus,
-.form-group input[type="date"]:focus,
-.form-group select:focus {
-  border-color: #6a8cff; /* Blue focus border */
-  box-shadow: 0 0 0 3px rgba(106, 140, 255, 0.2); /* Subtle blue glow */
-  outline: none;
-}
-
-.form-group input[disabled] {
-  background-color: #e9ecef;
-  cursor: not-allowed;
-}
-
-.error-message {
-  color: #e74c3c; /* Red for errors */
-  font-size: 0.9em;
-  margin-left: 10px;
-}
-
-/* Checkbox specific styling */
-.form-group label.checkbox-label {
-  display: flex;
-  align-items: center;
-  font-weight: normal; /* Make checkbox label less bold */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 100%; /* Make inputs take full width of their container */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
 .form-group input[type="checkbox"] {
-  margin-left: 10px;
-  transform: scale(1.2); /* Slightly larger checkbox */
+  width: auto; /* Checkboxes should not take full width */
+  margin-top: 5px;
 }
 
-/* Buttons */
-.button-group {
-  text-align: center;
-  margin-top: 40px;
-  margin-bottom: 20px;
-}
-
-.button {
-  padding: 12px 25px;
+/* Reset Button */
+.reset-button {
+  display: block;
+  width: 150px;
+  padding: 10px 20px;
+  margin: 20px auto;
+  background-color: #dc3545; /* Red for reset */
+  color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 5px;
+  font-size: 1rem;
   cursor: pointer;
-  font-size: 1.1em;
-  font-weight: 600;
-  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s ease-in-out;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  margin: 0 8px;
+  transition: background-color 0.3s ease;
 }
 
-.button-primary {
-  background-color: #3498db; /* A vibrant blue */
-  color: white;
+.reset-button:hover {
+  background-color: #c82333;
 }
 
-.button-primary:hover {
-  background-color: #2980b9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-}
-
-.button-primary:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.button-danger {
-  background-color: #e74c3c; /* A strong red */
-  color: white;
-}
-
-.button-danger:hover {
-  background-color: #c0392b;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-}
-
-.button-danger:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.button-success {
-  background-color: #2ecc71; /* A friendly green */
-  color: white;
-}
-
-.button-success:hover {
-  background-color: #27ae60;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-}
-
-.button-success:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-
-/* Assessment Results Section */
+/* Results Section */
 .results-section {
-  margin-top: 30px;
-  border: 1px solid #e9edf1;
-  padding: 25px;
-  border-radius: 10px;
-  background-color: #fefefe;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.results-content {
-  padding: 15px;
-  background-color: #ffffff;
-  font-size: 0.95em;
-  line-height: 1.7;
-}
-
-.results-summary-section {
-  margin-bottom: 20px;
-  padding: 15px;
-  border: 1px solid #dee7ed;
-  border-left: 5px solid #5fafe0; /* Accent border */
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
   border-radius: 6px;
-  background-color: #f7fcfe;
+  padding: 20px;
 }
 
-.school-result-card {
-  margin-bottom: 20px;
-  padding: 15px;
-  border: 1px solid #dcdcdc;
-  border-radius: 8px;
-  background-color: #fbfbfb;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.03); /* Very light shadow */
+.results-section p {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
 }
 
-.school-result-card p {
-  margin-bottom: 5px; /* Tighter spacing for result lines */
+.results-section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
 }
 
-/* Affordability Status Colors */
-.affordability-green {
-  border-left: 8px solid #2ecc71; /* Green */
-  background-color: #f0fff0; /* Very light green background */
+.results-section th,
+.results-section td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
 }
 
-.affordability-orange {
-  border-left: 8px solid #f39c12; /* Orange */
-  background-color: #fff8e1; /* Very light orange background */
-}
-
-.affordability-red {
-  border-left: 8px solid #e74c3c; /* Red */
-  background-color: #ffebee; /* Very light red background */
-}
-
-/* Optional: Add some margin-top to the school-result-card when colored for better visual separation if needed */
-.school-result-card.affordability-green,
-.school-result-card.affordability-orange,
-.school-result-card.affordability-red {
-  margin-top: 15px;
-}
-
-/* Add some styles for the ranking indicator */
-.school-rank {
+.results-section th {
+  background-color: #f2f2f2;
   font-weight: bold;
-  font-size: 1.2em;
-  color: #34495e;
-  margin-right: 10px;
+  color: #333;
 }
 
-/* Font import for Open Sans from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+/* Affordability Status Styling */
+.status-green {
+  background-color: #d4edda; /* Light green */
+  color: #155724; /* Dark green text */
+  font-weight: bold;
+}
+
+.status-orange {
+  background-color: #fff3cd; /* Light orange/yellow */
+  color: #856404; /* Dark orange text */
+  font-weight: bold;
+}
+
+.status-red {
+  background-color: #f8d7da; /* Light red */
+  color: #721c24; /* Dark red text */
+  font-weight: bold;
+}
+
+.warning-message {
+    color: #dc3545; /* Bootstrap danger red */
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #f5c6cb;
+    background-color: #f8d7da;
+    border-radius: 5px;
+    margin-top: 20px;
+}
