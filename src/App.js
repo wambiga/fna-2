@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import html2pdf from 'html2pdf.js';
 import './App.css';
 import { FaCalculator, FaRedo, FaDownload } from 'react-icons/fa';
