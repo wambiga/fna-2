@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react'; // Removed useEffect
+import React, { useState, useMemo, useRef, useCallback } from 'react'; // Added useCallback
 import html2pdf from 'html2pdf.js'; // Import html2pdf.js
 
 // Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
@@ -82,7 +82,6 @@ function App() {
     pg1OtherAssets: 0,
     pg1HomeMarketValue: 0,
     pg1HomeOutstandingMortgage: 0,
-    pg1TotalOutstandingDebt: 0, // Kept this as it was in the uploaded file
     pg1AnnualDebtPayment: 0,
     otherPropertiesNetIncome: 0,
     assetsAnotherCountryNetIncome: 0,
@@ -93,7 +92,6 @@ function App() {
     pg2StudentOtherAssets: 0,
     pg2ParentsAnnualDiscretionaryExpenditure: 0,
     pg2OtherHouseholdCosts: 0,
-    pg2TotalOutstandingDebt: 0, // Kept this as it was in the uploaded file
     pg2AnnualDebtPayment: 0,
     annualLoanRepayment: 0,
     familyAnticipatedAnnualSavings: 0,
@@ -143,13 +141,13 @@ function App() {
     return isNaN(num) ? 0 : num;
   };
 
-  // Helper function to convert NC currency to USD
-  const convertNcToUsd = (valueInNcCurrency, exchangeRate) => {
+  // Helper function to convert NC currency to USD - now wrapped in useCallback
+  const convertNcToUsd = useCallback((valueInNcCurrency, exchangeRate) => {
     if (exchangeRate <= 0) {
       return 0; // Prevent division by zero or negative rates
     }
     return getNum(valueInNcCurrency) / getNum(exchangeRate);
-  };
+  }, []); // Empty dependency array means this function is memoized and stable
 
   // Main financial need calculation logic, memoized for performance
   const allSchoolResults = useMemo(() => {
@@ -157,7 +155,7 @@ function App() {
       ncCurrencySymbol,
       exchangeRateToUSD,
       exchangeRateDate,
-      annualReturnOnAssets, // This will now be 0.025 by default
+      annualReturnOnAssets,
 
       // Page 1
       parentsLiveSameHome,
@@ -171,7 +169,6 @@ function App() {
       pg1OtherAssets,
       pg1HomeMarketValue,
       pg1HomeOutstandingMortgage,
-      pg1TotalOutstandingDebt,
       pg1AnnualDebtPayment,
       otherPropertiesNetIncome,
       assetsAnotherCountryNetIncome,
@@ -182,7 +179,6 @@ function App() {
       pg2StudentOtherAssets,
       pg2ParentsAnnualDiscretionaryExpenditure,
       pg2OtherHouseholdCosts,
-      pg2TotalOutstandingDebt,
       pg2AnnualDebtPayment,
       annualLoanRepayment,
       familyAnticipatedAnnualSavings,
@@ -375,9 +371,9 @@ function App() {
       uwcFamilyContributionRequiredUSD: uwcFamilyContributionRequiredUSD.toFixed(2),
       familyAnticipatedAnnualSavings: getNum(familyAnticipatedAnnualSavings).toFixed(2),
       potentialLoanAmount: getNum(potentialLoanAmount).toFixed(2),
-      allSchoolResults: calculatedSchoolResults, // <<-- Using the renamed variable here
+      allSchoolResults: calculatedSchoolResults,
     };
-  }, [formData]); // Removed convertNcToUsd from dependencies
+  }, [formData, convertNcToUsd]); // Added convertNcToUsd to dependencies
 
   const handleCalculate = (e) => {
     e.preventDefault();
@@ -398,7 +394,7 @@ function App() {
       ncCurrencySymbol: '',
       exchangeRateToUSD: 0,
       exchangeRateDate: '',
-      annualReturnOnAssets: 0.025, // Adjusted to 2.5% here too
+      annualReturnOnAssets: 0.025,
 
       pg1NumberIndependentAdults: 1,
       pg1NumberFinancialDependents: 0,
@@ -411,7 +407,6 @@ function App() {
       pg1OtherAssets: 0,
       pg1HomeMarketValue: 0,
       pg1HomeOutstandingMortgage: 0,
-      pg1TotalOutstandingDebt: 0,
       pg1AnnualDebtPayment: 0,
       otherPropertiesNetIncome: 0,
       assetsAnotherCountryNetIncome: 0,
@@ -421,7 +416,6 @@ function App() {
       pg2StudentOtherAssets: 0,
       pg2ParentsAnnualDiscretionaryExpenditure: 0,
       pg2OtherHouseholdCosts: 0,
-      pg2TotalOutstandingDebt: 0,
       pg2AnnualDebtPayment: 0,
       annualLoanRepayment: 0,
       familyAnticipatedAnnualSavings: 0,
@@ -673,19 +667,6 @@ function App() {
             />
           </div>
           <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg1TotalOutstandingDebt" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Total Outstanding Debt (Parent 1):</label>
-            <input
-              type="number"
-              id="pg1TotalOutstandingDebt"
-              name="pg1TotalOutstandingDebt"
-              min="0"
-              step="0.01"
-              value={formData.pg1TotalOutstandingDebt}
-              onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-            />
-          </div>
-          <div style={{ marginBottom: '15px' }}>
             <label htmlFor="pg1AnnualDebtPayment" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Debt Payment (Parent 1):</label>
             <input
               type="number"
@@ -793,19 +774,6 @@ function App() {
               onChange={handleChange}
               disabled={formData.parentsLiveSameHome} // Disable if parents live in the same home
               style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: formData.parentsLiveSameHome ? '#e9ecef' : 'white' }}
-            />
-          </div>
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="pg2TotalOutstandingDebt" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Total Outstanding Debt (Parent 2):</label>
-            <input
-              type="number"
-              id="pg2TotalOutstandingDebt"
-              name="pg2TotalOutstandingDebt"
-              min="0"
-              step="0.01"
-              value={formData.pg2TotalOutstandingDebt}
-              onChange={handleChange}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
             />
           </div>
           <div style={{ marginBottom: '15px' }}>
