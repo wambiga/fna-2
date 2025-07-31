@@ -28,42 +28,42 @@ const ANNUAL_AFFORDABILITY_GAP_THRESHOLD = 10000;
 
 function App() {
   const [formData, setFormData] = useState({
-    ncCurrencySymbol: 'KES', // Default to Kenyan Shillings
-    exchangeRateToUSD: 130, // Example: 130 KES to 1 USD
-    exchangeRateDate: '2023-10-26',
-    annualReturnOnAssets: 0.025, // 2.5%
+    ncCurrencySymbol: '', // Empty
+    exchangeRateToUSD: 0, // Zero
+    exchangeRateDate: '', // Empty
+    annualReturnOnAssets: 0, // Zero
 
     // Page 1: Family Income & Assets (all in NC unless specified)
-    parentsLiveSameHome: true,
-    pg1NumberIndependentAdults: 2,
-    pg1NumberFinancialDependents: 1, // Student is usually a dependent too, so 1 for other dependents
-    pg1AnnualIncomePrimaryParent: 5000000, // Example: 5,000,000 KES
-    pg1AnnualIncomeOtherParent: 2000000,
-    pg1AnnualBenefits: 0,
-    pg1OtherAnnualIncome: 0,
-    pg1CashSavings: 500000,
-    pg1OtherAssets: 0,
-    pg1HomeMarketValue: 15000000, // Example: 15,000,000 KES
-    pg1HomeOutstandingMortgage: 5000000,
-    pg1AnnualDebtPayment: 120000,
-    otherPropertiesNetIncome: 0,
-    assetsAnotherCountryNetIncome: 0,
+    parentsLiveSameHome: true, // Default to true, can be changed by user
+    pg1NumberIndependentAdults: 0, // Zero
+    pg1NumberFinancialDependents: 0, // Zero
+    pg1AnnualIncomePrimaryParent: 0, // Zero
+    pg1AnnualIncomeOtherParent: 0, // Zero
+    pg1AnnualBenefits: 0, // Zero
+    pg1OtherAnnualIncome: 0, // Zero
+    pg1CashSavings: 0, // Zero
+    pg1OtherAssets: 0, // Zero
+    pg1HomeMarketValue: 0, // Zero
+    pg1HomeOutstandingMortgage: 0, // Zero
+    pg1AnnualDebtPayment: 0, // Zero
+    otherPropertiesNetIncome: 0, // Zero
+    assetsAnotherCountryNetIncome: 0, // Zero
 
     // Page 2: Student & Family Expenses (all in NC unless specified)
-    pg2StudentAnnualIncome: 0,
-    pg2StudentCashSavings: 0,
-    pg2StudentOtherAssets: 0,
-    pg2ParentsAnnualDiscretionaryExpenditure: 1200000, // Example: 1,200,000 KES
-    pg2OtherHouseholdCosts: 0,
-    pg2AnnualDebtPayment: 0, // This seems redundant if pg1AnnualDebtPayment covers it. Clarify if separate.
-    annualLoanRepayment: 0, // This also seems redundant. Clarify if separate.
-    familyAnticipatedAnnualSavings: 0, // In NC
-    potentialLoanAmount: 0, // In NC
+    pg2StudentAnnualIncome: 0, // Zero
+    pg2StudentCashSavings: 0, // Zero
+    pg2StudentOtherAssets: 0, // Zero
+    pg2ParentsAnnualDiscretionaryExpenditure: 0, // Zero
+    pg2OtherHouseholdCosts: 0, // Zero
+    pg2AnnualDebtPayment: 0, // Zero
+    annualLoanRepayment: 0, // Zero
+    familyAnticipatedAnnualSavings: 0, // Zero
+    potentialLoanAmount: 0, // Zero
 
     // Page 3: UWC Specifics
-    annualTravelCostUSD: 1000, // In USD
-    ncScholarshipProvidedTwoYearsUSD: 0, // Example: already secured NC Scholarship in USD
-    ncCurrentFeesPayableAnnual: 0, // NEW: Annual amount in National Currency
+    annualTravelCostUSD: 0, // Zero
+    ncScholarshipProvidedTwoYearsUSD: 0, // Zero
+    ncCurrentFeesPayableAnnual: 0, // Zero
   });
 
   // 'errors' is not being used to display error messages, so it can be safely removed or commented out
@@ -89,14 +89,14 @@ function App() {
 
   const handleReset = useCallback(() => {
     setFormData({
-      ncCurrencySymbol: 'KES',
-      exchangeRateToUSD: 130,
-      exchangeRateDate: '2023-10-26',
-      annualReturnOnAssets: 0.025,
+      ncCurrencySymbol: '',
+      exchangeRateToUSD: 0,
+      exchangeRateDate: '',
+      annualReturnOnAssets: 0,
 
       parentsLiveSameHome: true,
-      pg1NumberIndependentAdults: 2,
-      pg1NumberFinancialDependents: 1,
+      pg1NumberIndependentAdults: 0,
+      pg1NumberFinancialDependents: 0,
       pg1AnnualIncomePrimaryParent: 0,
       pg1AnnualIncomeOtherParent: 0,
       pg1AnnualBenefits: 0,
@@ -121,7 +121,7 @@ function App() {
 
       annualTravelCostUSD: 0,
       ncScholarshipProvidedTwoYearsUSD: 0,
-      ncCurrentFeesPayableAnnual: 0, // Reset the new field
+      ncCurrentFeesPayableAnnual: 0,
     });
     // If you remove the errors state, remove this line too:
     // setErrors({});
@@ -129,13 +129,8 @@ function App() {
 
   const allSchoolResults = useMemo(() => {
     const {
-      // Removed from destructuring as they are not used within this useMemo's calculations:
-      // ncCurrencySymbol,
-      // parentsLiveSameHome,
-      // errors, // Also remove if you remove the state above
       exchangeRateToUSD,
       annualReturnOnAssets,
-      // pg1NumberIndependentAdults, // Used below, keep in context
       pg1NumberFinancialDependents,
       pg1AnnualIncomePrimaryParent,
       pg1AnnualIncomeOtherParent,
@@ -162,7 +157,6 @@ function App() {
       ncCurrentFeesPayableAnnual,
     } = formData;
 
-    // Use formData.pg1NumberIndependentAdults directly instead of destructuring
     const numIndependentAdults = getNum(formData.pg1NumberIndependentAdults);
 
 
@@ -258,10 +252,8 @@ function App() {
 
       const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
 
-      // The scholarship awarded is now purely based on the difference, no school-specific cap
       const uwcNeedsBasedScholarshipUSD = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - actualAnnualFamilyContributionUSD);
 
-      // The actual amount the family pays is their assessed contribution after the current fees minimum
       const finalFamilyPaymentRequiredAnnualUSD = actualAnnualFamilyContributionUSD;
 
       const percentagePayableBySchool =
@@ -298,7 +290,7 @@ function App() {
 
         // Scholarship calculations (now uncapped)
         uwcNeedsBasedScholarshipUSD: uwcNeedsBasedScholarshipUSD.toFixed(2),
-        netUWCAnnualFeesUSD: finalFamilyPaymentRequiredAnnualUSD.toFixed(2), // Net fees are simply family's contribution
+        netUWCAnnualFeesUSD: finalFamilyPaymentRequiredAnnualUSD.toFixed(2),
 
         // Final amounts family pays/school covers
         finalFamilyPaymentRequiredAnnualUSD: finalFamilyPaymentRequiredAnnualUSD.toFixed(2),
@@ -388,7 +380,7 @@ function App() {
         </section>
 
         <section className="form-section">
-          <h2>Page 1: Family Income & Assets ({formData.ncCurrencySymbol})</h2>
+          <h2>Page 1: Family Income & Assets ({formData.ncCurrencySymbol || 'NC'})</h2>
           <div className="form-group">
             <label htmlFor="parentsLiveSameHome">Parents Live in Same Home:</label>
             <input
@@ -556,7 +548,7 @@ function App() {
         </section>
 
         <section className="form-section">
-          <h2>Page 2: Student & Family Expenses ({formData.ncCurrencySymbol})</h2>
+          <h2>Page 2: Student & Family Expenses ({formData.ncCurrencySymbol || 'NC'})</h2>
           <div className="form-group">
             <label htmlFor="pg2StudentAnnualIncome">Student's Annual Income:</label>
             <input
@@ -694,7 +686,7 @@ function App() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="ncCurrentFeesPayableAnnual">Current Annual Fees Payable (in {formData.ncCurrencySymbol}):</label>
+            <label htmlFor="ncCurrentFeesPayableAnnual">Current Annual Fees Payable (in {formData.ncCurrencySymbol || 'NC'}):</label>
             <input
               type="number"
               id="ncCurrentFeesPayableAnnual"
@@ -714,40 +706,52 @@ function App() {
 
       <section className="results-section">
         <h2>Overall Financial Summary (USD)</h2>
-        <p><strong>Annual Funds Available for Fees:</strong> ${allSchoolResults.annualFundsAvailableForFeesUSD}</p>
-        <p><strong>Current Annual Fees Payable (Converted):</strong> ${allSchoolResults.ncCurrentFeesPayableAnnualUSD}</p>
+        {/* Added check for exchangeRateToUSD to avoid division by zero early on */}
+        {getNum(formData.exchangeRateToUSD) > 0 ? (
+          <>
+            <p><strong>Annual Funds Available for Fees:</strong> ${allSchoolResults.annualFundsAvailableForFeesUSD}</p>
+            <p><strong>Current Annual Fees Payable (Converted):</strong> ${allSchoolResults.ncCurrentFeesPayableAnnualUSD}</p>
+          </>
+        ) : (
+          <p className="warning-message">Please enter an exchange rate to see financial summaries.</p>
+        )}
+
 
         <h2>School-Specific Assessment Results (USD)</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>School Name</th>
-              <th>Total Annual Cost</th>
-              <th>Assessed Family Contribution</th>
-              <th>Actual Family Contribution (After Current Fees Min)</th>
-              <th>UWC Needs-Based Scholarship</th>
-              <th>Actual Family Payment Required</th>
-              <th>School % Covered</th>
-              <th>Family % Covered</th>
-              <th>Affordability Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {allSchoolResults.allSchoolResults.map((result) => (
-              <tr key={result.schoolName}>
-                <td>{result.schoolName}</td>
-                <td>${result.totalGrossAnnualCostOfAttendanceUSD}</td>
-                <td>${result.uwcFamilyContributionRequiredUSD}</td>
-                <td>${result.actualAnnualFamilyContributionUSD}</td>
-                <td>${result.uwcNeedsBasedScholarshipUSD}</td>
-                <td>${result.finalFamilyPaymentRequiredAnnualUSD}</td>
-                <td>{result.percentagePayableBySchool}%</td>
-                <td>{result.percentagePayableByFamily}%</td>
-                <td className={`status-${result.affordabilityStatus}`}>{result.affordabilityStatus.toUpperCase()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {getNum(formData.exchangeRateToUSD) > 0 ? (
+            <table>
+            <thead>
+                <tr>
+                <th>School Name</th>
+                <th>Total Annual Cost</th>
+                <th>Assessed Family Contribution</th>
+                <th>Actual Family Contribution (After Current Fees Min)</th>
+                <th>UWC Needs-Based Scholarship</th>
+                <th>Actual Family Payment Required</th>
+                <th>School % Covered</th>
+                <th>Family % Covered</th>
+                <th>Affordability Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {allSchoolResults.allSchoolResults.map((result) => (
+                <tr key={result.schoolName}>
+                    <td>{result.schoolName}</td>
+                    <td>${result.totalGrossAnnualCostOfAttendanceUSD}</td>
+                    <td>${result.uwcFamilyContributionRequiredUSD}</td>
+                    <td>${result.actualAnnualFamilyContributionUSD}</td>
+                    <td>${result.uwcNeedsBasedScholarshipUSD}</td>
+                    <td>${result.finalFamilyPaymentRequiredAnnualUSD}</td>
+                    <td>{result.percentagePayableBySchool}%</td>
+                    <td>{result.percentagePayableByFamily}%</td>
+                    <td className={`status-${result.affordabilityStatus}`}>{result.affordabilityStatus.toUpperCase()}</td>
+                </tr>
+                ))}
+            </tbody>
+            </table>
+        ) : (
+            <p className="warning-message">Enter an exchange rate to calculate school results.</p>
+        )}
       </section>
     </div>
   );
