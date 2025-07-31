@@ -62,6 +62,8 @@ const currencyList = [
   { abbr: 'KRW', symbol: '₩' },
 ];
 
+// Define an affordability threshold for 'orange' status (e.g., up to $10,000 difference over two years)
+const ORANGE_AFFORDABILITY_THRESHOLD = 10000;
 
 function App() {
   const [formData, setFormData] = useState({
@@ -219,6 +221,7 @@ function App() {
           amountPayableByFamilyAnnual: '0.00',
           percentagePayableBySchool: '0.00',
           percentagePayableByFamily: '0.00',
+          affordabilityStatus: 'red', // Default to red if no exchange rate
         })),
       };
     }
@@ -229,10 +232,11 @@ function App() {
     const ncIncomeOtherParentUSD = convertNcToUsd(pg1AnnualIncomeOtherParent, exchangeRateToUSD);
     const ncAnnualBenefitsUSD = convertNcToUsd(pg1AnnualBenefits, exchangeRateToUSD);
     const ncOtherAnnualIncomeUSD = convertNcToUsd(pg1OtherAnnualIncome, exchangeRateToUSD);
-    const ncCashSavingsUSD = convertNcToUsd(pg1CashSavings, exchangeRateToUSD);
-    const ncOtherAssetsUSD = convertNcToUsd(pg1OtherAssets, exchangeRateToUSD);
     const ncOtherPropertiesNetIncomeUSD = convertNcToUsd(otherPropertiesNetIncome, exchangeRateToUSD);
     const ncAssetsAnotherCountryNetIncomeUSD = convertNcToUsd(assetsAnotherCountryNetIncome, exchangeRateToUSD);
+
+    const ncCashSavingsUSD = convertNcToUsd(pg1CashSavings, exchangeRateToUSD);
+    const ncOtherAssetsUSD = convertNcToUsd(pg1OtherAssets, exchangeRateToUSD);
 
     const ncStudentAnnualIncomeUSD = convertNcToUsd(pg2StudentAnnualIncome, exchangeRateToUSD);
     const ncStudentCashSavingsUSD = convertNcToUsd(pg2StudentCashSavings, exchangeRateToUSD);
@@ -321,6 +325,21 @@ function App() {
           ? (amountPayableByFamilyAnnual / totalGrossAnnualCostOfAttendanceUSD) * 100
           : 0;
 
+      // --- Affordability Status Calculation ---
+      const totalFamilyAvailableFundsTwoYears = (getNum(familyAnticipatedAnnualSavings) * 2) + getNum(potentialLoanAmount);
+      let affordabilityStatus = 'red'; // Default to red
+
+      if (suggestedFamilyContributionTwoYearsUSD <= totalFamilyAvailableFundsTwoYears) {
+        affordabilityStatus = 'green';
+      } else if (
+        suggestedFamilyContributionTwoYearsUSD > totalFamilyAvailableFundsTwoYears &&
+        (suggestedFamilyContributionTwoYearsUSD - totalFamilyAvailableFundsTwoYears) <= ORANGE_AFFORDABILITY_THRESHOLD
+      ) {
+        affordabilityStatus = 'orange';
+      }
+      // --- End Affordability Status Calculation ---
+
+
       return {
         schoolName: school.name,
         schoolAnnualFeesUSD: schoolAnnualFeesUSD.toFixed(2),
@@ -329,7 +348,7 @@ function App() {
         totalNeedUSD: totalNeedUSD.toFixed(2),
         uwcNeedsBasedScholarshipUSD: uwcNeedsBasedScholarshipUSD.toFixed(2),
         uwcNeedsBasedScholarshipPercentage: uwcNeedsBasedScholarshipPercentage.toFixed(2),
-        netUWCAnnualFeesUSD: netUWCAnnualFeesUSD.toFixed(2),
+        netUWCAnnualFeesUSD: netUWCAnnualFeesUSD.toFixed(2), // This is the key for ranking
         suggestedFamilyContributionTwoYearsUSD: suggestedFamilyContributionTwoYearsUSD.toFixed(2),
         combinedNcAndFamilyContributionTwoYearsUSD: combinedNcAndFamilyContributionTwoYearsUSD.toFixed(2),
         totalCostOfAttendanceTwoYearsUSD: totalCostOfAttendanceTwoYearsUSD.toFixed(2),
@@ -338,8 +357,13 @@ function App() {
         amountPayableByFamilyAnnual: amountPayableByFamilyAnnual.toFixed(2),
         percentagePayableBySchool: percentagePayableBySchool.toFixed(2),
         percentagePayableByFamily: percentagePayableByFamily.toFixed(2),
+        affordabilityStatus: affordabilityStatus, // Add the calculated status
       };
     });
+
+    // --- Sort the schools by netUWCAnnualFeesUSD (most affordable first) ---
+    calculatedSchoolResults.sort((a, b) => parseFloat(a.netUWCAnnualFeesUSD) - parseFloat(b.netUWCAnnualFeesUSD));
+    // --- End Sorting ---
 
     return {
       ncCurrencySymbol,
@@ -861,17 +885,23 @@ function App() {
           </section>
 
           <section>
-            <h4>School-Specific Assessment Breakdown</h4>
+            <h4>School-Specific Assessment Breakdown (Ranked by Affordability)</h4>
             {allSchoolResults.allSchoolResults.map((school, index) => (
-              <div key={index} className="school-result-card">
-                <h5>{school.schoolName}</h5>
+              <div
+                key={index}
+                className={`school-result-card affordability-${school.affordabilityStatus}`}
+              >
+                <h5>
+                  <span className="school-rank">{index + 1}.</span> {school.schoolName}
+                </h5>
+                <p><strong>Affordability Status:</strong> <span style={{ color: school.affordabilityStatus === 'green' ? '#2ecc71' : school.affordabilityStatus === 'orange' ? '#f39c12' : '#e74c3c', fontWeight: 'bold' }}>{school.affordabilityStatus.charAt(0).toUpperCase() + school.affordabilityStatus.slice(1)}</span></p>
                 <p><strong>Annual Fees:</strong> ${school.schoolAnnualFeesUSD}</p>
                 <p><strong>Avg. Additional Costs:</strong> ${school.schoolAvgAdditionalCostsUSD}</p>
                 <p><strong>Annual Travel Cost:</strong> ${formData.annualTravelCostUSD.toFixed(2)}</p>
                 <p><strong>Total Gross Annual Cost of Attendance:</strong> ${school.totalGrossAnnualCostOfAttendanceUSD}</p>
                 <p><strong>Total Need:</strong> ${school.totalNeedUSD}</p>
                 <p><strong>UWC Needs-Based Scholarship:</strong> ${school.uwcNeedsBasedScholarshipUSD} ({school.uwcNeedsBasedScholarshipPercentage}%)</p>
-                <p><strong>Net UWC Annual Fees:</strong> ${school.netUWCAnnualFeesUSD}</p>
+                <p><strong>Net UWC Annual Fees (Family Pays Annually):</strong> ${school.netUWCAnnualFeesUSD}</p>
                 <p><strong>Suggested Family Contribution (2 Yrs):</strong> ${school.suggestedFamilyContributionTwoYearsUSD}</p>
                 <p><strong>National Committee Scholarship Provided (2 Yrs):</strong> ${formData.ncScholarshipProvidedTwoYearsUSD.toFixed(2)}</p>
                 <p><strong>Combined NC & Family Contribution (2 Yrs):</strong> ${school.combinedNcAndFamilyContributionTwoYearsUSD}</p>

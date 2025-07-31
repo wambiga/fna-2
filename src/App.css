@@ -229,5 +229,36 @@ h5 {
   margin-bottom: 5px; /* Tighter spacing for result lines */
 }
 
+/* Affordability Status Colors */
+.affordability-green {
+  border-left: 8px solid #2ecc71; /* Green */
+  background-color: #f0fff0; /* Very light green background */
+}
+
+.affordability-orange {
+  border-left: 8px solid #f39c12; /* Orange */
+  background-color: #fff8e1; /* Very light orange background */
+}
+
+.affordability-red {
+  border-left: 8px solid #e74c3c; /* Red */
+  background-color: #ffebee; /* Very light red background */
+}
+
+/* Optional: Add some margin-top to the school-result-card when colored for better visual separation if needed */
+.school-result-card.affordability-green,
+.school-result-card.affordability-orange,
+.school-result-card.affordability-red {
+  margin-top: 15px;
+}
+
+/* Add some styles for the ranking indicator */
+.school-rank {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #34495e;
+  margin-right: 10px;
+}
+
 /* Font import for Open Sans from Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
