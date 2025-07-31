@@ -62,8 +62,8 @@ const currencyList = [
   { abbr: 'KRW', symbol: '₩' },
 ];
 
-// Define an affordability threshold for 'orange' status (e.g., up to $20,000 difference over two years)
-const ORANGE_AFFORDABILITY_THRESHOLD = 20000; // Changed from 10000 to 20000
+// Define an affordability threshold for 'orange' status (e.g., up to $10,000 annual difference)
+const ANNUAL_AFFORDABILITY_GAP_THRESHOLD = 10000; // Changed to reflect annual threshold
 
 function App() {
   const [formData, setFormData] = useState({
@@ -206,6 +206,7 @@ function App() {
         uwcFamilyContributionRequiredUSD: '0.00',
         familyAnticipatedAnnualSavings: '0.00', // Keep these as string '0.00' for display
         potentialLoanAmount: '0.00', // Keep these as string '0.00' for display
+        annualFundsAvailableForFeesUSD: '0.00', // New: Annual Funds Available
         allSchoolResults: schoolCostsData.map(school => ({
           schoolName: school.name,
           schoolAnnualFeesUSD: school.annualFeesUSD.toFixed(2),
@@ -301,6 +302,12 @@ function App() {
       formula3_estimateCostEducateStudentHome
     );
 
+    // --- New Calculation for Annual Funds Available for Fees ---
+    // This represents the family's annual cash flow + annual share of savings/loan pool
+    const annualDisposableIncome = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure - discretionaryExpenditureForFormula3);
+    const annualFundsAvailableForFeesUSD = annualDisposableIncome + ncFamilyAnticipatedAnnualSavingsUSD + (ncPotentialLoanAmountUSD / 2); // Divide loan by 2 for annual portion
+    // --- End New Calculation ---
+
     const calculatedSchoolResults = schoolCostsData.map(school => {
       const schoolAnnualFeesUSD = school.annualFeesUSD;
       const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
@@ -335,19 +342,18 @@ function App() {
           ? (amountPayableByFamilyAnnual / totalGrossAnnualCostOfAttendanceUSD) * 100
           : 0;
 
-      // --- Affordability Status Calculation ---
-      const totalFamilyAvailableFundsTwoYears = (ncFamilyAnticipatedAnnualSavingsUSD * 2) + ncPotentialLoanAmountUSD;
+      // --- NEW Affordability Status Calculation (Based on Annual Cash Flow vs. Required Contribution) ---
       let affordabilityStatus = 'red'; // Default to red
+      const annualGap = uwcFamilyContributionRequiredUSD - annualFundsAvailableForFeesUSD;
 
-      if (suggestedFamilyContributionTwoYearsUSD <= totalFamilyAvailableFundsTwoYears) {
-        affordabilityStatus = 'green';
-      } else if (
-        suggestedFamilyContributionTwoYearsUSD > totalFamilyAvailableFundsTwoYears &&
-        (suggestedFamilyContributionTwoYearsUSD - totalFamilyAvailableFundsTwoYears) <= ORANGE_AFFORDABILITY_THRESHOLD
-      ) {
-        affordabilityStatus = 'orange';
+      if (annualFundsAvailableForFeesUSD >= uwcFamilyContributionRequiredUSD) {
+          affordabilityStatus = 'green'; // Family's annual available funds meet or exceed the required contribution
+      } else if (annualGap <= ANNUAL_AFFORDABILITY_GAP_THRESHOLD) { // Gap is within $10,000 annually
+          affordabilityStatus = 'orange';
+      } else { // Gap is more than $10,000 annually
+          affordabilityStatus = 'red';
       }
-      // --- End Affordability Status Calculation ---
+      // --- End NEW Affordability Status Calculation ---
 
 
       return {
@@ -391,9 +397,11 @@ function App() {
       formula2_studentContributionUSD: formula2_studentContributionUSD.toFixed(2),
       formula3_estimateCostEducateStudentHome: formula3_estimateCostEducateStudentHome.toFixed(2),
       uwcFamilyContributionRequiredUSD: uwcFamilyContributionRequiredUSD.toFixed(2),
-      // Display the converted USD values here
+      // Display the converted USD values for savings/loan in summary
       familyAnticipatedAnnualSavings: ncFamilyAnticipatedAnnualSavingsUSD.toFixed(2),
       potentialLoanAmount: ncPotentialLoanAmountUSD.toFixed(2),
+      // Display the new calculated annual funds available for fees
+      annualFundsAvailableForFeesUSD: annualFundsAvailableForFeesUSD.toFixed(2),
       allSchoolResults: calculatedSchoolResults,
     };
   }, [formData, convertNcToUsd]);
@@ -894,6 +902,7 @@ function App() {
             <p><strong>UWC Family Contribution Required (Formula Max):</strong> ${allSchoolResults.uwcFamilyContributionRequiredUSD}</p>
             <p><strong>Family Anticipated Annual Savings:</strong> ${allSchoolResults.familyAnticipatedAnnualSavings}</p>
             <p><strong>Potential Loan Amount:</strong> ${allSchoolResults.potentialLoanAmount}</p>
+            <p><strong>Annual Funds Available for Fees (Estimated):</strong> ${allSchoolResults.annualFundsAvailableForFeesUSD}</p>
           </section>
 
           <section>
