@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import html2pdf from 'html2pdf.js';
 
+// Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
 const schoolCostsData = [
   { name: 'UWC South East Asia', annualFeesUSD: 68249, avgAdditionalCostsUSD: 7918.91 },
   { name: 'Li Po Chun United World College of Hong Kong', annualFeesUSD: 49883, avgAdditionalCostsUSD: 2613.76 },
@@ -22,6 +23,7 @@ const schoolCostsData = [
   { name: 'UWC USA', annualFeesUSD: 60000, avgAdditionalCostsUSD: 5000 },
 ];
 
+// Embedded data from "FNA Tool.xlsx - Currency list.csv"
 const currencyList = [
   { abbr: 'USD', symbol: '$' },
   { abbr: 'KES', symbol: 'KSh' },
@@ -58,6 +60,23 @@ const currencyList = [
   { abbr: 'KRW', symbol: '₩' },
 ];
 
+// --- Helper Functions moved outside the component to fix the eslint error ---
+
+// Helper function to get a number from a value, defaulting to 0
+const getNum = (value) => {
+  const num = parseFloat(value);
+  return isNaN(num) ? 0 : num;
+};
+
+// Helper function to convert NC currency to USD
+const convertNcToUsd = (valueInNcCurrency, exchangeRate) => {
+  if (exchangeRate <= 0) {
+    return 0;
+  }
+  return getNum(valueInNcCurrency) / getNum(exchangeRate);
+};
+
+// --- End of Helper Functions ---
 
 function App() {
   const [formData, setFormData] = useState({
@@ -66,6 +85,7 @@ function App() {
     exchangeRateDate: '',
     annualReturnOnAssets: 0.025,
 
+    // Page 1: Family Income & Assets
     parentsLiveSameHome: true,
     pg1NumberIndependentAdults: 1,
     pg1NumberFinancialDependents: 0,
@@ -77,20 +97,24 @@ function App() {
     pg1OtherAssets: 0,
     pg1HomeMarketValue: 0,
     pg1HomeOutstandingMortgage: 0,
+    pg1TotalOutstandingDebt: 0,
     pg1AnnualDebtPayment: 0,
     otherPropertiesNetIncome: 0,
     assetsAnotherCountryNetIncome: 0,
 
+    // Page 2: Student & Family Expenses
     pg2StudentAnnualIncome: 0,
     pg2StudentCashSavings: 0,
     pg2StudentOtherAssets: 0,
     pg2ParentsAnnualDiscretionaryExpenditure: 0,
     pg2OtherHouseholdCosts: 0,
+    pg2TotalOutstandingDebt: 0,
     pg2AnnualDebtPayment: 0,
     annualLoanRepayment: 0,
     familyAnticipatedAnnualSavings: 0,
     potentialLoanAmount: 0,
 
+    // Page 3: UWC Specifics
     annualTravelCostUSD: 0,
     ncScholarshipProvidedTwoYearsUSD: 0,
   });
@@ -123,29 +147,6 @@ function App() {
         return newErrors;
       });
     }
-  };
-
-  const getNum = (value) => {
-    const num = parseFloat(value);
-    return isNaN(num) ? 0 : num;
-  };
-
-  const getSchoolStatus = (combinedNcAndFamilyContributionTwoYearsUSD, totalCostOfAttendanceTwoYearsUSD) => {
-    const gap = totalCostOfAttendanceTwoYearsUSD - combinedNcAndFamilyContributionTwoYearsUSD;
-    if (gap <= 0) {
-      return 'green';
-    } else if (gap <= 10000) {
-      return 'orange';
-    } else {
-      return 'red';
-    }
-  };
-
-  const convertNcToUsd = (valueInNcCurrency, exchangeRate) => {
-    if (exchangeRate <= 0) {
-      return 0;
-    }
-    return getNum(valueInNcCurrency) / getNum(exchangeRate);
   };
 
   const allSchoolResults = useMemo(() => {
@@ -222,6 +223,7 @@ function App() {
     }
 
     const totalHouseholdMembers = getNum(pg1NumberIndependentAdults) + getNum(pg1NumberFinancialDependents);
+
     const ncIncomePrimaryParentUSD = convertNcToUsd(pg1AnnualIncomePrimaryParent, exchangeRateToUSD);
     const ncIncomeOtherParentUSD = convertNcToUsd(pg1AnnualIncomeOtherParent, exchangeRateToUSD);
     const ncAnnualBenefitsUSD = convertNcToUsd(pg1AnnualBenefits, exchangeRateToUSD);
@@ -230,11 +232,14 @@ function App() {
     const ncOtherAssetsUSD = convertNcToUsd(pg1OtherAssets, exchangeRateToUSD);
     const ncOtherPropertiesNetIncomeUSD = convertNcToUsd(otherPropertiesNetIncome, exchangeRateToUSD);
     const ncAssetsAnotherCountryNetIncomeUSD = convertNcToUsd(assetsAnotherCountryNetIncome, exchangeRateToUSD);
+
     const ncStudentAnnualIncomeUSD = convertNcToUsd(pg2StudentAnnualIncome, exchangeRateToUSD);
     const ncStudentCashSavingsUSD = convertNcToUsd(pg2StudentCashSavings, exchangeRateToUSD);
     const ncStudentOtherAssetsUSD = convertNcToUsd(pg2StudentOtherAssets, exchangeRateToUSD);
+
     const ncParentsAnnualDiscretionaryExpenditureUSD = convertNcToUsd(pg2ParentsAnnualDiscretionaryExpenditure, exchangeRateToUSD);
     const ncOtherHouseholdCostsUSD = convertNcToUsd(pg2OtherHouseholdCosts, exchangeRateToUSD);
+
     const pg1AnnualDebtPaymentUSD = convertNcToUsd(pg1AnnualDebtPayment, exchangeRateToUSD);
     const pg2AnnualDebtPaymentUSD = convertNcToUsd(pg2AnnualDebtPayment, exchangeRateToUSD);
     const annualLoanRepaymentUSD = convertNcToUsd(annualLoanRepayment, exchangeRateToUSD);
@@ -246,36 +251,73 @@ function App() {
       ncOtherAnnualIncomeUSD +
       ncOtherPropertiesNetIncomeUSD +
       ncAssetsAnotherCountryNetIncomeUSD;
+
     const totalCashAssets = ncCashSavingsUSD + ncOtherAssetsUSD;
     const annualReturnOnFamilyAssets = totalCashAssets * getNum(annualReturnOnAssets);
+
     const homeEquity = Math.max(0, getNum(pg1HomeMarketValue) - getNum(pg1HomeOutstandingMortgage));
     const annualHomeEquityContribution = homeEquity * 0.02;
+
     const totalAssetsContribution = annualReturnOnFamilyAssets + annualHomeEquityContribution;
+
     const totalAnnualFixedExpenditure = pg1AnnualDebtPaymentUSD + pg2AnnualDebtPaymentUSD + annualLoanRepaymentUSD;
+
     const discretionaryExpenditureForFormula3 = ncParentsAnnualDiscretionaryExpenditureUSD + (parentsLiveSameHome ? 0 : ncOtherHouseholdCostsUSD);
-    const formula1_familyContributionUSD = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure + totalAssetsContribution);
-    const formula2_studentContributionUSD = ncStudentAnnualIncomeUSD + (ncStudentCashSavingsUSD * 0.1) + (ncStudentOtherAssetsUSD * 0.05);
+
+    const formula1_familyContributionUSD = Math.max(
+      0,
+      totalAnnualIncome - totalAnnualFixedExpenditure + totalAssetsContribution
+    );
+
+    const formula2_studentContributionUSD =
+      ncStudentAnnualIncomeUSD +
+      (ncStudentCashSavingsUSD * 0.1) +
+      (ncStudentOtherAssetsUSD * 0.05);
+
     const costHome = 0;
-    const formula3_estimateCostEducateStudentHome = (totalHouseholdMembers > 0 ? discretionaryExpenditureForFormula3 / totalHouseholdMembers : 0) + costHome;
-    const uwcFamilyContributionRequiredUSD = Math.max(0, formula1_familyContributionUSD, formula2_studentContributionUSD, formula3_estimateCostEducateStudentHome);
+    const formula3_estimateCostEducateStudentHome =
+      (totalHouseholdMembers > 0 ? discretionaryExpenditureForFormula3 / totalHouseholdMembers : 0) + costHome;
+
+    const uwcFamilyContributionRequiredUSD = Math.max(
+      0,
+      formula1_familyContributionUSD,
+      formula2_studentContributionUSD,
+      formula3_estimateCostEducateStudentHome
+    );
 
     const calculatedSchoolResults = schoolCostsData.map(school => {
       const schoolAnnualFeesUSD = school.annualFeesUSD;
       const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
+
       const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
+
       const totalNeedUSD = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - uwcFamilyContributionRequiredUSD);
       const uwcNeedsBasedScholarshipUSD = totalNeedUSD;
-      const uwcNeedsBasedScholarshipPercentage = totalGrossAnnualCostOfAttendanceUSD > 0 ? (uwcNeedsBasedScholarshipUSD / totalGrossAnnualCostOfAttendanceUSD) * 100 : 0;
+
+      const uwcNeedsBasedScholarshipPercentage =
+        totalGrossAnnualCostOfAttendanceUSD > 0
+          ? (uwcNeedsBasedScholarshipUSD / totalGrossAnnualCostOfAttendanceUSD) * 100
+          : 0;
+
       const netUWCAnnualFeesUSD = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - uwcNeedsBasedScholarshipUSD);
+
       const suggestedFamilyContributionTwoYearsUSD = Math.max(0, (uwcFamilyContributionRequiredUSD * 2) - ncScholarshipProvidedTwoYearsUSD);
       const combinedNcAndFamilyContributionTwoYearsUSD = getNum(ncScholarshipProvidedTwoYearsUSD) + suggestedFamilyContributionTwoYearsUSD;
       const totalCostOfAttendanceTwoYearsUSD = totalGrossAnnualCostOfAttendanceUSD * 2;
       const combinedContributionMeetsExpectation = combinedNcAndFamilyContributionTwoYearsUSD >= totalCostOfAttendanceTwoYearsUSD;
+
       const amountPayableBySchoolAnnual = uwcNeedsBasedScholarshipUSD;
       const amountPayableByFamilyAnnual = uwcFamilyContributionRequiredUSD;
-      const percentagePayableBySchool = totalGrossAnnualCostOfAttendanceUSD > 0 ? (amountPayableBySchoolAnnual / totalGrossAnnualCostOfAttendanceUSD) * 100 : 0;
-      const percentagePayableByFamily = totalGrossAnnualCostOfAttendanceUSD > 0 ? (amountPayableByFamilyAnnual / totalGrossAnnualCostOfAttendanceUSD) * 100 : 0;
-      const status = getSchoolStatus(combinedNcAndFamilyContributionTwoYearsUSD, totalCostOfAttendanceTwoYearsUSD);
+
+      const percentagePayableBySchool =
+        totalGrossAnnualCostOfAttendanceUSD > 0
+          ? (amountPayableBySchoolAnnual / totalGrossAnnualCostOfAttendanceUSD) * 100
+          : 0;
+
+      const percentagePayableByFamily =
+        totalGrossAnnualCostOfAttendanceUSD > 0
+          ? (amountPayableByFamilyAnnual / totalGrossAnnualCostOfAttendanceUSD) * 100
+          : 0;
 
       return {
         schoolName: school.name,
@@ -294,7 +336,6 @@ function App() {
         amountPayableByFamilyAnnual: amountPayableByFamilyAnnual.toFixed(2),
         percentagePayableBySchool: percentagePayableBySchool.toFixed(2),
         percentagePayableByFamily: percentagePayableByFamily.toFixed(2),
-        status,
       };
     });
 
@@ -318,7 +359,7 @@ function App() {
       potentialLoanAmount: getNum(potentialLoanAmount).toFixed(2),
       allSchoolResults: calculatedSchoolResults,
     };
-  }, [formData, convertNcToUsd]);
+  }, [formData]);
 
   const handleCalculate = (e) => {
     e.preventDefault();
@@ -340,9 +381,10 @@ function App() {
       exchangeRateToUSD: 0,
       exchangeRateDate: '',
       annualReturnOnAssets: 0.025,
-      parentsLiveSameHome: true,
+
       pg1NumberIndependentAdults: 1,
       pg1NumberFinancialDependents: 0,
+      parentsLiveSameHome: true,
       pg1AnnualIncomePrimaryParent: 0,
       pg1AnnualIncomeOtherParent: 0,
       pg1AnnualBenefits: 0,
@@ -351,18 +393,22 @@ function App() {
       pg1OtherAssets: 0,
       pg1HomeMarketValue: 0,
       pg1HomeOutstandingMortgage: 0,
+      pg1TotalOutstandingDebt: 0,
       pg1AnnualDebtPayment: 0,
       otherPropertiesNetIncome: 0,
       assetsAnotherCountryNetIncome: 0,
+
       pg2StudentAnnualIncome: 0,
       pg2StudentCashSavings: 0,
       pg2StudentOtherAssets: 0,
       pg2ParentsAnnualDiscretionaryExpenditure: 0,
       pg2OtherHouseholdCosts: 0,
+      pg2TotalOutstandingDebt: 0,
       pg2AnnualDebtPayment: 0,
       annualLoanRepayment: 0,
       familyAnticipatedAnnualSavings: 0,
       potentialLoanAmount: 0,
+
       annualTravelCostUSD: 0,
       ncScholarshipProvidedTwoYearsUSD: 0,
     });
@@ -379,6 +425,7 @@ function App() {
 
   const handleDownloadPdf = () => {
     const content = pdfContentRef.current;
+
     if (!content) {
       console.error("PDF content element not found. Cannot generate PDF.");
       return;
@@ -391,6 +438,7 @@ function App() {
       html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
+
     html2pdf().from(content).set(options).save();
   };
 
@@ -604,6 +652,19 @@ function App() {
             />
           </div>
           <div style={{ marginBottom: '15px' }}>
+            <label htmlFor="pg1TotalOutstandingDebt" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Total Outstanding Debt (Parent 1):</label>
+            <input
+              type="number"
+              id="pg1TotalOutstandingDebt"
+              name="pg1TotalOutstandingDebt"
+              min="0"
+              step="0.01"
+              value={formData.pg1TotalOutstandingDebt}
+              onChange={handleChange}
+              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+            />
+          </div>
+          <div style={{ marginBottom: '15px' }}>
             <label htmlFor="pg1AnnualDebtPayment" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Debt Payment (Parent 1):</label>
             <input
               type="number"
@@ -714,6 +775,19 @@ function App() {
             />
           </div>
           <div style={{ marginBottom: '15px' }}>
+            <label htmlFor="pg2TotalOutstandingDebt" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Total Outstanding Debt (Parent 2):</label>
+            <input
+              type="number"
+              id="pg2TotalOutstandingDebt"
+              name="pg2TotalOutstandingDebt"
+              min="0"
+              step="0.01"
+              value={formData.pg2TotalOutstandingDebt}
+              onChange={handleChange}
+              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+            />
+          </div>
+          <div style={{ marginBottom: '15px' }}>
             <label htmlFor="pg2AnnualDebtPayment" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Annual Debt Payment (Parent 2):</label>
             <input
               type="number"
@@ -816,8 +890,10 @@ function App() {
 
       <section style={{ marginTop: '30px', border: '1px solid #e0e0e0', padding: '15px', borderRadius: '8px', backgroundColor: '#fdfdfd' }}>
         <h2 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>Assessment Results</h2>
+
         <div ref={pdfContentRef} style={{ padding: '10px', backgroundColor: '#fff', fontSize: '12px', lineHeight: '1.6' }}>
           <h3 style={{ textAlign: 'center', color: '#333', marginBottom: '20px', fontSize: '18px' }}>Financial Need Assessment Report</h3>
+
           <section style={{ marginBottom: '15px', padding: '10px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
             <h4 style={{ color: '#0056b3', marginBottom: '10px', fontSize: '14px' }}>General Application Details</h4>
             <p><strong>National Currency Symbol:</strong> {allSchoolResults.ncCurrencySymbol}</p>
@@ -825,6 +901,7 @@ function App() {
             <p><strong>Exchange Rate Date:</strong> {allSchoolResults.exchangeRateDate || 'N/A'}</p>
             <p><strong>Annual Return on Assets (%):</strong> {(formData.annualReturnOnAssets * 100).toFixed(2)}%</p>
           </section>
+
           <section style={{ marginBottom: '15px', padding: '10px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
             <h4 style={{ color: '#0056b3', marginBottom: '10px', fontSize: '14px' }}>Family Financial Summary (USD)</h4>
             <p><strong>Total Annual Income:</strong> ${allSchoolResults.totalAnnualIncome}</p>
@@ -835,13 +912,12 @@ function App() {
             <p><strong>Family Anticipated Annual Savings:</strong> ${allSchoolResults.familyAnticipatedAnnualSavings}</p>
             <p><strong>Potential Loan Amount:</strong> ${allSchoolResults.potentialLoanAmount}</p>
           </section>
+
           <section>
             <h4 style={{ color: '#0056b3', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px', fontSize: '16px' }}>School-Specific Assessment Breakdown</h4>
             {allSchoolResults.allSchoolResults.map((school, index) => (
               <div key={index} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#fcfcfc' }}>
-                <h5 style={{ color: '#444', marginBottom: '10px', fontSize: '14px' }}>
-                  {school.schoolName} - Status: <span style={{ color: school.status }}>{school.status.toUpperCase()}</span>
-                </h5>
+                <h5 style={{ color: '#444', marginBottom: '10px', fontSize: '14px' }}>{school.schoolName}</h5>
                 <p><strong>Annual Fees:</strong> ${school.schoolAnnualFeesUSD}</p>
                 <p><strong>Avg. Additional Costs:</strong> ${school.schoolAvgAdditionalCostsUSD}</p>
                 <p><strong>Annual Travel Cost:</strong> ${formData.annualTravelCostUSD.toFixed(2)}</p>
