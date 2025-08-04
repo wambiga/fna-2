@@ -482,37 +482,39 @@ const AssessmentResults = ({ formData, allSchoolResults, onDownloadPdf, onDownlo
   );
 };
 
-const App = () => {
-  const [formData, setFormData] = useState({
-    ncCurrencySymbol: 'USD',
-    exchangeRateToUSD: 1.0,
-    exchangeRateDate: new Date().toISOString().split('T')[0],
-    annualReturnOnAssets: 0.05,
-    pg1NumberIndependentAdults: 2,
-    pg1NumberFinancialDependents: 0,
-    annualSchoolFeesForOtherChildren: 0,
-    annualSchoolFeesForNonDependentChildren: 0,
-    pg1AnnualIncomePrimaryParent: 0,
-    pg1AnnualIncomeOtherParent: 0,
-    pg1AnnualBenefits: 0,
-    pg1OtherAnnualIncome: 0,
-    pg1CashSavings: 0,
-    pg1OtherAssets: 0,
-    pg1HomeMarketValue: 0,
-    pg1HomeOutstandingMortgage: 0,
-    otherPropertiesNetIncome: 0,
-    assetsAnotherCountryNetIncome: 0,
-    pg2StudentAnnualIncome: 0,
-    pg2StudentCashSavings: 0,
-    pg2StudentOtherAssets: 0,
-    annualTravelCostUSD: 2000,
-    ncScholarshipProvidedTwoYearsUSD: 0,
-    totalAnnualLivingExpensesNC: 0,
-    familyAnticipatedAnnualSavings: 0,
-    potentialLoanAmount: 0,
-    unusualCircumstances: '',
-  });
+// Define the initial state outside the component for reusability
+const initialFormData = {
+  ncCurrencySymbol: 'USD',
+  exchangeRateToUSD: 1.0,
+  exchangeRateDate: new Date().toISOString().split('T')[0],
+  annualReturnOnAssets: 0.05,
+  pg1NumberIndependentAdults: 2,
+  pg1NumberFinancialDependents: 0,
+  annualSchoolFeesForOtherChildren: 0,
+  annualSchoolFeesForNonDependentChildren: 0,
+  pg1AnnualIncomePrimaryParent: 0,
+  pg1AnnualIncomeOtherParent: 0,
+  pg1AnnualBenefits: 0,
+  pg1OtherAnnualIncome: 0,
+  pg1CashSavings: 0,
+  pg1OtherAssets: 0,
+  pg1HomeMarketValue: 0,
+  pg1HomeOutstandingMortgage: 0,
+  otherPropertiesNetIncome: 0,
+  assetsAnotherCountryNetIncome: 0,
+  pg2StudentAnnualIncome: 0,
+  pg2StudentCashSavings: 0,
+  pg2StudentOtherAssets: 0,
+  annualTravelCostUSD: 2000,
+  ncScholarshipProvidedTwoYearsUSD: 0,
+  totalAnnualLivingExpensesNC: 0,
+  familyAnticipatedAnnualSavings: 0,
+  potentialLoanAmount: 0,
+  unusualCircumstances: '',
+};
 
+const App = () => {
+  const [formData, setFormData] = useState(initialFormData);
   const pdfContentRef = useRef(null);
 
   const handleInputChange = (e) => {
@@ -521,6 +523,10 @@ const App = () => {
       ...prevData,
       [name]: type === 'checkbox' ? checked : value,
     }));
+  };
+
+  const handleResetForm = () => {
+    setFormData(initialFormData);
   };
 
   const allSchoolResults = useFinancialCalculations(formData);
@@ -880,6 +886,14 @@ const App = () => {
               />
             </div>
           </form>
+          <div style={{ marginTop: '20px' }}>
+            <button
+              onClick={handleResetForm}
+              style={{ padding: '10px 20px', fontSize: '14px', cursor: 'pointer', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px' }}
+            >
+              Reset Form
+            </button>
+          </div>
         </div>
 
         <div style={{ flex: '1 1 40%', minWidth: '400px' }}>
