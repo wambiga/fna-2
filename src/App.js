@@ -407,7 +407,7 @@ const useFinancialCalculations = (formData) => {
 };
 
 // --- Results Component to be rendered in Step 5 ---
-const AssessmentResults = ({ formData, allSchoolResults, onDownloadPdf, pdfContentRef }) => {
+const AssessmentResults = ({ formData, allSchoolResults, onDownloadPdf, onDownloadCsv, pdfContentRef }) => {
   return (
     <section style={{ marginTop: '30px', border: '1px solid #e0e0e0', padding: '15px', borderRadius: '8px', backgroundColor: '#fdfdfd' }}>
       <h2 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>Assessment Results</h2>
@@ -474,7 +474,10 @@ const AssessmentResults = ({ formData, allSchoolResults, onDownloadPdf, pdfConte
           </div>
         </section>
       </div>
-      <button onClick={onDownloadPdf} style={{ marginTop: '20px', padding: '10px 20px', fontSize: '14px', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}>Download as PDF</button>
+      <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+        <button onClick={onDownloadPdf} style={{ flex: 1, padding: '10px 20px', fontSize: '14px', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}>Download as PDF</button>
+        <button onClick={onDownloadCsv} style={{ flex: 1, padding: '10px 20px', fontSize: '14px', cursor: 'pointer', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px' }}>Export to CSV</button>
+      </div>
     </section>
   );
 };
@@ -533,6 +536,46 @@ const App = () => {
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
       html2pdf().from(element).set(opt).save();
+    }
+  };
+
+  const handleDownloadCsv = () => {
+    const data = allSchoolResults.allSchoolResults;
+    if (!data || data.length === 0) return;
+
+    const headers = [
+      "School",
+      "Annual Fees (USD)",
+      "Total Gross Annual Cost (USD)",
+      "Needs-Based Scholarship (USD)",
+      "% by School",
+      "Affordability Status",
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...data.map(school =>
+        [
+          `"${school.schoolName}"`,
+          school.schoolAnnualFeesUSD,
+          school.totalGrossAnnualCostOfAttendanceUSD,
+          school.uwcNeedsBasedScholarshipUSD,
+          school.percentagePayableBySchool,
+          `"${school.contributionStatus}"`
+        ].join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'school_assessment_summary.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -844,6 +887,7 @@ const App = () => {
             formData={formData}
             allSchoolResults={allSchoolResults}
             onDownloadPdf={handleDownloadPdf}
+            onDownloadCsv={handleDownloadCsv}
             pdfContentRef={pdfContentRef}
           />
         </div>
