@@ -207,7 +207,6 @@ const useFinancialCalculations = (formData) => {
     const {
       exchangeRateToUSD,
       annualReturnOnAssets,
-      parentsLiveSameHome,
       pg1NumberIndependentAdults,
       pg1NumberFinancialDependents,
       annualSchoolFeesForOtherChildren,
@@ -486,7 +485,6 @@ const App = () => {
     exchangeRateToUSD: 1.0,
     exchangeRateDate: new Date().toISOString().split('T')[0],
     annualReturnOnAssets: 0.05,
-    parentsLiveSameHome: true,
     pg1NumberIndependentAdults: 2,
     pg1NumberFinancialDependents: 0,
     annualSchoolFeesForOtherChildren: 0,
@@ -604,15 +602,7 @@ const App = () => {
             </div>
             
             <h3 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px', marginTop: '30px' }}>Parent/Guardian 1 & 2 Financial Information</h3>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Do parents/guardians live in the same home?</label>
-              <input
-                type="checkbox"
-                name="parentsLiveSameHome"
-                checked={formData.parentsLiveSameHome}
-                onChange={handleInputChange}
-              />
-            </div>
+            
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Number of Independent Adults:</label>
               <input
