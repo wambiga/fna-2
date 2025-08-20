@@ -277,7 +277,7 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
       const schoolAnnualFeesUSD = school.annualFeesUSD;
       const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
       
-      const maxScholarshipPercentage = getNum(maxScholarshipPercentages[school.name] || school.maxScholarshipPercentage);
+      const maxScholarshipPercentage = getNum(maxScholarshipPercentages[school.name]) / 100;
       const maxScholarshipLocal = (school.annualFeesLocalCurrency * 2) * maxScholarshipPercentage;
       const maxScholarshipFromSchoolUSD = maxScholarshipLocal / school.localCurrencyExchangeRateToUSD;
       
@@ -446,10 +446,9 @@ const App = () => {
   const [maxScholarshipPercentages, setMaxScholarshipPercentages] = useState({});
 
   useEffect(() => {
-    // Initialize the maxScholarshipPercentages state with default values from schoolCostsData
     const initialPercentages = {};
     schoolCostsData.forEach(school => {
-      initialPercentages[school.name] = school.maxScholarshipPercentage * 100;
+      initialPercentages[school.name] = 0;
     });
     setMaxScholarshipPercentages(initialPercentages);
   }, []);
@@ -473,7 +472,7 @@ const App = () => {
     setFormData(initialFormData);
     const initialPercentages = {};
     schoolCostsData.forEach(school => {
-      initialPercentages[school.name] = school.maxScholarshipPercentage * 100;
+      initialPercentages[school.name] = 0;
     });
     setMaxScholarshipPercentages(initialPercentages);
     setActiveTab('general');
