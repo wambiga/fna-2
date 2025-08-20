@@ -350,7 +350,7 @@ const useFinancialCalculations = (formData) => {
       const shortfall = totalCostOfAttendanceTwoYearsUSD - totalContributionAndAwardedScholarshipTwoYearsUSD;
 
       if (shortfall <= 0) {
-        contributionStatus = 'Contribution Meets or Exceeds Cost';
+        contributionStatus = 'Meets or Exceeds Cost';
         contributionColor = '#d4edda';
       } else if (shortfall <= 10000) {
         contributionStatus = `Shortfall of $${shortfall.toFixed(2)}`;
@@ -395,20 +395,20 @@ const useFinancialCalculations = (formData) => {
 // --- Results Component to be rendered in Step 5 ---
 const AssessmentResults = ({ formData, allSchoolResults, onDownloadPdf, onDownloadCsv, pdfContentRef }) => {
   return (
-    <section style={{ marginTop: '30px', border: '1px solid #e0e0e0', padding: '15px', borderRadius: '8px', backgroundColor: '#fdfdfd' }}>
-      <h2 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>Assessment Results</h2>
-      <div ref={pdfContentRef} style={{ padding: '10px', backgroundColor: '#fff', fontSize: '12px', lineHeight: '1.6' }}>
-        <h3 style={{ textAlign: 'center', color: '#333', marginBottom: '20px', fontSize: '18px' }}>Financial Need Assessment Report</h3>
-        <section style={{ marginBottom: '15px', padding: '10px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-          <h4 style={{ color: '#0056b3', marginBottom: '10px', fontSize: '14px' }}>General Application Details</h4>
+    <section className="assessment-results">
+      <h2>Assessment Results</h2>
+      <div ref={pdfContentRef} className="pdf-content">
+        <h3 className="report-title">Financial Need Assessment Report</h3>
+        <section className="summary-section">
+          <h4>General Application Details</h4>
           <p><strong>National Currency Symbol:</strong> {formData.ncCurrencySymbol || 'N/A'}</p>
           <p><strong>Exchange Rate (1 USD = X NC Currency):</strong> {formData.exchangeRateToUSD || 'N/A'}</p>
           <p><strong>Exchange Rate Date:</strong> {formData.exchangeRateDate || 'N/A'}</p>
           <p><strong>Annual Return on Assets (%):</strong> {(formData.annualReturnOnAssets * 100).toFixed(2)}%</p>
           <p><strong>Unusual Circumstances:</strong> {formData.unusualCircumstances || 'N/A'}</p>
         </section>
-        <section style={{ marginBottom: '15px', padding: '10px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-          <h4 style={{ color: '#0056b3', marginBottom: '10px', fontSize: '14px' }}>Family Financial Summary (USD)</h4>
+        <section className="summary-section">
+          <h4>Family Financial Summary (USD)</h4>
           <p><strong>Total Annual Income:</strong> ${allSchoolResults.totalAnnualIncome}</p>
           <p><strong>Total Family Assets:</strong> ${allSchoolResults.totalFamilyAssetsUSD}</p>
           <p><strong>Annual Contribution from Assets:</strong> ${allSchoolResults.totalAssetsContribution}</p>
@@ -417,43 +417,32 @@ const AssessmentResults = ({ formData, allSchoolResults, onDownloadPdf, onDownlo
           <p><strong>Family Anticipated Annual Savings:</strong> ${allSchoolResults.familyAnticipatedAnnualSavings}</p>
           <p><strong>Potential Loan Amount:</strong> ${allSchoolResults.potentialLoanAmount}</p>
         </section>
-        <section>
-          <h4 style={{ color: '#0056b3', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px', fontSize: '16px' }}>School-Specific Assessment Breakdown</h4>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
+        <section className="schools-section">
+          <h4>School-Specific Assessment Breakdown</h4>
+          <div className="table-container">
+            <table>
               <thead>
-                <tr style={{ backgroundColor: '#f2f2f2', borderBottom: '2px solid #ddd' }}>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>School</th>
-                  <th style={{ padding: '8px', textAlign: 'right' }}>Annual Fees</th>
-                  <th style={{ padding: '8px', textAlign: 'right' }}>Total Gross Annual Cost</th>
-                  <th style={{ padding: '8px', textAlign: 'right' }}>Max Scholarship Available</th>
-                  <th style={{ padding: '8px', textAlign: 'right' }}>Needs-Based Scholarship Awarded</th>
-                  <th style={{ padding: '8px', textAlign: 'right' }}>% by School</th>
-                  <th style={{ padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>Total 2-Year Cost</th>
-                  <th style={{ padding: '8px', textAlign: 'center' }}>Affordability Status</th>
+                <tr>
+                  <th>School</th>
+                  <th>Annual Fees</th>
+                  <th>Total Gross Annual Cost</th>
+                  <th>Needs-Based Scholarship Awarded</th>
+                  <th>% by School</th>
+                  <th>Total 2-Year Cost</th>
+                  <th>Affordability Status</th>
                 </tr>
               </thead>
               <tbody>
                 {allSchoolResults.allSchoolResults.map((school, index) => (
-                  <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '8px', verticalAlign: 'top' }}>{school.schoolName}</td>
-                    <td style={{ padding: '8px', textAlign: 'right', verticalAlign: 'top' }}>${school.schoolAnnualFeesUSD}</td>
-                    <td style={{ padding: '8px', textAlign: 'right', verticalAlign: 'top' }}>${school.totalGrossAnnualCostOfAttendanceUSD}</td>
-                    <td style={{ padding: '8px', textAlign: 'right', verticalAlign: 'top' }}>${school.maxNeedsBasedScholarshipUSD}</td>
-                    <td style={{ padding: '8px', textAlign: 'right', verticalAlign: 'top' }}>${school.uwcNeedsBasedScholarshipAwardedUSD}</td>
-                    <td style={{ padding: '8px', textAlign: 'right', verticalAlign: 'top' }}>{school.uwcNeedsBasedScholarshipPercentage}%</td>
-                    <td style={{ padding: '8px', textAlign: 'right', verticalAlign: 'top', fontWeight: 'bold' }}>${school.totalCostOfAttendanceTwoYearsUSD}</td>
-                    <td style={{ padding: '8px', textAlign: 'center', verticalAlign: 'top' }}>
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          padding: '4px 8px',
-                          borderRadius: '15px',
-                          backgroundColor: school.contributionColor,
-                          color: '#333',
-                          fontSize: '10px'
-                        }}
-                      >
+                  <tr key={index}>
+                    <td>{school.schoolName}</td>
+                    <td>${school.schoolAnnualFeesUSD}</td>
+                    <td>${school.totalGrossAnnualCostOfAttendanceUSD}</td>
+                    <td>${school.uwcNeedsBasedScholarshipAwardedUSD}</td>
+                    <td>{school.uwcNeedsBasedScholarshipPercentage}%</td>
+                    <td className="total-cost">${school.totalCostOfAttendanceTwoYearsUSD}</td>
+                    <td>
+                      <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
                         {school.contributionStatus}
                       </span>
                     </td>
@@ -464,9 +453,9 @@ const AssessmentResults = ({ formData, allSchoolResults, onDownloadPdf, onDownlo
           </div>
         </section>
       </div>
-      <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-        <button onClick={onDownloadPdf} style={{ flex: 1, padding: '10px 20px', fontSize: '14px', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px' }}>Download as PDF</button>
-        <button onClick={onDownloadCsv} style={{ flex: 1, padding: '10px 20px', fontSize: '14px', cursor: 'pointer', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px' }}>Export to CSV</button>
+      <div className="download-buttons">
+        <button onClick={onDownloadPdf}>Download as PDF</button>
+        <button onClick={onDownloadCsv}>Export to CSV</button>
       </div>
     </section>
   );
@@ -580,300 +569,148 @@ const App = () => {
   };
 
   return (
-    <div className="App" style={{ fontFamily: 'Arial, sans-serif', padding: '20px', maxWidth: '1200px', margin: '0 auto', backgroundColor: '#f4f7f9' }}>
-      <header style={{ textAlign: 'center', marginBottom: '30px', borderBottom: '2px solid #ccc', paddingBottom: '20px' }}>
-        <h1 style={{ color: '#2c3e50', fontSize: '2em' }}>UWC Financial Need Assessment Tool</h1>
+    <div className="App">
+      <header>
+        <h1>UWC Financial Need Assessment Tool</h1>
       </header>
-      {/* ADDED flexbox styles to main container to create the side-by-side layout */}
-      <main style={{ display: 'flex', gap: '30px', flexWrap: 'wrap' }}>
-        <div style={{ flex: '1 1 55%', minWidth: '400px' }}>
-          <h2 style={{ color: '#34495e', marginBottom: '20px' }}>Input Form</h2>
-          <form style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px' }}>General Information</h3>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>National Currency Symbol:</label>
+      <main>
+        <div className="form-container">
+          <h2>Input Form</h2>
+          <form>
+            <h3>General Information</h3>
+            <div className="input-group">
+              <label>National Currency Symbol:</label>
               <select
                 name="ncCurrencySymbol"
                 value={formData.ncCurrencySymbol}
                 onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
               >
                 {currencyList.map(currency => (
                   <option key={currency.abbr} value={currency.abbr}>{currency.abbr} ({currency.symbol})</option>
                 ))}
               </select>
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Exchange Rate (1 USD = X NC Currency):</label>
-              <input
-                type="number"
-                name="exchangeRateToUSD"
-                value={formData.exchangeRateToUSD}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Exchange Rate (1 USD = X NC Currency):</label>
+              <input type="number" name="exchangeRateToUSD" value={formData.exchangeRateToUSD} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Date of Exchange Rate:</label>
-              <input
-                type="date"
-                name="exchangeRateDate"
-                value={formData.exchangeRateDate}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Date of Exchange Rate:</label>
+              <input type="date" name="exchangeRateDate" value={formData.exchangeRateDate} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Annual Return on Assets (%):</label>
+            <div className="input-group">
+              <label>Annual Return on Assets (%):</label>
               <input
                 type="number"
                 name="annualReturnOnAssets"
                 value={(formData.annualReturnOnAssets * 100).toFixed(2)}
                 onChange={e => handleInputChange({ target: { name: 'annualReturnOnAssets', value: e.target.value / 100 } })}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
               />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Annual Travel Cost to UWC (USD):</label>
-              <input
-                type="number"
-                name="annualTravelCostUSD"
-                value={formData.annualTravelCostUSD}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Annual Travel Cost to UWC (USD):</label>
+              <input type="number" name="annualTravelCostUSD" value={formData.annualTravelCostUSD} onChange={handleInputChange} />
             </div>
-            <h3 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px', marginTop: '30px' }}>Parent/Guardian 1 & 2 Financial Information</h3>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Number of Independent Adults:</label>
-              <input
-                type="number"
-                name="pg1NumberIndependentAdults"
-                value={formData.pg1NumberIndependentAdults}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <h3>Parent/Guardian Financial Information</h3>
+            <div className="input-group">
+              <label>Number of Independent Adults:</label>
+              <input type="number" name="pg1NumberIndependentAdults" value={formData.pg1NumberIndependentAdults} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Number of Financial Dependents:</label>
-              <input
-                type="number"
-                name="pg1NumberFinancialDependents"
-                value={formData.pg1NumberFinancialDependents}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Number of Financial Dependents:</label>
+              <input type="number" name="pg1NumberFinancialDependents" value={formData.pg1NumberFinancialDependents} onChange={handleInputChange} />
             </div>
-            <h4 style={{ color: '#0056b3', marginTop: '20px', marginBottom: '10px' }}>Income Information (National Currency)</h4>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Annual Income of Primary Parent:</label>
-              <input
-                type="number"
-                name="pg1AnnualIncomePrimaryParent"
-                value={formData.pg1AnnualIncomePrimaryParent}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <h4>Income Information (National Currency)</h4>
+            <div className="input-group">
+              <label>Annual Income of Primary Parent:</label>
+              <input type="number" name="pg1AnnualIncomePrimaryParent" value={formData.pg1AnnualIncomePrimaryParent} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Annual Income of Other Parent:</label>
-              <input
-                type="number"
-                name="pg1AnnualIncomeOtherParent"
-                value={formData.pg1AnnualIncomeOtherParent}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Annual Income of Other Parent:</label>
+              <input type="number" name="pg1AnnualIncomeOtherParent" value={formData.pg1AnnualIncomeOtherParent} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Annual Benefits:</label>
-              <input
-                type="number"
-                name="pg1AnnualBenefits"
-                value={formData.pg1AnnualBenefits}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Annual Benefits:</label>
+              <input type="number" name="pg1AnnualBenefits" value={formData.pg1AnnualBenefits} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Other Annual Income:</label>
-              <input
-                type="number"
-                name="pg1OtherAnnualIncome"
-                value={formData.pg1OtherAnnualIncome}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Other Annual Income:</label>
+              <input type="number" name="pg1OtherAnnualIncome" value={formData.pg1OtherAnnualIncome} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Net Income from Other Properties:</label>
-              <input
-                type="number"
-                name="otherPropertiesNetIncome"
-                value={formData.otherPropertiesNetIncome}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Net Income from Other Properties:</label>
+              <input type="number" name="otherPropertiesNetIncome" value={formData.otherPropertiesNetIncome} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Net Income from Assets in Another Country:</label>
-              <input
-                type="number"
-                name="assetsAnotherCountryNetIncome"
-                value={formData.assetsAnotherCountryNetIncome}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Net Income from Assets in Another Country:</label>
+              <input type="number" name="assetsAnotherCountryNetIncome" value={formData.assetsAnotherCountryNetIncome} onChange={handleInputChange} />
             </div>
-            <h4 style={{ color: '#0056b3', marginTop: '20px', marginBottom: '10px' }}>Assets Information (National Currency)</h4>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Cash and Savings:</label>
-              <input
-                type="number"
-                name="pg1CashSavings"
-                value={formData.pg1CashSavings}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <h4>Assets Information (National Currency)</h4>
+            <div className="input-group">
+              <label>Cash and Savings:</label>
+              <input type="number" name="pg1CashSavings" value={formData.pg1CashSavings} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Other Assets:</label>
-              <input
-                type="number"
-                name="pg1OtherAssets"
-                value={formData.pg1OtherAssets}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Other Assets:</label>
+              <input type="number" name="pg1OtherAssets" value={formData.pg1OtherAssets} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Home Market Value:</label>
-              <input
-                type="number"
-                name="pg1HomeMarketValue"
-                value={formData.pg1HomeMarketValue}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Home Market Value:</label>
+              <input type="number" name="pg1HomeMarketValue" value={formData.pg1HomeMarketValue} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Home Outstanding Mortgage:</label>
-              <input
-                type="number"
-                name="pg1HomeOutstandingMortgage"
-                value={formData.pg1HomeOutstandingMortgage}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Home Outstanding Mortgage:</label>
+              <input type="number" name="pg1HomeOutstandingMortgage" value={formData.pg1HomeOutstandingMortgage} onChange={handleInputChange} />
             </div>
-            <h4 style={{ color: '#0056b3', marginTop: '20px', marginBottom: '10px' }}>Annual Expenses (National Currency)</h4>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Total Annual Living Expenses:</label>
-              <input
-                type="number"
-                name="totalAnnualLivingExpensesNC"
-                value={formData.totalAnnualLivingExpensesNC}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <h4>Annual Expenses (National Currency)</h4>
+            <div className="input-group">
+              <label>Total Annual Living Expenses:</label>
+              <input type="number" name="totalAnnualLivingExpensesNC" value={formData.totalAnnualLivingExpensesNC} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Annual School Fees for Other Children:</label>
-              <input
-                type="number"
-                name="annualSchoolFeesForOtherChildren"
-                value={formData.annualSchoolFeesForOtherChildren}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Annual School Fees for Other Children:</label>
+              <input type="number" name="annualSchoolFeesForOtherChildren" value={formData.annualSchoolFeesForOtherChildren} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Annual School Fees for Non-Dependent Children:</label>
-              <input
-                type="number"
-                name="annualSchoolFeesForNonDependentChildren"
-                value={formData.annualSchoolFeesForNonDependentChildren}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Annual School Fees for Non-Dependent Children:</label>
+              <input type="number" name="annualSchoolFeesForNonDependentChildren" value={formData.annualSchoolFeesForNonDependentChildren} onChange={handleInputChange} />
             </div>
-            <h3 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px', marginTop: '30px' }}>Student Financial Information (National Currency)</h3>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Student Annual Income:</label>
-              <input
-                type="number"
-                name="pg2StudentAnnualIncome"
-                value={formData.pg2StudentAnnualIncome}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <h3>Student Financial Information (National Currency)</h3>
+            <div className="input-group">
+              <label>Student Annual Income:</label>
+              <input type="number" name="pg2StudentAnnualIncome" value={formData.pg2StudentAnnualIncome} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Student Cash & Savings:</label>
-              <input
-                type="number"
-                name="pg2StudentCashSavings"
-                value={formData.pg2StudentCashSavings}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Student Cash & Savings:</label>
+              <input type="number" name="pg2StudentCashSavings" value={formData.pg2StudentCashSavings} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Student Other Assets:</label>
-              <input
-                type="number"
-                name="pg2StudentOtherAssets"
-                value={formData.pg2StudentOtherAssets}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Student Other Assets:</label>
+              <input type="number" name="pg2StudentOtherAssets" value={formData.pg2StudentOtherAssets} onChange={handleInputChange} />
             </div>
-            <h3 style={{ color: '#555', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px', marginTop: '30px' }}>Additional Contributions & Information</h3>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Scholarship Provided by NC (2 years, USD):</label>
-              <input
-                type="number"
-                name="ncScholarshipProvidedTwoYearsUSD"
-                value={formData.ncScholarshipProvidedTwoYearsUSD}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <h3>Additional Contributions & Information</h3>
+            <div className="input-group">
+              <label>Scholarship by NC (2 years, USD):</label>
+              <input type="number" name="ncScholarshipProvidedTwoYearsUSD" value={formData.ncScholarshipProvidedTwoYearsUSD} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Family Anticipated Annual Savings (USD):</label>
-              <input
-                type="number"
-                name="familyAnticipatedAnnualSavings"
-                value={formData.familyAnticipatedAnnualSavings}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Family Anticipated Annual Savings (USD):</label>
+              <input type="number" name="familyAnticipatedAnnualSavings" value={formData.familyAnticipatedAnnualSavings} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Potential Loan Amount (USD):</label>
-              <input
-                type="number"
-                name="potentialLoanAmount"
-                value={formData.potentialLoanAmount}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Potential Loan Amount (USD):</label>
+              <input type="number" name="potentialLoanAmount" value={formData.potentialLoanAmount} onChange={handleInputChange} />
             </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#666' }}>Unusual Circumstances:</label>
-              <textarea
-                name="unusualCircumstances"
-                value={formData.unusualCircumstances}
-                onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+            <div className="input-group">
+              <label>Unusual Circumstances:</label>
+              <textarea name="unusualCircumstances" value={formData.unusualCircumstances} onChange={handleInputChange} rows="3" />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button type="reset" onClick={handleResetForm} style={{ padding: '10px 20px', fontSize: '14px', cursor: 'pointer', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px' }}>Reset Form</button>
+            <div className="button-group">
+              <button type="reset" onClick={handleResetForm}>Reset Form</button>
             </div>
           </form>
         </div>
-        <div style={{ flex: '1 1 40%', minWidth: '400px' }}>
+        <div className="results-container">
           <AssessmentResults
             formData={formData}
             allSchoolResults={allSchoolResults}
