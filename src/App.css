@@ -219,6 +219,22 @@ th {
   white-space: nowrap;
 }
 
+.max-scholarship-input {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.max-scholarship-input input {
+  width: 70px;
+}
+
+.scholarship-details {
+  margin-top: 5px;
+  font-size: 0.85em;
+  color: #6c757d;
+}
+
 .download-buttons {
   display: flex;
   gap: 15px;

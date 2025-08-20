@@ -1,27 +1,28 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
 import './App.css';
 
 // Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
+// Updated to include local currency fees and other attributes
 const schoolCostsData = [
-  { name: 'UWC South East Asia', annualFeesUSD: 68249, avgAdditionalCostsUSD: 7918.91, maxScholarshipPercentage: 0.8, localCurrency: 'SGD', localCurrencyExchangeRateToUSD: 1.34 },
-  { name: 'Li Po Chun United World College of Hong Kong', annualFeesUSD: 49883, avgAdditionalCostsUSD: 2613.76, maxScholarshipPercentage: 0.8, localCurrency: 'HKD', localCurrencyExchangeRateToUSD: 7.85 },
-  { name: 'UWC Robert Bosch College', annualFeesUSD: 41395, avgAdditionalCostsUSD: 4073.40, maxScholarshipPercentage: 0.8, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
-  { name: 'UWC Costa Rica', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3140, maxScholarshipPercentage: 0.8, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
-  { name: 'Waterford Kamhlaba UWC of Southern Africa', annualFeesUSD: 30925, avgAdditionalCostsUSD: 2270.62, maxScholarshipPercentage: 0.8, localCurrency: 'SZL', localCurrencyExchangeRateToUSD: 18.0 },
-  { name: 'UWC Dilijan', annualFeesUSD: 44000, avgAdditionalCostsUSD: 800, maxScholarshipPercentage: 0.8, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
-  { name: 'UWC Atlantic', annualFeesUSD: 42000, avgAdditionalCostsUSD: 3800, maxScholarshipPercentage: 0.8, localCurrency: 'GBP', localCurrencyExchangeRateToUSD: 0.79 },
-  { name: 'UWC Mahindra College', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000, maxScholarshipPercentage: 0.8, localCurrency: 'INR', localCurrencyExchangeRateToUSD: 83.0 },
-  { name: 'UWC Pearson College', annualFeesUSD: 45000, avgAdditionalCostsUSD: 4200, maxScholarshipPercentage: 0.8, localCurrency: 'CAD', localCurrencyExchangeRateToUSD: 1.37 },
-  { name: 'UWC Changshu China', annualFeesUSD: 46000, avgAdditionalCostsUSD: 3500, maxScholarshipPercentage: 0.8, localCurrency: 'CNY', localCurrencyExchangeRateToUSD: 7.25 },
-  { name: 'UWC Red Cross Nordic', annualFeesUSD: 41000, avgAdditionalCostsUSD: 3000, maxScholarshipPercentage: 0.8, localCurrency: 'NOK', localCurrencyExchangeRateToUSD: 10.7 },
-  { name: 'UWC Adriatic', annualFeesUSD: 39000, avgAdditionalCostsUSD: 3200, maxScholarshipPercentage: 0.8, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
-  { name: 'UWC ISAK Japan', annualFeesUSD: 48000, avgAdditionalCostsUSD: 4000, maxScholarshipPercentage: 0.8, localCurrency: 'JPY', localCurrencyExchangeRateToUSD: 155.0 },
-  { name: 'UWC Thailand', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3500, maxScholarshipPercentage: 0.8, localCurrency: 'THB', localCurrencyExchangeRateToUSD: 36.5 },
-  { name: 'UWC Mostar', annualFeesUSD: 38000, avgAdditionalCostsUSD: 2800, maxScholarshipPercentage: 0.8, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
-  { name: 'UWC Maastricht', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000, maxScholarshipPercentage: 0.8, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
-  { name: 'UWC East Africa', annualFeesUSD: 47000, avgAdditionalCostsUSD: 4000, maxScholarshipPercentage: 0.8, localCurrency: 'TZS', localCurrencyExchangeRateToUSD: 2500.0 },
-  { name: 'UWC USA', annualFeesUSD: 60000, avgAdditionalCostsUSD: 5000, maxScholarshipPercentage: 0.8, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
+  { name: 'UWC South East Asia', annualFeesUSD: 68249, annualFeesLocalCurrency: 91400, avgAdditionalCostsUSD: 7918.91, maxScholarshipPercentage: 0.8, localCurrency: 'SGD', localCurrencyExchangeRateToUSD: 1.34 },
+  { name: 'Li Po Chun United World College of Hong Kong', annualFeesUSD: 49883, annualFeesLocalCurrency: 391617, avgAdditionalCostsUSD: 2613.76, maxScholarshipPercentage: 0.8, localCurrency: 'HKD', localCurrencyExchangeRateToUSD: 7.85 },
+  { name: 'UWC Robert Bosch College', annualFeesUSD: 41395, annualFeesLocalCurrency: 38083, avgAdditionalCostsUSD: 4073.40, maxScholarshipPercentage: 0.8, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
+  { name: 'UWC Costa Rica', annualFeesUSD: 43000, annualFeesLocalCurrency: 43000, avgAdditionalCostsUSD: 3140, maxScholarshipPercentage: 0.8, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
+  { name: 'Waterford Kamhlaba UWC of Southern Africa', annualFeesUSD: 30925, annualFeesLocalCurrency: 556650, avgAdditionalCostsUSD: 2270.62, maxScholarshipPercentage: 0.8, localCurrency: 'SZL', localCurrencyExchangeRateToUSD: 18.0 },
+  { name: 'UWC Dilijan', annualFeesUSD: 44000, annualFeesLocalCurrency: 44000, avgAdditionalCostsUSD: 800, maxScholarshipPercentage: 0.8, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
+  { name: 'UWC Atlantic', annualFeesUSD: 42000, annualFeesLocalCurrency: 33180, avgAdditionalCostsUSD: 3800, maxScholarshipPercentage: 0.8, localCurrency: 'GBP', localCurrencyExchangeRateToUSD: 0.79 },
+  { name: 'UWC Mahindra College', annualFeesUSD: 40000, annualFeesLocalCurrency: 3320000, avgAdditionalCostsUSD: 3000, maxScholarshipPercentage: 0.8, localCurrency: 'INR', localCurrencyExchangeRateToUSD: 83.0 },
+  { name: 'UWC Pearson College', annualFeesUSD: 45000, annualFeesLocalCurrency: 61650, avgAdditionalCostsUSD: 4200, maxScholarshipPercentage: 0.8, localCurrency: 'CAD', localCurrencyExchangeRateToUSD: 1.37 },
+  { name: 'UWC Changshu China', annualFeesUSD: 46000, annualFeesLocalCurrency: 333500, avgAdditionalCostsUSD: 3500, maxScholarshipPercentage: 0.8, localCurrency: 'CNY', localCurrencyExchangeRateToUSD: 7.25 },
+  { name: 'UWC Red Cross Nordic', annualFeesUSD: 41000, annualFeesLocalCurrency: 438700, avgAdditionalCostsUSD: 3000, maxScholarshipPercentage: 0.8, localCurrency: 'NOK', localCurrencyExchangeRateToUSD: 10.7 },
+  { name: 'UWC Adriatic', annualFeesUSD: 39000, annualFeesLocalCurrency: 35880, avgAdditionalCostsUSD: 3200, maxScholarshipPercentage: 0.8, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
+  { name: 'UWC ISAK Japan', annualFeesUSD: 48000, annualFeesLocalCurrency: 7440000, avgAdditionalCostsUSD: 4000, maxScholarshipPercentage: 0.8, localCurrency: 'JPY', localCurrencyExchangeRateToUSD: 155.0 },
+  { name: 'UWC Thailand', annualFeesUSD: 43000, annualFeesLocalCurrency: 1570000, avgAdditionalCostsUSD: 3500, maxScholarshipPercentage: 0.8, localCurrency: 'THB', localCurrencyExchangeRateToUSD: 36.5 },
+  { name: 'UWC Mostar', annualFeesUSD: 38000, annualFeesLocalCurrency: 34960, avgAdditionalCostsUSD: 2800, maxScholarshipPercentage: 0.8, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
+  { name: 'UWC Maastricht', annualFeesUSD: 40000, annualFeesLocalCurrency: 36800, avgAdditionalCostsUSD: 3000, maxScholarshipPercentage: 0.8, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
+  { name: 'UWC East Africa', annualFeesUSD: 47000, annualFeesLocalCurrency: 117500000, avgAdditionalCostsUSD: 4000, maxScholarshipPercentage: 0.8, localCurrency: 'TZS', localCurrencyExchangeRateToUSD: 2500.0 },
+  { name: 'UWC USA', annualFeesUSD: 60000, annualFeesLocalCurrency: 60000, avgAdditionalCostsUSD: 5000, maxScholarshipPercentage: 0.8, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
 ];
 
 const currencyList = [
@@ -198,7 +199,7 @@ const convertNcToUsd = (valueInNcCurrency, exchangeRate) => {
   return getNum(valueInNcCurrency) / getNum(exchangeRate);
 };
 
-const useFinancialCalculations = (formData) => {
+const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
   const allSchoolResults = useMemo(() => {
     const {
       exchangeRateToUSD,
@@ -223,6 +224,7 @@ const useFinancialCalculations = (formData) => {
       annualTravelCostUSD,
       ncScholarshipProvidedTwoYearsUSD,
       totalAnnualLivingExpensesNC,
+      potentialLoanAmount,
     } = formData;
 
     if (getNum(exchangeRateToUSD) <= 0) {
@@ -230,13 +232,12 @@ const useFinancialCalculations = (formData) => {
         uwcFamilyContributionRequiredUSD: '0.00',
         allSchoolResults: schoolCostsData.map(school => ({
           schoolName: school.name,
-          totalGrossAnnualCostOfAttendanceUSD: '0.00',
+          totalAllInclusiveCostTwoYearsUSD: '0.00',
           maxScholarshipAvailableUSD: '0.00',
+          maxScholarshipPercentage: '0',
           needsBasedScholarshipGap: '0.00',
           contributionStatus: 'N/A',
           contributionColor: 'grey',
-          totalCostOfAttendanceTwoYearsUSD: '0.00',
-          shortfall: '0.00'
         })),
       };
     }
@@ -270,33 +271,32 @@ const useFinancialCalculations = (formData) => {
     const formula3_estimateCostEducateStudentHome = (totalHouseholdMembers > 0 ? totalLivingAllowanceUSD / totalHouseholdMembers : 0);
     const uwcFamilyContributionRequiredUSD = Math.max(0, formula1_familyContributionUSD, formula2_studentContributionUSD, formula3_estimateCostEducateStudentHome);
 
-    const finalUwcFamilyContribution = uwcFamilyContributionRequiredUSD;
+    const finalUwcFamilyContributionTwoYears = uwcFamilyContributionRequiredUSD * 2;
 
     const calculatedSchoolResults = schoolCostsData.map(school => {
       const schoolAnnualFeesUSD = school.annualFeesUSD;
       const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
       
-      const maxScholarshipFromSchoolUSD = (school.annualFeesUSD / school.localCurrencyExchangeRateToUSD) * school.maxScholarshipPercentage;
-
-      const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
-      const totalCostOfAttendanceTwoYearsUSD = totalGrossAnnualCostOfAttendanceUSD * 2;
+      const maxScholarshipPercentage = getNum(maxScholarshipPercentages[school.name] || school.maxScholarshipPercentage);
+      const maxScholarshipLocal = (school.annualFeesLocalCurrency * 2) * maxScholarshipPercentage;
+      const maxScholarshipFromSchoolUSD = maxScholarshipLocal / school.localCurrencyExchangeRateToUSD;
       
-      const needsBasedScholarshipGap = totalGrossAnnualCostOfAttendanceUSD - finalUwcFamilyContribution;
-      const ncScholarshipPerYear = getNum(ncScholarshipProvidedTwoYearsUSD) / 2;
+      const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
+      const totalAllInclusiveCostTwoYearsUSD = totalGrossAnnualCostOfAttendanceUSD * 2;
+      
+      const totalScholarshipNeeded = totalAllInclusiveCostTwoYearsUSD - finalUwcFamilyContributionTwoYears - getNum(potentialLoanAmount);
+      const finalScholarshipNeededFromSchool = Math.max(0, totalScholarshipNeeded - getNum(ncScholarshipProvidedTwoYearsUSD));
       
       let contributionStatus = '';
       let contributionColor = '';
       let shortfall = 0;
 
-      // New affordability logic:
-      const scholarshipNeededFromSchool = Math.max(0, needsBasedScholarshipGap - ncScholarshipPerYear);
-
-      if (scholarshipNeededFromSchool <= maxScholarshipFromSchoolUSD) {
+      if (finalScholarshipNeededFromSchool <= maxScholarshipFromSchoolUSD) {
           contributionStatus = 'Fully Funded';
           contributionColor = '#d4edda';
           shortfall = 0;
       } else {
-          shortfall = scholarshipNeededFromSchool - maxScholarshipFromSchoolUSD;
+          shortfall = finalScholarshipNeededFromSchool - maxScholarshipFromSchoolUSD;
           contributionStatus = `Shortfall of $${shortfall.toFixed(2)}`;
           contributionColor = '#f8d7da';
       }
@@ -304,9 +304,12 @@ const useFinancialCalculations = (formData) => {
       return {
         schoolName: school.name,
         totalGrossAnnualCostOfAttendanceUSD: totalGrossAnnualCostOfAttendanceUSD.toFixed(2),
-        totalCostOfAttendanceTwoYearsUSD: totalCostOfAttendanceTwoYearsUSD.toFixed(2),
+        totalAllInclusiveCostTwoYearsUSD: totalAllInclusiveCostTwoYearsUSD.toFixed(2),
         maxScholarshipAvailableUSD: maxScholarshipFromSchoolUSD.toFixed(2),
-        needsBasedScholarshipGap: Math.max(0, needsBasedScholarshipGap).toFixed(2),
+        maxScholarshipLocal: maxScholarshipLocal.toFixed(2),
+        maxScholarshipPercentage: (maxScholarshipPercentage * 100).toFixed(0),
+        localCurrencySymbol: school.localCurrency,
+        finalScholarshipNeededFromSchool: finalScholarshipNeededFromSchool.toFixed(2),
         contributionStatus,
         contributionColor,
         shortfall: shortfall.toFixed(2),
@@ -319,18 +322,18 @@ const useFinancialCalculations = (formData) => {
       totalAssetsContribution: totalAssetsContribution.toFixed(2),
       homeEquity: homeEquity.toFixed(2),
       totalAnnualFixedExpenditure: totalAnnualFixedExpenditure.toFixed(2),
-      uwcFamilyContributionRequiredUSD: finalUwcFamilyContribution.toFixed(2),
+      uwcFamilyContributionRequiredUSD: uwcFamilyContributionRequiredUSD.toFixed(2),
       familyAnticipatedAnnualSavings: getNum(formData.familyAnticipatedAnnualSavings).toFixed(2),
       potentialLoanAmount: getNum(formData.potentialLoanAmount).toFixed(2),
       allSchoolResults: calculatedSchoolResults,
     };
-  }, [formData]);
+  }, [formData, maxScholarshipPercentages]);
 
   return allSchoolResults;
 };
 
 // Component for the Assessment Results tab
-const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDownloadCsv, pdfContentRef }) => {
+const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDownloadCsv, pdfContentRef, maxScholarshipPercentages, handleMaxScholarshipChange }) => {
   return (
     <div className="tab-content">
       <section className="assessment-results">
@@ -346,13 +349,9 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
           </section>
           <section className="summary-section">
             <h4>Family Financial Summary (USD)</h4>
-            <p><strong>Total Annual Income:</strong> ${allSchoolResults.totalAnnualIncome}</p>
-            <p><strong>Total Family Assets:</strong> ${allSchoolResults.totalFamilyAssetsUSD}</p>
-            <p><strong>Annual Contribution from Assets:</strong> ${allSchoolResults.totalAssetsContribution}</p>
-            <p><strong>Home Equity:</strong> ${allSchoolResults.homeEquity}</p>
-            <p><strong>UWC Family Contribution Required (Formula Max):</strong> ${allSchoolResults.uwcFamilyContributionRequiredUSD}</p>
-            <p><strong>Family Anticipated Annual Savings:</strong> ${allSchoolResults.familyAnticipatedAnnualSavings}</p>
-            <p><strong>Potential Loan Amount:</strong> ${allSchoolResults.potentialLoanAmount}</p>
+            <p><strong>UWC Family Contribution Required (2 Years):</strong> ${allSchoolResults.uwcFamilyContributionRequiredUSD * 2}</p>
+            <p><strong>Scholarship from NC (2 years):</strong> ${getNum(formData.ncScholarshipProvidedTwoYearsUSD).toFixed(2)}</p>
+            <p><strong>Potential Loan Amount (2 years):</strong> ${allSchoolResults.potentialLoanAmount}</p>
           </section>
           <section className="schools-section">
             <h4>School-Specific Assessment Breakdown</h4>
@@ -361,9 +360,9 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                 <thead>
                   <tr>
                     <th>School</th>
-                    <th>Annual Cost of Attendance</th>
+                    <th>Total All-Inclusive Cost (2 years)</th>
                     <th>Max Scholarship Available</th>
-                    <th>Needs-Based Scholarship Gap (Per Year)</th>
+                    <th>Final Scholarship Needed From School (2 years)</th>
                     <th>Affordability Status</th>
                   </tr>
                 </thead>
@@ -371,9 +370,23 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                   {allSchoolResults.allSchoolResults.map((school, index) => (
                     <tr key={index}>
                       <td>{school.schoolName}</td>
-                      <td>${school.totalGrossAnnualCostOfAttendanceUSD}</td>
-                      <td>${school.maxScholarshipAvailableUSD}</td>
-                      <td>${school.needsBasedScholarshipGap}</td>
+                      <td>${school.totalAllInclusiveCostTwoYearsUSD}</td>
+                      <td>
+                        <div className="max-scholarship-input">
+                          <input 
+                            type="number"
+                            value={school.maxScholarshipPercentage}
+                            onChange={(e) => handleMaxScholarshipChange(school.schoolName, e.target.value)}
+                            min="0"
+                            max="100"
+                          />
+                          <span>% of fees</span>
+                        </div>
+                        <p className="scholarship-details">
+                          (~ {school.localCurrencySymbol} {school.maxScholarshipLocal}) = ${school.maxScholarshipAvailableUSD} USD
+                        </p>
+                      </td>
+                      <td>${school.finalScholarshipNeededFromSchool}</td>
                       <td>
                         <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
                           {school.contributionStatus}
@@ -430,6 +443,17 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('general');
   const pdfContentRef = useRef(null);
 
+  const [maxScholarshipPercentages, setMaxScholarshipPercentages] = useState({});
+
+  useEffect(() => {
+    // Initialize the maxScholarshipPercentages state with default values from schoolCostsData
+    const initialPercentages = {};
+    schoolCostsData.forEach(school => {
+      initialPercentages[school.name] = school.maxScholarshipPercentage * 100;
+    });
+    setMaxScholarshipPercentages(initialPercentages);
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prevData => ({
@@ -438,12 +462,24 @@ const App = () => {
     }));
   };
 
+  const handleMaxScholarshipChange = (schoolName, value) => {
+    setMaxScholarshipPercentages(prevPercentages => ({
+      ...prevPercentages,
+      [schoolName]: value,
+    }));
+  };
+
   const handleResetForm = () => {
     setFormData(initialFormData);
+    const initialPercentages = {};
+    schoolCostsData.forEach(school => {
+      initialPercentages[school.name] = school.maxScholarshipPercentage * 100;
+    });
+    setMaxScholarshipPercentages(initialPercentages);
     setActiveTab('general');
   };
 
-  const allSchoolResults = useFinancialCalculations(formData);
+  const allSchoolResults = useFinancialCalculations(formData, maxScholarshipPercentages);
 
   const handleDownloadPdf = () => {
     if (pdfContentRef.current) {
@@ -464,9 +500,11 @@ const App = () => {
     if (!data || data.length === 0) return;
     const headers = [
       "School",
-      "Annual Cost of Attendance (USD)",
+      "Total All-Inclusive Cost (2 years) (USD)",
+      "Max Scholarship Percentage (%)",
+      "Max Scholarship Available (Local)",
       "Max Scholarship Available (USD)",
-      "Needs-Based Scholarship Gap (Per Year) (USD)",
+      "Final Scholarship Needed From School (USD)",
       "Affordability Status",
     ];
 
@@ -475,9 +513,11 @@ const App = () => {
       ...data.map(school =>
         [
           `"${school.schoolName}"`,
-          school.totalGrossAnnualCostOfAttendanceUSD,
+          school.totalAllInclusiveCostTwoYearsUSD,
+          school.maxScholarshipPercentage,
+          school.maxScholarshipLocal,
           school.maxScholarshipAvailableUSD,
-          school.needsBasedScholarshipGap,
+          school.finalScholarshipNeededFromSchool,
           `"${school.contributionStatus}"`
         ].join(',')
       )
@@ -643,12 +683,8 @@ const App = () => {
             <div className="form-section">
               <h3>Additional Contributions & Information</h3>
               <div className="input-group">
-                <label>Scholarship by NC (2 years, USD):</label>
+                <label>Scholarship from NC (2 years, USD):</label>
                 <input type="number" name="ncScholarshipProvidedTwoYearsUSD" value={formData.ncScholarshipProvidedTwoYearsUSD} onChange={handleInputChange} />
-              </div>
-              <div className="input-group">
-                <label>Family Anticipated Annual Savings (USD):</label>
-                <input type="number" name="familyAnticipatedAnnualSavings" value={formData.familyAnticipatedAnnualSavings} onChange={handleInputChange} />
               </div>
               <div className="input-group">
                 <label>Potential Loan Amount (USD):</label>
@@ -673,6 +709,8 @@ const App = () => {
             onDownloadPdf={handleDownloadPdf}
             onDownloadCsv={handleDownloadCsv}
             pdfContentRef={pdfContentRef}
+            maxScholarshipPercentages={maxScholarshipPercentages}
+            handleMaxScholarshipChange={handleMaxScholarshipChange}
           />
         );
       default:
