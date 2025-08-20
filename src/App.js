@@ -350,15 +350,10 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
           </section>
           <section className="summary-section">
             <h4>Family Financial Summary (USD)</h4>
-            <p><strong>UWC Family Contribution Required (2 Years):</strong> ${getNum(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</p>
+            <p><strong>Assessed Funds Available for Fees (2 Years):</strong> ${getNum(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</p>
             <p><strong>Current School Fees for Applicant (for discussion):</strong> ${allSchoolResults.currentSchoolFeesUSD.toFixed(2)} per year</p>
             <p><strong>Scholarship from NC (2 years):</strong> ${getNum(formData.ncScholarshipProvidedTwoYearsUSD).toFixed(2)}</p>
             <p><strong>Potential Loan Amount (2 years):</strong> ${getNum(allSchoolResults.potentialLoanAmount).toFixed(2)}</p>
-          </section>
-          <section className="summary-section">
-            <h4>Qualitative Notes for Assessor</h4>
-            <p><strong>Job Notes:</strong> {formData.pg1JobNotes || 'N/A'}</p>
-            <p><strong>Unusual Circumstances:</strong> {formData.unusualCircumstances || 'N/A'}</p>
           </section>
           <section className="schools-section">
             <h4>School-Specific Assessment Breakdown</h4>
@@ -368,6 +363,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                   <tr>
                     <th>School</th>
                     <th>Total All-Inclusive Cost (2 years)</th>
+                    <th>Assessed Funds Available for Fees (2 years)</th>
                     <th>Final Scholarship Needed From School (2 years)</th>
                     <th>Max Scholarship Available</th>
                     <th>Final Shortfall / Surplus</th>
@@ -378,6 +374,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                     <tr key={index}>
                       <td>{school.schoolName}</td>
                       <td>${school.totalAllInclusiveCostTwoYearsUSD}</td>
+                      <td>${(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</td>
                       <td>${school.finalScholarshipNeededFromSchool}</td>
                       <td>
                         <div className="max-scholarship-input">
@@ -508,6 +505,7 @@ const App = () => {
     const headers = [
       "School",
       "Total All-Inclusive Cost (2 years) (USD)",
+      "Assessed Funds Available for Fees (2 years) (USD)",
       "Final Scholarship Needed From School (2 years) (USD)",
       "Max Scholarship Percentage (%)",
       "Max Scholarship Available (Local)",
@@ -521,6 +519,7 @@ const App = () => {
         [
           `"${school.schoolName}"`,
           school.totalAllInclusiveCostTwoYearsUSD,
+          (allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2),
           school.finalScholarshipNeededFromSchool,
           school.maxScholarshipPercentage,
           school.maxScholarshipAvailableUSD,
