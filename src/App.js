@@ -4,24 +4,24 @@ import './App.css';
 
 // Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
 const schoolCostsData = [
-  { name: 'UWC South East Asia', annualFeesUSD: 68249, avgAdditionalCostsUSD: 7918.91, maxNeedsBasedScholarshipUSD: 55000 },
-  { name: 'Li Po Chun United World College of Hong Kong', annualFeesUSD: 49883, avgAdditionalCostsUSD: 2613.76, maxNeedsBasedScholarshipUSD: 40000 },
-  { name: 'UWC Robert Bosch College', annualFeesUSD: 41395, avgAdditionalCostsUSD: 4073.40, maxNeedsBasedScholarshipUSD: 35000 },
-  { name: 'UWC Costa Rica', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3140, maxNeedsBasedScholarshipUSD: 35000 },
-  { name: 'Waterford Kamhlaba UWC of Southern Africa', annualFeesUSD: 30925, avgAdditionalCostsUSD: 2270.62, maxNeedsBasedScholarshipUSD: 25000 },
-  { name: 'UWC Dilijan', annualFeesUSD: 44000, avgAdditionalCostsUSD: 800, maxNeedsBasedScholarshipUSD: 35000 },
-  { name: 'UWC Atlantic', annualFeesUSD: 42000, avgAdditionalCostsUSD: 3800, maxNeedsBasedScholarshipUSD: 35000 },
-  { name: 'UWC Mahindra College', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000, maxNeedsBasedScholarshipUSD: 30000 },
-  { name: 'UWC Pearson College', annualFeesUSD: 45000, avgAdditionalCostsUSD: 4200, maxNeedsBasedScholarshipUSD: 35000 },
-  { name: 'UWC Changshu China', annualFeesUSD: 46000, avgAdditionalCostsUSD: 3500, maxNeedsBasedScholarshipUSD: 35000 },
-  { name: 'UWC Red Cross Nordic', annualFeesUSD: 41000, avgAdditionalCostsUSD: 3000, maxNeedsBasedScholarshipUSD: 30000 },
-  { name: 'UWC Adriatic', annualFeesUSD: 39000, avgAdditionalCostsUSD: 3200, maxNeedsBasedScholarshipUSD: 28000 },
-  { name: 'UWC ISAK Japan', annualFeesUSD: 48000, avgAdditionalCostsUSD: 4000, maxNeedsBasedScholarshipUSD: 38000 },
-  { name: 'UWC Thailand', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3500, maxNeedsBasedScholarshipUSD: 32000 },
-  { name: 'UWC Mostar', annualFeesUSD: 38000, avgAdditionalCostsUSD: 2800, maxNeedsBasedScholarshipUSD: 27000 },
-  { name: 'UWC Maastricht', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000, maxNeedsBasedScholarshipUSD: 30000 },
-  { name: 'UWC East Africa', annualFeesUSD: 47000, avgAdditionalCostsUSD: 4000, maxNeedsBasedScholarshipUSD: 38000 },
-  { name: 'UWC USA', annualFeesUSD: 60000, avgAdditionalCostsUSD: 5000, maxNeedsBasedScholarshipUSD: 45000 },
+  { name: 'UWC South East Asia', annualFeesUSD: 68249, avgAdditionalCostsUSD: 7918.91, maxScholarshipPercentage: 0.8, localCurrency: 'SGD', localCurrencyExchangeRateToUSD: 1.34 },
+  { name: 'Li Po Chun United World College of Hong Kong', annualFeesUSD: 49883, avgAdditionalCostsUSD: 2613.76, maxScholarshipPercentage: 0.8, localCurrency: 'HKD', localCurrencyExchangeRateToUSD: 7.85 },
+  { name: 'UWC Robert Bosch College', annualFeesUSD: 41395, avgAdditionalCostsUSD: 4073.40, maxScholarshipPercentage: 0.8, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
+  { name: 'UWC Costa Rica', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3140, maxScholarshipPercentage: 0.8, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
+  { name: 'Waterford Kamhlaba UWC of Southern Africa', annualFeesUSD: 30925, avgAdditionalCostsUSD: 2270.62, maxScholarshipPercentage: 0.8, localCurrency: 'SZL', localCurrencyExchangeRateToUSD: 18.0 },
+  { name: 'UWC Dilijan', annualFeesUSD: 44000, avgAdditionalCostsUSD: 800, maxScholarshipPercentage: 0.8, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
+  { name: 'UWC Atlantic', annualFeesUSD: 42000, avgAdditionalCostsUSD: 3800, maxScholarshipPercentage: 0.8, localCurrency: 'GBP', localCurrencyExchangeRateToUSD: 0.79 },
+  { name: 'UWC Mahindra College', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000, maxScholarshipPercentage: 0.8, localCurrency: 'INR', localCurrencyExchangeRateToUSD: 83.0 },
+  { name: 'UWC Pearson College', annualFeesUSD: 45000, avgAdditionalCostsUSD: 4200, maxScholarshipPercentage: 0.8, localCurrency: 'CAD', localCurrencyExchangeRateToUSD: 1.37 },
+  { name: 'UWC Changshu China', annualFeesUSD: 46000, avgAdditionalCostsUSD: 3500, maxScholarshipPercentage: 0.8, localCurrency: 'CNY', localCurrencyExchangeRateToUSD: 7.25 },
+  { name: 'UWC Red Cross Nordic', annualFeesUSD: 41000, avgAdditionalCostsUSD: 3000, maxScholarshipPercentage: 0.8, localCurrency: 'NOK', localCurrencyExchangeRateToUSD: 10.7 },
+  { name: 'UWC Adriatic', annualFeesUSD: 39000, avgAdditionalCostsUSD: 3200, maxScholarshipPercentage: 0.8, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
+  { name: 'UWC ISAK Japan', annualFeesUSD: 48000, avgAdditionalCostsUSD: 4000, maxScholarshipPercentage: 0.8, localCurrency: 'JPY', localCurrencyExchangeRateToUSD: 155.0 },
+  { name: 'UWC Thailand', annualFeesUSD: 43000, avgAdditionalCostsUSD: 3500, maxScholarshipPercentage: 0.8, localCurrency: 'THB', localCurrencyExchangeRateToUSD: 36.5 },
+  { name: 'UWC Mostar', annualFeesUSD: 38000, avgAdditionalCostsUSD: 2800, maxScholarshipPercentage: 0.8, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
+  { name: 'UWC Maastricht', annualFeesUSD: 40000, avgAdditionalCostsUSD: 3000, maxScholarshipPercentage: 0.8, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
+  { name: 'UWC East Africa', annualFeesUSD: 47000, avgAdditionalCostsUSD: 4000, maxScholarshipPercentage: 0.8, localCurrency: 'TZS', localCurrencyExchangeRateToUSD: 2500.0 },
+  { name: 'UWC USA', annualFeesUSD: 60000, avgAdditionalCostsUSD: 5000, maxScholarshipPercentage: 0.8, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
 ];
 
 const currencyList = [
@@ -231,8 +231,8 @@ const useFinancialCalculations = (formData) => {
         allSchoolResults: schoolCostsData.map(school => ({
           schoolName: school.name,
           totalGrossAnnualCostOfAttendanceUSD: '0.00',
-          uwcNeedsBasedScholarshipAwardedUSD: '0.00',
-          uwcNeedsBasedScholarshipPercentage: '0.00',
+          maxScholarshipAvailableUSD: '0.00',
+          needsBasedScholarshipGap: '0.00',
           contributionStatus: 'N/A',
           contributionColor: 'grey',
           totalCostOfAttendanceTwoYearsUSD: '0.00',
@@ -275,23 +275,28 @@ const useFinancialCalculations = (formData) => {
     const calculatedSchoolResults = schoolCostsData.map(school => {
       const schoolAnnualFeesUSD = school.annualFeesUSD;
       const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
+      
+      const maxScholarshipFromSchoolUSD = (school.annualFeesUSD / school.localCurrencyExchangeRateToUSD) * school.maxScholarshipPercentage;
+
       const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
       const totalCostOfAttendanceTwoYearsUSD = totalGrossAnnualCostOfAttendanceUSD * 2;
+      
       const needsBasedScholarshipGap = totalGrossAnnualCostOfAttendanceUSD - finalUwcFamilyContribution;
-
+      const ncScholarshipPerYear = getNum(ncScholarshipProvidedTwoYearsUSD) / 2;
+      
       let contributionStatus = '';
       let contributionColor = '';
       let shortfall = 0;
 
       // New affordability logic:
-      const scholarshipNeededFromSchool = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - finalUwcFamilyContribution - getNum(ncScholarshipProvidedTwoYearsUSD) / 2);
+      const scholarshipNeededFromSchool = Math.max(0, needsBasedScholarshipGap - ncScholarshipPerYear);
 
-      if (scholarshipNeededFromSchool <= school.maxNeedsBasedScholarshipUSD) {
+      if (scholarshipNeededFromSchool <= maxScholarshipFromSchoolUSD) {
           contributionStatus = 'Fully Funded';
           contributionColor = '#d4edda';
           shortfall = 0;
       } else {
-          shortfall = scholarshipNeededFromSchool - school.maxNeedsBasedScholarshipUSD;
+          shortfall = scholarshipNeededFromSchool - maxScholarshipFromSchoolUSD;
           contributionStatus = `Shortfall of $${shortfall.toFixed(2)}`;
           contributionColor = '#f8d7da';
       }
@@ -300,7 +305,7 @@ const useFinancialCalculations = (formData) => {
         schoolName: school.name,
         totalGrossAnnualCostOfAttendanceUSD: totalGrossAnnualCostOfAttendanceUSD.toFixed(2),
         totalCostOfAttendanceTwoYearsUSD: totalCostOfAttendanceTwoYearsUSD.toFixed(2),
-        maxNeedsBasedScholarshipUSD: school.maxNeedsBasedScholarshipUSD.toFixed(2),
+        maxScholarshipAvailableUSD: maxScholarshipFromSchoolUSD.toFixed(2),
         needsBasedScholarshipGap: Math.max(0, needsBasedScholarshipGap).toFixed(2),
         contributionStatus,
         contributionColor,
@@ -367,7 +372,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                     <tr key={index}>
                       <td>{school.schoolName}</td>
                       <td>${school.totalGrossAnnualCostOfAttendanceUSD}</td>
-                      <td>${school.maxNeedsBasedScholarshipUSD}</td>
+                      <td>${school.maxScholarshipAvailableUSD}</td>
                       <td>${school.needsBasedScholarshipGap}</td>
                       <td>
                         <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
@@ -471,7 +476,7 @@ const App = () => {
         [
           `"${school.schoolName}"`,
           school.totalGrossAnnualCostOfAttendanceUSD,
-          school.maxNeedsBasedScholarshipUSD,
+          school.maxScholarshipAvailableUSD,
           school.needsBasedScholarshipGap,
           `"${school.contributionStatus}"`
         ].join(',')
