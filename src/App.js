@@ -185,8 +185,6 @@ const currencyList = [
   { abbr: 'ZWL', symbol: 'Z$' }
 ];
 
-const standardLivingAllowancePerPersonUSD = 5000;
-
 const getNum = (value) => {
   const num = parseFloat(value);
   return isNaN(num) ? 0 : num;
@@ -208,6 +206,7 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
       pg1NumberFinancialDependents,
       annualSchoolFeesForOtherChildren,
       annualSchoolFeesForNonDependentChildren,
+      currentSchoolFees,
       pg1AnnualIncomePrimaryParent,
       pg1AnnualIncomeOtherParent,
       pg1AnnualBenefits,
@@ -256,6 +255,7 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
     const ncStudentOtherAssetsUSD = convertNcToUsd(pg2StudentOtherAssets, exchangeRateToUSD);
     const totalAnnualLivingExpensesUSD = convertNcToUsd(totalAnnualLivingExpensesNC, exchangeRateToUSD);
 
+    // Calculation Formulas based on the UWC model, adjusted to your request
     const totalAnnualIncome =
       ncIncomePrimaryParentUSD + ncIncomeOtherParentUSD + ncAnnualBenefitsUSD +
       ncOtherAnnualIncomeUSD + ncOtherPropertiesNetIncomeUSD + ncAssetsAnotherCountryNetIncomeUSD;
@@ -265,11 +265,15 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
     const totalAnnualFixedExpenditure = totalAnnualLivingExpensesUSD +
       convertNcToUsd(annualSchoolFeesForOtherChildren, exchangeRateToUSD) +
       convertNcToUsd(annualSchoolFeesForNonDependentChildren, exchangeRateToUSD);
-    const totalLivingAllowanceUSD = totalHouseholdMembers * standardLivingAllowancePerPersonUSD;
+      
+    // Formula 1 (Income/Expenditure)
     const formula1_familyContributionUSD = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure + totalAssetsContribution);
+    
+    // Formula 2 (Student Contribution)
     const formula2_studentContributionUSD = ncStudentAnnualIncomeUSD + (ncStudentCashSavingsUSD * 0.1) + (ncStudentOtherAssetsUSD * 0.05);
-    const formula3_estimateCostEducateStudentHome = (totalHouseholdMembers > 0 ? totalLivingAllowanceUSD / totalHouseholdMembers : 0);
-    const uwcFamilyContributionRequiredUSD = Math.max(0, formula1_familyContributionUSD, formula2_studentContributionUSD, formula3_estimateCostEducateStudentHome);
+    
+    // The required contribution is the maximum of these two
+    const uwcFamilyContributionRequiredUSD = Math.max(0, formula1_familyContributionUSD, formula2_studentContributionUSD);
 
     const finalUwcFamilyContributionTwoYears = uwcFamilyContributionRequiredUSD * 2;
 
@@ -322,6 +326,7 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
       totalAssetsContribution: totalAssetsContribution.toFixed(2),
       homeEquity: homeEquity.toFixed(2),
       totalAnnualFixedExpenditure: totalAnnualFixedExpenditure.toFixed(2),
+      currentSchoolFeesUSD: convertNcToUsd(currentSchoolFees, exchangeRateToUSD),
       uwcFamilyContributionRequiredUSD: uwcFamilyContributionRequiredUSD.toFixed(2),
       familyAnticipatedAnnualSavings: getNum(formData.familyAnticipatedAnnualSavings).toFixed(2),
       potentialLoanAmount: getNum(formData.potentialLoanAmount).toFixed(2),
@@ -350,6 +355,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
           <section className="summary-section">
             <h4>Family Financial Summary (USD)</h4>
             <p><strong>UWC Family Contribution Required (2 Years):</strong> ${getNum(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</p>
+            <p><strong>Current School Fees for Applicant (for discussion):</strong> ${allSchoolResults.currentSchoolFeesUSD.toFixed(2)} per year</p>
             <p><strong>Scholarship from NC (2 years):</strong> ${getNum(formData.ncScholarshipProvidedTwoYearsUSD).toFixed(2)}</p>
             <p><strong>Potential Loan Amount (2 years):</strong> ${getNum(allSchoolResults.potentialLoanAmount).toFixed(2)}</p>
           </section>
@@ -417,11 +423,12 @@ const initialFormData = {
   ncCurrencySymbol: 'USD',
   exchangeRateToUSD: 1.0,
   exchangeRateDate: new Date().toISOString().split('T')[0],
-  annualReturnOnAssets: 0.05,
-  pg1NumberIndependentAdults: 2,
+  annualReturnOnAssets: 0,
+  pg1NumberIndependentAdults: 0,
   pg1NumberFinancialDependents: 0,
   annualSchoolFeesForOtherChildren: 0,
   annualSchoolFeesForNonDependentChildren: 0,
+  currentSchoolFees: 0,
   pg1AnnualIncomePrimaryParent: 0,
   pg1AnnualIncomeOtherParent: 0,
   pg1AnnualBenefits: 0,
@@ -436,7 +443,7 @@ const initialFormData = {
   pg2StudentAnnualIncome: 0,
   pg2StudentCashSavings: 0,
   pg2StudentOtherAssets: 0,
-  annualTravelCostUSD: 2000,
+  annualTravelCostUSD: 0,
   ncScholarshipProvidedTwoYearsUSD: 0,
   totalAnnualLivingExpensesNC: 0,
   familyAnticipatedAnnualSavings: 0,
@@ -506,10 +513,10 @@ const App = () => {
     const headers = [
       "School",
       "Total All-Inclusive Cost (2 years) (USD)",
+      "Final Scholarship Needed From School (2 years) (USD)",
       "Max Scholarship Percentage (%)",
       "Max Scholarship Available (Local)",
       "Max Scholarship Available (USD)",
-      "Final Scholarship Needed From School (USD)",
       "Final Shortfall/Surplus",
     ];
 
@@ -519,9 +526,9 @@ const App = () => {
         [
           `"${school.schoolName}"`,
           school.totalAllInclusiveCostTwoYearsUSD,
+          school.finalScholarshipNeededFromSchool,
           school.maxScholarshipPercentage,
           school.maxScholarshipAvailableUSD,
-          school.finalScholarshipNeededFromSchool,
           `"${school.contributionStatus}"`
         ].join(',')
       )
@@ -649,6 +656,10 @@ const App = () => {
               <div className="input-group">
                 <label>Annual School Fees for Non-Dependent Children:</label>
                 <input type="number" name="annualSchoolFeesForNonDependentChildren" value={formData.annualSchoolFeesForNonDependentChildren} onChange={handleInputChange} />
+              </div>
+              <div className="input-group">
+                <label>Current Annual School Fees for Applicant:</label>
+                <input type="number" name="currentSchoolFees" value={formData.currentSchoolFees} onChange={handleInputChange} />
               </div>
               <div className="input-group">
                 <label>Job Type / Income Stability Notes:</label>
