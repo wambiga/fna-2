@@ -202,8 +202,6 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
     const {
       exchangeRateToUSD,
       annualReturnOnAssets,
-      pg1NumberIndependentAdults,
-      pg1NumberFinancialDependents,
       annualSchoolFeesForOtherChildren,
       annualSchoolFeesForNonDependentChildren,
       currentSchoolFees,
@@ -241,9 +239,6 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
       };
     }
 
-    // This variable was removed as it's no longer used in the core calculation.
-    // const totalHouseholdMembers = getNum(pg1NumberIndependentAdults) + getNum(pg1NumberFinancialDependents) + 1;
-    
     const ncIncomePrimaryParentUSD = convertNcToUsd(pg1AnnualIncomePrimaryParent, exchangeRateToUSD);
     const ncIncomeOtherParentUSD = convertNcToUsd(pg1AnnualIncomeOtherParent, exchangeRateToUSD);
     const ncAnnualBenefitsUSD = convertNcToUsd(pg1AnnualBenefits, exchangeRateToUSD);
@@ -330,7 +325,6 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
       totalAnnualFixedExpenditure: totalAnnualFixedExpenditure.toFixed(2),
       currentSchoolFeesUSD: convertNcToUsd(currentSchoolFees, exchangeRateToUSD),
       uwcFamilyContributionRequiredUSD: uwcFamilyContributionRequiredUSD.toFixed(2),
-      familyAnticipatedAnnualSavings: getNum(formData.familyAnticipatedAnnualSavings).toFixed(2),
       potentialLoanAmount: getNum(formData.potentialLoanAmount).toFixed(2),
       allSchoolResults: calculatedSchoolResults,
     };
@@ -448,7 +442,6 @@ const initialFormData = {
   annualTravelCostUSD: 0,
   ncScholarshipProvidedTwoYearsUSD: 0,
   totalAnnualLivingExpensesNC: 0,
-  familyAnticipatedAnnualSavings: 0,
   potentialLoanAmount: 0,
   unusualCircumstances: '',
 };
