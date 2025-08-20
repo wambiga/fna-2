@@ -366,8 +366,8 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                   <tr>
                     <th>School</th>
                     <th>Total All-Inclusive Cost (2 years)</th>
-                    <th>Max Scholarship Available</th>
                     <th>Final Scholarship Needed From School (2 years)</th>
+                    <th>Max Scholarship Available</th>
                     <th>Final Shortfall / Surplus</th>
                   </tr>
                 </thead>
@@ -376,6 +376,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                     <tr key={index}>
                       <td>{school.schoolName}</td>
                       <td>${school.totalAllInclusiveCostTwoYearsUSD}</td>
+                      <td>${school.finalScholarshipNeededFromSchool}</td>
                       <td>
                         <div className="max-scholarship-input">
                           <input 
@@ -391,7 +392,6 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                           (~ {school.localCurrencySymbol} {school.maxScholarshipLocal}) = ${school.maxScholarshipAvailableUSD} USD
                         </p>
                       </td>
-                      <td>${school.finalScholarshipNeededFromSchool}</td>
                       <td>
                         <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
                           {school.contributionStatus}
