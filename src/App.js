@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import html2pdf from 'html2pdf.js';
+import './App.css'; // Add this line to import the CSS file
 
 // Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
 const schoolCostsData = [
