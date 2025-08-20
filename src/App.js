@@ -345,13 +345,18 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
             <p><strong>Exchange Rate (1 USD = X NC Currency):</strong> {formData.exchangeRateToUSD || 'N/A'}</p>
             <p><strong>Exchange Rate Date:</strong> {formData.exchangeRateDate || 'N/A'}</p>
             <p><strong>Annual Return on Assets (%):</strong> {(formData.annualReturnOnAssets * 100).toFixed(2)}%</p>
-            <p><strong>Unusual Circumstances:</strong> {formData.unusualCircumstances || 'N/A'}</p>
+            <p><strong>Annual Travel Cost (USD):</strong> ${getNum(formData.annualTravelCostUSD).toFixed(2)}</p>
           </section>
           <section className="summary-section">
             <h4>Family Financial Summary (USD)</h4>
-            <p><strong>UWC Family Contribution Required (2 Years):</strong> ${allSchoolResults.uwcFamilyContributionRequiredUSD * 2}</p>
+            <p><strong>UWC Family Contribution Required (2 Years):</strong> ${getNum(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</p>
             <p><strong>Scholarship from NC (2 years):</strong> ${getNum(formData.ncScholarshipProvidedTwoYearsUSD).toFixed(2)}</p>
-            <p><strong>Potential Loan Amount (2 years):</strong> ${allSchoolResults.potentialLoanAmount}</p>
+            <p><strong>Potential Loan Amount (2 years):</strong> ${getNum(allSchoolResults.potentialLoanAmount).toFixed(2)}</p>
+          </section>
+          <section className="summary-section">
+            <h4>Qualitative Notes for Assessor</h4>
+            <p><strong>Job Notes:</strong> {formData.pg1JobNotes || 'N/A'}</p>
+            <p><strong>Unusual Circumstances:</strong> {formData.unusualCircumstances || 'N/A'}</p>
           </section>
           <section className="schools-section">
             <h4>School-Specific Assessment Breakdown</h4>
@@ -427,6 +432,7 @@ const initialFormData = {
   pg1HomeOutstandingMortgage: 0,
   otherPropertiesNetIncome: 0,
   assetsAnotherCountryNetIncome: 0,
+  pg1JobNotes: '', // NEW FIELD
   pg2StudentAnnualIncome: 0,
   pg2StudentCashSavings: 0,
   pg2StudentOtherAssets: 0,
@@ -514,7 +520,6 @@ const App = () => {
           `"${school.schoolName}"`,
           school.totalAllInclusiveCostTwoYearsUSD,
           school.maxScholarshipPercentage,
-          school.maxScholarshipLocal,
           school.maxScholarshipAvailableUSD,
           school.finalScholarshipNeededFromSchool,
           `"${school.contributionStatus}"`
@@ -645,6 +650,10 @@ const App = () => {
                 <label>Annual School Fees for Non-Dependent Children:</label>
                 <input type="number" name="annualSchoolFeesForNonDependentChildren" value={formData.annualSchoolFeesForNonDependentChildren} onChange={handleInputChange} />
               </div>
+              <div className="input-group">
+                <label>Job Type / Income Stability Notes:</label>
+                <textarea name="pg1JobNotes" value={formData.pg1JobNotes} onChange={handleInputChange} rows="3" placeholder="e.g., 'Independent contractor with highly variable income,' 'Seasonal worker,' or 'Recently took on a part-time job.'" />
+              </div>
             </div>
             <div className="button-group">
               <button onClick={() => setActiveTab('general')}>Back</button>
@@ -691,7 +700,13 @@ const App = () => {
               </div>
               <div className="input-group">
                 <label>Unusual Circumstances:</label>
-                <textarea name="unusualCircumstances" value={formData.unusualCircumstances} onChange={handleInputChange} rows="3" />
+                <textarea 
+                  name="unusualCircumstances" 
+                  value={formData.unusualCircumstances} 
+                  onChange={handleInputChange} 
+                  rows="3" 
+                  placeholder="e.g., medical expenses, a recent job loss, the end of a previous scholarship, or other unique financial burdens."
+                />
               </div>
             </div>
             <div className="button-group">
