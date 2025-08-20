@@ -230,15 +230,13 @@ const useFinancialCalculations = (formData) => {
         uwcFamilyContributionRequiredUSD: '0.00',
         allSchoolResults: schoolCostsData.map(school => ({
           schoolName: school.name,
-          schoolAnnualFeesUSD: school.annualFeesUSD.toFixed(2),
-          schoolAvgAdditionalCostsUSD: school.avgAdditionalCostsUSD.toFixed(2),
           totalGrossAnnualCostOfAttendanceUSD: '0.00',
           uwcNeedsBasedScholarshipAwardedUSD: '0.00',
           uwcNeedsBasedScholarshipPercentage: '0.00',
           contributionStatus: 'N/A',
           contributionColor: 'grey',
           totalCostOfAttendanceTwoYearsUSD: '0.00',
-          totalContributionAndAwardedScholarshipTwoYearsUSD: '0.00'
+          shortfall: '0.00'
         })),
       };
     }
@@ -256,6 +254,7 @@ const useFinancialCalculations = (formData) => {
     const ncStudentCashSavingsUSD = convertNcToUsd(pg2StudentCashSavings, exchangeRateToUSD);
     const ncStudentOtherAssetsUSD = convertNcToUsd(pg2StudentOtherAssets, exchangeRateToUSD);
     const totalAnnualLivingExpensesUSD = convertNcToUsd(totalAnnualLivingExpensesNC, exchangeRateToUSD);
+
     const totalAnnualIncome =
       ncIncomePrimaryParentUSD + ncIncomeOtherParentUSD + ncAnnualBenefitsUSD +
       ncOtherAnnualIncomeUSD + ncOtherPropertiesNetIncomeUSD + ncAssetsAnotherCountryNetIncomeUSD;
@@ -270,51 +269,43 @@ const useFinancialCalculations = (formData) => {
     const formula2_studentContributionUSD = ncStudentAnnualIncomeUSD + (ncStudentCashSavingsUSD * 0.1) + (ncStudentOtherAssetsUSD * 0.05);
     const formula3_estimateCostEducateStudentHome = (totalHouseholdMembers > 0 ? totalLivingAllowanceUSD / totalHouseholdMembers : 0);
     const uwcFamilyContributionRequiredUSD = Math.max(0, formula1_familyContributionUSD, formula2_studentContributionUSD, formula3_estimateCostEducateStudentHome);
+
     const finalUwcFamilyContribution = uwcFamilyContributionRequiredUSD;
 
     const calculatedSchoolResults = schoolCostsData.map(school => {
       const schoolAnnualFeesUSD = school.annualFeesUSD;
       const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
       const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
-      const totalNeedUSD = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - finalUwcFamilyContribution);
-      const uwcNeedsBasedScholarshipAwardedUSD = Math.min(totalNeedUSD, school.maxNeedsBasedScholarshipUSD);
-      const uwcNeedsBasedScholarshipPercentage =
-        totalGrossAnnualCostOfAttendanceUSD > 0
-          ? (uwcNeedsBasedScholarshipAwardedUSD / totalGrossAnnualCostOfAttendanceUSD) * 100
-          : 0;
       const totalCostOfAttendanceTwoYearsUSD = totalGrossAnnualCostOfAttendanceUSD * 2;
-      const totalContributionAndAwardedScholarshipTwoYearsUSD =
-        (finalUwcFamilyContribution * 2) +
-        (uwcNeedsBasedScholarshipAwardedUSD * 2) +
-        getNum(ncScholarshipProvidedTwoYearsUSD);
+      const needsBasedScholarshipGap = totalGrossAnnualCostOfAttendanceUSD - finalUwcFamilyContribution;
+
       let contributionStatus = '';
       let contributionColor = '';
-      const shortfall = totalCostOfAttendanceTwoYearsUSD - totalContributionAndAwardedScholarshipTwoYearsUSD;
+      let shortfall = 0;
 
-      if (shortfall <= 0) {
-        contributionStatus = 'Meets or Exceeds Cost';
-        contributionColor = '#d4edda';
-      } else if (shortfall <= 10000) {
-        contributionStatus = `Shortfall of $${shortfall.toFixed(2)}`;
-        contributionColor = '#fff3cd';
+      // New affordability logic:
+      const totalAvailableScholarship = needsBasedScholarshipGap + getNum(ncScholarshipProvidedTwoYearsUSD) / 2;
+      const scholarshipNeededFromSchool = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - finalUwcFamilyContribution - getNum(ncScholarshipProvidedTwoYearsUSD) / 2);
+
+      if (scholarshipNeededFromSchool <= school.maxNeedsBasedScholarshipUSD) {
+          contributionStatus = 'Fully Funded';
+          contributionColor = '#d4edda';
+          shortfall = 0;
       } else {
-        contributionStatus = `Shortfall of $${shortfall.toFixed(2)}`;
-        contributionColor = '#f8d7da';
+          shortfall = scholarshipNeededFromSchool - school.maxNeedsBasedScholarshipUSD;
+          contributionStatus = `Shortfall of $${shortfall.toFixed(2)}`;
+          contributionColor = '#f8d7da';
       }
 
       return {
         schoolName: school.name,
-        schoolAnnualFeesUSD: schoolAnnualFeesUSD.toFixed(2),
-        schoolAvgAdditionalCostsUSD: school.avgAdditionalCostsUSD.toFixed(2),
         totalGrossAnnualCostOfAttendanceUSD: totalGrossAnnualCostOfAttendanceUSD.toFixed(2),
-        totalNeedUSD: totalNeedUSD.toFixed(2),
-        uwcNeedsBasedScholarshipAwardedUSD: uwcNeedsBasedScholarshipAwardedUSD.toFixed(2),
-        maxNeedsBasedScholarshipUSD: school.maxNeedsBasedScholarshipUSD.toFixed(2),
-        uwcNeedsBasedScholarshipPercentage: uwcNeedsBasedScholarshipPercentage.toFixed(2),
         totalCostOfAttendanceTwoYearsUSD: totalCostOfAttendanceTwoYearsUSD.toFixed(2),
-        totalContributionAndAwardedScholarshipTwoYearsUSD: totalContributionAndAwardedScholarshipTwoYearsUSD.toFixed(2),
+        maxNeedsBasedScholarshipUSD: school.maxNeedsBasedScholarshipUSD.toFixed(2),
+        needsBasedScholarshipGap: Math.max(0, needsBasedScholarshipGap).toFixed(2),
         contributionStatus,
         contributionColor,
+        shortfall: shortfall.toFixed(2),
       };
     });
 
@@ -366,11 +357,9 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                 <thead>
                   <tr>
                     <th>School</th>
-                    <th>Annual Fees</th>
-                    <th>Total Gross Annual Cost</th>
-                    <th>Needs-Based Scholarship Awarded</th>
-                    <th>% by School</th>
-                    <th>Total 2-Year Cost</th>
+                    <th>Annual Cost of Attendance</th>
+                    <th>Max Scholarship Available</th>
+                    <th>Needs-Based Scholarship Gap (Per Year)</th>
                     <th>Affordability Status</th>
                   </tr>
                 </thead>
@@ -378,11 +367,9 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                   {allSchoolResults.allSchoolResults.map((school, index) => (
                     <tr key={index}>
                       <td>{school.schoolName}</td>
-                      <td>${school.schoolAnnualFeesUSD}</td>
                       <td>${school.totalGrossAnnualCostOfAttendanceUSD}</td>
-                      <td>${school.uwcNeedsBasedScholarshipAwardedUSD}</td>
-                      <td>{school.uwcNeedsBasedScholarshipPercentage}%</td>
-                      <td className="total-cost">${school.totalCostOfAttendanceTwoYearsUSD}</td>
+                      <td>${school.maxNeedsBasedScholarshipUSD}</td>
+                      <td>${school.needsBasedScholarshipGap}</td>
                       <td>
                         <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
                           {school.contributionStatus}
@@ -473,12 +460,9 @@ const App = () => {
     if (!data || data.length === 0) return;
     const headers = [
       "School",
-      "Annual Fees (USD)",
-      "Total Gross Annual Cost (USD)",
+      "Annual Cost of Attendance (USD)",
       "Max Scholarship Available (USD)",
-      "Needs-Based Scholarship Awarded (USD)",
-      "% by School",
-      "Total 2-Year Cost (USD)",
+      "Needs-Based Scholarship Gap (Per Year) (USD)",
       "Affordability Status",
     ];
 
@@ -487,12 +471,9 @@ const App = () => {
       ...data.map(school =>
         [
           `"${school.schoolName}"`,
-          school.schoolAnnualFeesUSD,
           school.totalGrossAnnualCostOfAttendanceUSD,
           school.maxNeedsBasedScholarshipUSD,
-          school.uwcNeedsBasedScholarshipAwardedUSD,
-          school.uwcNeedsBasedScholarshipPercentage,
-          school.totalCostOfAttendanceTwoYearsUSD,
+          school.needsBasedScholarshipGap,
           `"${school.contributionStatus}"`
         ].join(',')
       )
