@@ -368,7 +368,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                     <th>Total All-Inclusive Cost (2 years)</th>
                     <th>Max Scholarship Available</th>
                     <th>Final Scholarship Needed From School (2 years)</th>
-                    <th>Affordability Status</th>
+                    <th>Final Shortfall / Surplus</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -432,7 +432,7 @@ const initialFormData = {
   pg1HomeOutstandingMortgage: 0,
   otherPropertiesNetIncome: 0,
   assetsAnotherCountryNetIncome: 0,
-  pg1JobNotes: '', // NEW FIELD
+  pg1JobNotes: '',
   pg2StudentAnnualIncome: 0,
   pg2StudentCashSavings: 0,
   pg2StudentOtherAssets: 0,
@@ -510,7 +510,7 @@ const App = () => {
       "Max Scholarship Available (Local)",
       "Max Scholarship Available (USD)",
       "Final Scholarship Needed From School (USD)",
-      "Affordability Status",
+      "Final Shortfall/Surplus",
     ];
 
     const csvContent = [
