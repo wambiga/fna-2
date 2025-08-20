@@ -284,7 +284,6 @@ const useFinancialCalculations = (formData) => {
       let shortfall = 0;
 
       // New affordability logic:
-      const totalAvailableScholarship = needsBasedScholarshipGap + getNum(ncScholarshipProvidedTwoYearsUSD) / 2;
       const scholarshipNeededFromSchool = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - finalUwcFamilyContribution - getNum(ncScholarshipProvidedTwoYearsUSD) / 2);
 
       if (scholarshipNeededFromSchool <= school.maxNeedsBasedScholarshipUSD) {
