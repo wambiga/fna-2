@@ -186,11 +186,8 @@ const currencyList = [
   { abbr: 'ZWL', symbol: 'Z$' }
 ];
 
-// A standard, objective annual living allowance per person in USD.
-// This replaces subjective discretionary expenditure inputs.
 const standardLivingAllowancePerPersonUSD = 5000;
 
-// --- Helper Functions moved outside the component for reusability ---
 const getNum = (value) => {
   const num = parseFloat(value);
   return isNaN(num) ? 0 : num;
@@ -203,7 +200,6 @@ const convertNcToUsd = (valueInNcCurrency, exchangeRate) => {
   return getNum(valueInNcCurrency) / getNum(exchangeRate);
 };
 
-// --- Custom Hook for all financial calculations ---
 const useFinancialCalculations = (formData) => {
   const allSchoolResults = useMemo(() => {
     const {
@@ -249,12 +245,7 @@ const useFinancialCalculations = (formData) => {
       };
     }
 
-    // --- Calculation Logic Start ---
-
-    // Total number of people supported by the household income
-    const totalHouseholdMembers = getNum(pg1NumberIndependentAdults) + getNum(pg1NumberFinancialDependents) + 1; // +1 for the student
-
-    // Convert all National Currency (NC) values to USD
+    const totalHouseholdMembers = getNum(pg1NumberIndependentAdults) + getNum(pg1NumberFinancialDependents) + 1;
     const ncIncomePrimaryParentUSD = convertNcToUsd(pg1AnnualIncomePrimaryParent, exchangeRateToUSD);
     const ncIncomeOtherParentUSD = convertNcToUsd(pg1AnnualIncomeOtherParent, exchangeRateToUSD);
     const ncAnnualBenefitsUSD = convertNcToUsd(pg1AnnualBenefits, exchangeRateToUSD);
@@ -266,87 +257,40 @@ const useFinancialCalculations = (formData) => {
     const ncStudentAnnualIncomeUSD = convertNcToUsd(pg2StudentAnnualIncome, exchangeRateToUSD);
     const ncStudentCashSavingsUSD = convertNcToUsd(pg2StudentCashSavings, exchangeRateToUSD);
     const ncStudentOtherAssetsUSD = convertNcToUsd(pg2StudentOtherAssets, exchangeRateToUSD);
-
     const totalAnnualLivingExpensesUSD = convertNcToUsd(totalAnnualLivingExpensesNC, exchangeRateToUSD);
-
-    // Calculate Total Annual Income
     const totalAnnualIncome =
-      ncIncomePrimaryParentUSD +
-      ncIncomeOtherParentUSD +
-      ncAnnualBenefitsUSD +
-      ncOtherAnnualIncomeUSD +
-      ncOtherPropertiesNetIncomeUSD +
-      ncAssetsAnotherCountryNetIncomeUSD;
-
-    // Calculate contribution from assets
-    // Calculate home equity
+      ncIncomePrimaryParentUSD + ncIncomeOtherParentUSD + ncAnnualBenefitsUSD +
+      ncOtherAnnualIncomeUSD + ncOtherPropertiesNetIncomeUSD + ncAssetsAnotherCountryNetIncomeUSD;
     const homeEquity = Math.max(0, convertNcToUsd(pg1HomeMarketValue, exchangeRateToUSD) - convertNcToUsd(pg1HomeOutstandingMortgage, exchangeRateToUSD));
     const totalFamilyAssetsUSD = ncCashSavingsUSD + ncOtherAssetsUSD + homeEquity;
-
-    // Apply the annual return rate to all family assets, including home equity
     const totalAssetsContribution = totalFamilyAssetsUSD * getNum(annualReturnOnAssets);
-
-    // Calculate total fixed expenses, now including school fees for other children and non-dependent children
     const totalAnnualFixedExpenditure = totalAnnualLivingExpensesUSD +
       convertNcToUsd(annualSchoolFeesForOtherChildren, exchangeRateToUSD) +
       convertNcToUsd(annualSchoolFeesForNonDependentChildren, exchangeRateToUSD);
-
-    // Use a standard living allowance instead of subjective inputs
     const totalLivingAllowanceUSD = totalHouseholdMembers * standardLivingAllowancePerPersonUSD;
-
-    // Formula 1: Family Contribution based on Income and Assets
-    const formula1_familyContributionUSD = Math.max(
-      0,
-      totalAnnualIncome - totalAnnualFixedExpenditure + totalAssetsContribution
-    );
-
-    // Formula 2: Student's Contribution
-    const formula2_studentContributionUSD =
-      ncStudentAnnualIncomeUSD +
-      (ncStudentCashSavingsUSD * 0.1) +
-      (ncStudentOtherAssetsUSD * 0.05);
-
-    // Formula 3: Cost to educate the student at home
-    const formula3_estimateCostEducateStudentHome =
-      (totalHouseholdMembers > 0 ? totalLivingAllowanceUSD / totalHouseholdMembers : 0);
-
-    // Determine the UWC Family Contribution required, which is the maximum of the three formulas
-    const uwcFamilyContributionRequiredUSD = Math.max(
-      0,
-      formula1_familyContributionUSD,
-      formula2_studentContributionUSD,
-      formula3_estimateCostEducateStudentHome
-    );
-
+    const formula1_familyContributionUSD = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure + totalAssetsContribution);
+    const formula2_studentContributionUSD = ncStudentAnnualIncomeUSD + (ncStudentCashSavingsUSD * 0.1) + (ncStudentOtherAssetsUSD * 0.05);
+    const formula3_estimateCostEducateStudentHome = (totalHouseholdMembers > 0 ? totalLivingAllowanceUSD / totalHouseholdMembers : 0);
+    const uwcFamilyContributionRequiredUSD = Math.max(0, formula1_familyContributionUSD, formula2_studentContributionUSD, formula3_estimateCostEducateStudentHome);
     const finalUwcFamilyContribution = uwcFamilyContributionRequiredUSD;
 
     const calculatedSchoolResults = schoolCostsData.map(school => {
       const schoolAnnualFeesUSD = school.annualFeesUSD;
       const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
       const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
-
-      // Calculation of the total need based on family contribution
       const totalNeedUSD = Math.max(0, totalGrossAnnualCostOfAttendanceUSD - finalUwcFamilyContribution);
-
-      // Determine the actual scholarship awarded, capped by the school's max
       const uwcNeedsBasedScholarshipAwardedUSD = Math.min(totalNeedUSD, school.maxNeedsBasedScholarshipUSD);
-
       const uwcNeedsBasedScholarshipPercentage =
         totalGrossAnnualCostOfAttendanceUSD > 0
           ? (uwcNeedsBasedScholarshipAwardedUSD / totalGrossAnnualCostOfAttendanceUSD) * 100
           : 0;
-
-      // Total two-year funds from family and ALL scholarships
       const totalCostOfAttendanceTwoYearsUSD = totalGrossAnnualCostOfAttendanceUSD * 2;
       const totalContributionAndAwardedScholarshipTwoYearsUSD =
         (finalUwcFamilyContribution * 2) +
         (uwcNeedsBasedScholarshipAwardedUSD * 2) +
         getNum(ncScholarshipProvidedTwoYearsUSD);
-
       let contributionStatus = '';
       let contributionColor = '';
-
-      // Shortfall is now the final gap after all funds are applied
       const shortfall = totalCostOfAttendanceTwoYearsUSD - totalContributionAndAwardedScholarshipTwoYearsUSD;
 
       if (shortfall <= 0) {
@@ -392,7 +336,6 @@ const useFinancialCalculations = (formData) => {
   return allSchoolResults;
 };
 
-// --- Results Component to be rendered in Step 5 ---
 const AssessmentResults = ({ formData, allSchoolResults, onDownloadPdf, onDownloadCsv, pdfContentRef }) => {
   return (
     <section className="assessment-results">
@@ -424,8 +367,8 @@ const AssessmentResults = ({ formData, allSchoolResults, onDownloadPdf, onDownlo
               <thead>
                 <tr>
                   <th>School</th>
-                  <th>Annual Fees</th>
-                  <th>Total Gross Annual Cost</th>
+                  <th className="hide-on-small">Annual Fees</th>
+                  <th className="hide-on-small">Total Gross Annual Cost</th>
                   <th>Needs-Based Scholarship Awarded</th>
                   <th>% by School</th>
                   <th>Total 2-Year Cost</th>
@@ -436,8 +379,8 @@ const AssessmentResults = ({ formData, allSchoolResults, onDownloadPdf, onDownlo
                 {allSchoolResults.allSchoolResults.map((school, index) => (
                   <tr key={index}>
                     <td>{school.schoolName}</td>
-                    <td>${school.schoolAnnualFeesUSD}</td>
-                    <td>${school.totalGrossAnnualCostOfAttendanceUSD}</td>
+                    <td className="hide-on-small">${school.schoolAnnualFeesUSD}</td>
+                    <td className="hide-on-small">${school.totalGrossAnnualCostOfAttendanceUSD}</td>
                     <td>${school.uwcNeedsBasedScholarshipAwardedUSD}</td>
                     <td>{school.uwcNeedsBasedScholarshipPercentage}%</td>
                     <td className="total-cost">${school.totalCostOfAttendanceTwoYearsUSD}</td>
@@ -461,7 +404,6 @@ const AssessmentResults = ({ formData, allSchoolResults, onDownloadPdf, onDownlo
   );
 };
 
-// Define the initial state outside the component for reusability
 const initialFormData = {
   ncCurrencySymbol: 'USD',
   exchangeRateToUSD: 1.0,
@@ -527,7 +469,6 @@ const App = () => {
   const handleDownloadCsv = () => {
     const data = allSchoolResults.allSchoolResults;
     if (!data || data.length === 0) return;
-
     const headers = [
       "School",
       "Annual Fees (USD)",
@@ -578,128 +519,150 @@ const App = () => {
           <h2>Input Form</h2>
           <form>
             <h3>General Information</h3>
-            <div className="input-group">
-              <label>National Currency Symbol:</label>
-              <select
-                name="ncCurrencySymbol"
-                value={formData.ncCurrencySymbol}
-                onChange={handleInputChange}
-              >
-                {currencyList.map(currency => (
-                  <option key={currency.abbr} value={currency.abbr}>{currency.abbr} ({currency.symbol})</option>
-                ))}
-              </select>
+            <div className="input-grid">
+              <div className="input-group">
+                <label>National Currency Symbol:</label>
+                <select name="ncCurrencySymbol" value={formData.ncCurrencySymbol} onChange={handleInputChange}>
+                  {currencyList.map(currency => (
+                    <option key={currency.abbr} value={currency.abbr}>{currency.abbr} ({currency.symbol})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Exchange Rate (1 USD = X NC Currency):</label>
+                <input type="number" name="exchangeRateToUSD" value={formData.exchangeRateToUSD} onChange={handleInputChange} />
+              </div>
             </div>
-            <div className="input-group">
-              <label>Exchange Rate (1 USD = X NC Currency):</label>
-              <input type="number" name="exchangeRateToUSD" value={formData.exchangeRateToUSD} onChange={handleInputChange} />
+            <div className="input-grid">
+              <div className="input-group">
+                <label>Date of Exchange Rate:</label>
+                <input type="date" name="exchangeRateDate" value={formData.exchangeRateDate} onChange={handleInputChange} />
+              </div>
+              <div className="input-group">
+                <label>Annual Return on Assets (%):</label>
+                <input
+                  type="number"
+                  name="annualReturnOnAssets"
+                  value={(formData.annualReturnOnAssets * 100).toFixed(2)}
+                  onChange={e => handleInputChange({ target: { name: 'annualReturnOnAssets', value: e.target.value / 100 } })}
+                />
+              </div>
             </div>
-            <div className="input-group">
-              <label>Date of Exchange Rate:</label>
-              <input type="date" name="exchangeRateDate" value={formData.exchangeRateDate} onChange={handleInputChange} />
-            </div>
-            <div className="input-group">
-              <label>Annual Return on Assets (%):</label>
-              <input
-                type="number"
-                name="annualReturnOnAssets"
-                value={(formData.annualReturnOnAssets * 100).toFixed(2)}
-                onChange={e => handleInputChange({ target: { name: 'annualReturnOnAssets', value: e.target.value / 100 } })}
-              />
-            </div>
-            <div className="input-group">
-              <label>Annual Travel Cost to UWC (USD):</label>
-              <input type="number" name="annualTravelCostUSD" value={formData.annualTravelCostUSD} onChange={handleInputChange} />
+            <div className="input-grid">
+              <div className="input-group">
+                <label>Annual Travel Cost to UWC (USD):</label>
+                <input type="number" name="annualTravelCostUSD" value={formData.annualTravelCostUSD} onChange={handleInputChange} />
+              </div>
             </div>
             <h3>Parent/Guardian Financial Information</h3>
-            <div className="input-group">
-              <label>Number of Independent Adults:</label>
-              <input type="number" name="pg1NumberIndependentAdults" value={formData.pg1NumberIndependentAdults} onChange={handleInputChange} />
+            <div className="input-grid">
+              <div className="input-group">
+                <label>Independent Adults:</label>
+                <input type="number" name="pg1NumberIndependentAdults" value={formData.pg1NumberIndependentAdults} onChange={handleInputChange} />
+              </div>
+              <div className="input-group">
+                <label>Financial Dependents:</label>
+                <input type="number" name="pg1NumberFinancialDependents" value={formData.pg1NumberFinancialDependents} onChange={handleInputChange} />
+              </div>
             </div>
-            <div className="input-group">
-              <label>Number of Financial Dependents:</label>
-              <input type="number" name="pg1NumberFinancialDependents" value={formData.pg1NumberFinancialDependents} onChange={handleInputChange} />
+            <h4>Income (National Currency)</h4>
+            <div className="input-grid">
+              <div className="input-group">
+                <label>Primary Parent Income:</label>
+                <input type="number" name="pg1AnnualIncomePrimaryParent" value={formData.pg1AnnualIncomePrimaryParent} onChange={handleInputChange} />
+              </div>
+              <div className="input-group">
+                <label>Other Parent Income:</label>
+                <input type="number" name="pg1AnnualIncomeOtherParent" value={formData.pg1AnnualIncomeOtherParent} onChange={handleInputChange} />
+              </div>
             </div>
-            <h4>Income Information (National Currency)</h4>
-            <div className="input-group">
-              <label>Annual Income of Primary Parent:</label>
-              <input type="number" name="pg1AnnualIncomePrimaryParent" value={formData.pg1AnnualIncomePrimaryParent} onChange={handleInputChange} />
+            <div className="input-grid">
+              <div className="input-group">
+                <label>Annual Benefits:</label>
+                <input type="number" name="pg1AnnualBenefits" value={formData.pg1AnnualBenefits} onChange={handleInputChange} />
+              </div>
+              <div className="input-group">
+                <label>Other Annual Income:</label>
+                <input type="number" name="pg1OtherAnnualIncome" value={formData.pg1OtherAnnualIncome} onChange={handleInputChange} />
+              </div>
             </div>
-            <div className="input-group">
-              <label>Annual Income of Other Parent:</label>
-              <input type="number" name="pg1AnnualIncomeOtherParent" value={formData.pg1AnnualIncomeOtherParent} onChange={handleInputChange} />
+            <div className="input-grid">
+              <div className="input-group">
+                <label>Net Income from Other Properties:</label>
+                <input type="number" name="otherPropertiesNetIncome" value={formData.otherPropertiesNetIncome} onChange={handleInputChange} />
+              </div>
+              <div className="input-group">
+                <label>Net Income from Foreign Assets:</label>
+                <input type="number" name="assetsAnotherCountryNetIncome" value={formData.assetsAnotherCountryNetIncome} onChange={handleInputChange} />
+              </div>
             </div>
-            <div className="input-group">
-              <label>Annual Benefits:</label>
-              <input type="number" name="pg1AnnualBenefits" value={formData.pg1AnnualBenefits} onChange={handleInputChange} />
+            <h4>Assets (National Currency)</h4>
+            <div className="input-grid">
+              <div className="input-group">
+                <label>Cash and Savings:</label>
+                <input type="number" name="pg1CashSavings" value={formData.pg1CashSavings} onChange={handleInputChange} />
+              </div>
+              <div className="input-group">
+                <label>Other Assets:</label>
+                <input type="number" name="pg1OtherAssets" value={formData.pg1OtherAssets} onChange={handleInputChange} />
+              </div>
             </div>
-            <div className="input-group">
-              <label>Other Annual Income:</label>
-              <input type="number" name="pg1OtherAnnualIncome" value={formData.pg1OtherAnnualIncome} onChange={handleInputChange} />
-            </div>
-            <div className="input-group">
-              <label>Net Income from Other Properties:</label>
-              <input type="number" name="otherPropertiesNetIncome" value={formData.otherPropertiesNetIncome} onChange={handleInputChange} />
-            </div>
-            <div className="input-group">
-              <label>Net Income from Assets in Another Country:</label>
-              <input type="number" name="assetsAnotherCountryNetIncome" value={formData.assetsAnotherCountryNetIncome} onChange={handleInputChange} />
-            </div>
-            <h4>Assets Information (National Currency)</h4>
-            <div className="input-group">
-              <label>Cash and Savings:</label>
-              <input type="number" name="pg1CashSavings" value={formData.pg1CashSavings} onChange={handleInputChange} />
-            </div>
-            <div className="input-group">
-              <label>Other Assets:</label>
-              <input type="number" name="pg1OtherAssets" value={formData.pg1OtherAssets} onChange={handleInputChange} />
-            </div>
-            <div className="input-group">
-              <label>Home Market Value:</label>
-              <input type="number" name="pg1HomeMarketValue" value={formData.pg1HomeMarketValue} onChange={handleInputChange} />
-            </div>
-            <div className="input-group">
-              <label>Home Outstanding Mortgage:</label>
-              <input type="number" name="pg1HomeOutstandingMortgage" value={formData.pg1HomeOutstandingMortgage} onChange={handleInputChange} />
+            <div className="input-grid">
+              <div className="input-group">
+                <label>Home Market Value:</label>
+                <input type="number" name="pg1HomeMarketValue" value={formData.pg1HomeMarketValue} onChange={handleInputChange} />
+              </div>
+              <div className="input-group">
+                <label>Home Outstanding Mortgage:</label>
+                <input type="number" name="pg1HomeOutstandingMortgage" value={formData.pg1HomeOutstandingMortgage} onChange={handleInputChange} />
+              </div>
             </div>
             <h4>Annual Expenses (National Currency)</h4>
-            <div className="input-group">
-              <label>Total Annual Living Expenses:</label>
-              <input type="number" name="totalAnnualLivingExpensesNC" value={formData.totalAnnualLivingExpensesNC} onChange={handleInputChange} />
-            </div>
-            <div className="input-group">
-              <label>Annual School Fees for Other Children:</label>
-              <input type="number" name="annualSchoolFeesForOtherChildren" value={formData.annualSchoolFeesForOtherChildren} onChange={handleInputChange} />
+            <div className="input-grid">
+              <div className="input-group">
+                <label>Total Annual Living Expenses:</label>
+                <input type="number" name="totalAnnualLivingExpensesNC" value={formData.totalAnnualLivingExpensesNC} onChange={handleInputChange} />
+              </div>
+              <div className="input-group">
+                <label>Annual School Fees for Other Children:</label>
+                <input type="number" name="annualSchoolFeesForOtherChildren" value={formData.annualSchoolFeesForOtherChildren} onChange={handleInputChange} />
+              </div>
             </div>
             <div className="input-group">
               <label>Annual School Fees for Non-Dependent Children:</label>
               <input type="number" name="annualSchoolFeesForNonDependentChildren" value={formData.annualSchoolFeesForNonDependentChildren} onChange={handleInputChange} />
             </div>
-            <h3>Student Financial Information (National Currency)</h3>
-            <div className="input-group">
-              <label>Student Annual Income:</label>
-              <input type="number" name="pg2StudentAnnualIncome" value={formData.pg2StudentAnnualIncome} onChange={handleInputChange} />
-            </div>
-            <div className="input-group">
-              <label>Student Cash & Savings:</label>
-              <input type="number" name="pg2StudentCashSavings" value={formData.pg2StudentCashSavings} onChange={handleInputChange} />
+            <h3>Student Financial Information</h3>
+            <div className="input-grid">
+              <div className="input-group">
+                <label>Student Annual Income:</label>
+                <input type="number" name="pg2StudentAnnualIncome" value={formData.pg2StudentAnnualIncome} onChange={handleInputChange} />
+              </div>
+              <div className="input-group">
+                <label>Student Cash & Savings:</label>
+                <input type="number" name="pg2StudentCashSavings" value={formData.pg2StudentCashSavings} onChange={handleInputChange} />
+              </div>
             </div>
             <div className="input-group">
               <label>Student Other Assets:</label>
               <input type="number" name="pg2StudentOtherAssets" value={formData.pg2StudentOtherAssets} onChange={handleInputChange} />
             </div>
             <h3>Additional Contributions & Information</h3>
-            <div className="input-group">
-              <label>Scholarship by NC (2 years, USD):</label>
-              <input type="number" name="ncScholarshipProvidedTwoYearsUSD" value={formData.ncScholarshipProvidedTwoYearsUSD} onChange={handleInputChange} />
+            <div className="input-grid">
+              <div className="input-group">
+                <label>Scholarship by NC (2 years, USD):</label>
+                <input type="number" name="ncScholarshipProvidedTwoYearsUSD" value={formData.ncScholarshipProvidedTwoYearsUSD} onChange={handleInputChange} />
+              </div>
+              <div className="input-group">
+                <label>Family Anticipated Annual Savings (USD):</label>
+                <input type="number" name="familyAnticipatedAnnualSavings" value={formData.familyAnticipatedAnnualSavings} onChange={handleInputChange} />
+              </div>
             </div>
-            <div className="input-group">
-              <label>Family Anticipated Annual Savings (USD):</label>
-              <input type="number" name="familyAnticipatedAnnualSavings" value={formData.familyAnticipatedAnnualSavings} onChange={handleInputChange} />
-            </div>
-            <div className="input-group">
-              <label>Potential Loan Amount (USD):</label>
-              <input type="number" name="potentialLoanAmount" value={formData.potentialLoanAmount} onChange={handleInputChange} />
+            <div className="input-grid">
+              <div className="input-group">
+                <label>Potential Loan Amount (USD):</label>
+                <input type="number" name="potentialLoanAmount" value={formData.potentialLoanAmount} onChange={handleInputChange} />
+              </div>
             </div>
             <div className="input-group">
               <label>Unusual Circumstances:</label>
