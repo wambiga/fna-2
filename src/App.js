@@ -185,6 +185,99 @@ const currencyList = [
     { abbr: 'ZWL', symbol: 'Z$' }
 ];
 
+const ageCriteriaData = [
+    {
+        "schoolName": "UWC Adriatic",
+        "minAgeCutoff": "2010-01-01",
+        "maxAgeCutoff": "2007-08-19"
+    },
+    {
+        "schoolName": "UWC Atlantic",
+        "minAgeCutoff": "2009-11-01",
+        "maxAgeCutoff": "2006-09-01"
+    },
+    {
+        "schoolName": "UWC Changshu China",
+        "minAgeCutoff": "2010-08-16",
+        "maxAgeCutoff": "2007-08-14"
+    },
+    {
+        "schoolName": "UWC Costa Rica",
+        "minAgeCutoff": "2009-08-08",
+        "maxAgeCutoff": "2007-08-06"
+    },
+    {
+        "schoolName": "UWC Dilijan",
+        "minAgeCutoff": "2009-09-01",
+        "maxAgeCutoff": "2007-08-31"
+    },
+    {
+        "schoolName": "UWC East Africa",
+        "minAgeCutoff": "2009-08-01",
+        "maxAgeCutoff": "2006-07-31"
+    },
+    {
+        "schoolName": "UWC ISAK Japan",
+        "minAgeCutoff": "2010-01-01",
+        "maxAgeCutoff": "2007-05-31"
+    },
+    {
+        "schoolName": "UWC Li Po Chun",
+        "minAgeCutoff": "2009-09-02",
+        "maxAgeCutoff": "2007-08-31"
+    },
+    {
+        "schoolName": "UWC Maastricht",
+        "minAgeCutoff": "2009-09-01",
+        "maxAgeCutoff": "2007-08-06"
+    },
+    {
+        "schoolName": "UWC Mahindra",
+        "minAgeCutoff": "2009-09-02",
+        "maxAgeCutoff": "2007-08-31"
+    },
+    {
+        "schoolName": "UWC Mostar",
+        "minAgeCutoff": "2009-08-02",
+        "maxAgeCutoff": "2007-07-31"
+    },
+    {
+        "schoolName": "UWC Pearson College",
+        "minAgeCutoff": "2009-09-02",
+        "maxAgeCutoff": "2006-08-31"
+    },
+    {
+        "schoolName": "UWC Red Cross Nordic",
+        "minAgeCutoff": "2009-08-02",
+        "maxAgeCutoff": "2007-07-31"
+    },
+    {
+        "schoolName": "UWC Robert Bosch College",
+        "minAgeCutoff": "2009-09-01",
+        "maxAgeCutoff": "2007-02-27"
+    },
+    {
+        "schoolName": "UWC South East Asia",
+        "minAgeCutoff": "2009-09-01",
+        "maxAgeCutoff": "2008-08-31"
+    },
+    {
+        "schoolName": "UWC Thailand",
+        "minAgeCutoff": "2009-08-02",
+        "maxAgeCutoff": "2007-05-31"
+    },
+    {
+        "schoolName": "UWC USA",
+        "minAgeCutoff": "2009-09-02",
+        "maxAgeCutoff": "2007-08-31"
+    },
+    {
+        "schoolName": "UWC Waterford",
+        "minAgeCutoff": "2010-01-01",
+        "maxAgeCutoff": "2005-12-31"
+    }
+];
+
 const getNum = (value) => {
     const num = parseFloat(value);
     return isNaN(num) ? 0 : num;
@@ -197,10 +290,33 @@ const convertNcToUsd = (valueInNcCurrency, exchangeRate) => {
     return getNum(valueInNcCurrency) / getNum(exchangeRate);
 };
 
+const checkAgeEligibility = (dob, school) => {
+    if (!dob) {
+        return 'N/A';
+    }
+
+    const applicantDob = new Date(dob);
+    const minCutoffDate = new Date(school.minAgeCutoff);
+    const maxCutoffDate = new Date(school.maxAgeCutoff);
+
+    if (isNaN(applicantDob) || isNaN(minCutoffDate) || isNaN(maxCutoffDate)) {
+        return 'Invalid Dates';
+    }
+
+    // Check if DOB is within the range
+    if (applicantDob >= maxCutoffDate && applicantDob <= minCutoffDate) {
+        return 'Eligible';
+    } else {
+        return 'Not Eligible';
+    }
+};
+
+
 const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
     const allSchoolResults = useMemo(() => {
         const {
             exchangeRateToUSD,
+            applicantDob,
             annualReturnOnAssets,
             annualSchoolFeesForOtherChildren,
             annualSchoolFeesForNonDependentChildren,
@@ -235,6 +351,7 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
                     needsBasedScholarshipGap: '0.00',
                     contributionStatus: 'N/A',
                     contributionColor: 'grey',
+                    ageEligibility: checkAgeEligibility(applicantDob, ageCriteriaData.find(ac => ac.schoolName.includes(school.name))),
                 })),
             };
         }
@@ -296,6 +413,10 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
                 contributionColor = '#f8d7da';
             }
 
+            // Get age eligibility for the current school
+            const ageCriteria = ageCriteriaData.find(ac => ac.schoolName.includes(school.name.replace('Li Po Chun United World College of Hong Kong', 'UWC Li Po Chun').replace('Waterford Kamhlaba UWC of Southern Africa', 'UWC Waterford').replace('UWC Mahindra College', 'UWC Mahindra').replace('UWC Pearson College', 'UWC Pearson College')));
+            const ageEligibility = ageCriteria ? checkAgeEligibility(applicantDob, ageCriteria) : 'N/A';
+
             return {
                 schoolName: school.name,
                 totalGrossAnnualCostOfAttendanceUSD: totalGrossAnnualCostOfAttendanceUSD.toFixed(2),
@@ -308,6 +429,7 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
                 contributionStatus,
                 contributionColor,
                 shortfall: shortfall.toFixed(2),
+                ageEligibility,
             };
         });
 
@@ -336,6 +458,8 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                     <h3 className="report-title">Financial Need Assessment Report</h3>
                     <section className="summary-section">
                         <h4>General Application Details</h4>
+                        <p><strong>Applicant Name:</strong> {formData.applicantName || 'N/A'}</p>
+                        <p><strong>Date of Birth:</strong> {formData.applicantDob || 'N/A'}</p>
                         <p><strong>National Currency Symbol:</strong> {formData.ncCurrencySymbol || 'N/A'}</p>
                         <p><strong>Exchange Rate (1 USD = X NC Currency):</strong> {formData.exchangeRateToUSD || 'N/A'}</p>
                         <p><strong>Exchange Rate Date:</strong> {formData.exchangeRateDate || 'N/A'}</p>
@@ -362,7 +486,8 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                                         <th>Assessed Funds Available for Fees (2 years)</th>
                                         <th>Final Scholarship Needed From School (2 years)</th>
                                         <th>Max Scholarship Available</th>
-                                        <th>Final Shortfall / Surplus</th>
+                                        <th>Financial Contribution Status</th>
+                                        <th>Age Eligibility</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -390,6 +515,11 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                                             <td>
                                                 <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
                                                     {school.contributionStatus}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span className="status-badge" style={{ backgroundColor: school.ageEligibility === 'Eligible' ? '#d4edda' : (school.ageEligibility === 'Not Eligible' ? '#f8d7da' : 'grey') }}>
+                                                    {school.ageEligibility}
                                                 </span>
                                             </td>
                                         </tr>
@@ -442,6 +572,9 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                                         <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
                                             {school.contributionStatus}
                                         </span>
+                                        <span className="status-badge" style={{ backgroundColor: school.ageEligibility === 'Eligible' ? '#d4edda' : (school.ageEligibility === 'Not Eligible' ? '#f8d7da' : 'grey') }}>
+                                            {school.ageEligibility}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
@@ -458,6 +591,8 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
 };
 
 const initialFormData = {
+    applicantName: '',
+    applicantDob: '',
     ncCurrencySymbol: 'USD',
     exchangeRateToUSD: 1.0,
     exchangeRateDate: new Date().toISOString().split('T')[0],
@@ -490,6 +625,7 @@ const initialFormData = {
 const App = () => {
     const [formData, setFormData] = useState(initialFormData);
     const [activeTab, setActiveTab] = useState('general');
+    const [excelFile, setExcelFile] = useState(null); // New state to hold the selected file
     const pdfContentRef = useRef(null);
 
     const [maxScholarshipPercentages, setMaxScholarshipPercentages] = useState({});
@@ -524,13 +660,19 @@ const App = () => {
             initialPercentages[school.name] = 0;
         });
         setMaxScholarshipPercentages(initialPercentages);
+        setExcelFile(null); // Also clear the file state
         setActiveTab('general');
     };
 
-    // This is the updated function that now handles both file selection and processing.
-    const handleFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) {
+    // New function to handle file selection
+    const handleFileSelect = (e) => {
+        setExcelFile(e.target.files[0]);
+    };
+
+    // New function to process the selected Excel file
+    const processFile = () => {
+        if (!excelFile) {
+            alert("Please select an Excel file first.");
             return;
         }
 
@@ -541,7 +683,10 @@ const App = () => {
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
 
+            // Assuming data is in column B, starting from row 4
             const newFormData = {
+                applicantName: worksheet['B1'] ? worksheet['B1'].v : '',
+                applicantDob: worksheet['B2'] ? XLSX.utils.formatDate(worksheet['B2'].v, 'YYYY-MM-DD') : '',
                 ncCurrencySymbol: worksheet['B4'] ? worksheet['B4'].v : 'N/A',
                 exchangeRateToUSD: getNum(worksheet['B5'] ? worksheet['B5'].v : 0),
                 exchangeRateDate: worksheet['B6'] ? XLSX.utils.formatDate(worksheet['B6'].v, 'YYYY-MM-DD') : '',
@@ -572,7 +717,7 @@ const App = () => {
             setFormData(newFormData);
             setActiveTab('results'); // Automatically go to results after upload
         };
-        reader.readAsBinaryString(file);
+        reader.readAsBinaryString(excelFile);
     };
 
     const allSchoolResults = useFinancialCalculations(formData, maxScholarshipPercentages);
@@ -602,7 +747,8 @@ const App = () => {
             "Max Scholarship Percentage (%)",
             "Max Scholarship Available (Local)",
             "Max Scholarship Available (USD)",
-            "Final Shortfall/Surplus",
+            "Financial Contribution Status",
+            "Age Eligibility"
         ];
 
         const csvContent = [
@@ -614,8 +760,10 @@ const App = () => {
                     (allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2),
                     school.finalScholarshipNeededFromSchool,
                     school.maxScholarshipPercentage,
+                    `"${school.localCurrencySymbol} ${school.maxScholarshipLocal}"`,
                     school.maxScholarshipAvailableUSD,
-                    `"${school.contributionStatus}"`
+                    `"${school.contributionStatus}"`,
+                    `"${school.ageEligibility}"`
                 ].join(',')
             )
         ].join('\n');
@@ -642,10 +790,25 @@ const App = () => {
                             <h3>General Information</h3>
                             <div className="input-group">
                                 <label>Upload Parent/Guardian Excel Form:</label>
-                                <input type="file" onChange={handleFileUpload} accept=".xlsx, .xls" />
+                                <input type="file" onChange={handleFileSelect} accept=".xlsx, .xls" />
+                                <button
+                                    onClick={processFile}
+                                    disabled={!excelFile} // Button is disabled until a file is selected
+                                    className="process-button"
+                                >
+                                    Process File
+                                </button>
                             </div>
                             <hr style={{ margin: '20px 0' }} />
                             <h3>Or, Manually Enter Data Below</h3>
+                            <div className="input-group">
+                                <label>Applicant's Full Name:</label>
+                                <input type="text" name="applicantName" value={formData.applicantName} onChange={handleInputChange} />
+                            </div>
+                            <div className="input-group">
+                                <label>Applicant's Date of Birth:</label>
+                                <input type="date" name="applicantDob" value={formData.applicantDob} onChange={handleInputChange} />
+                            </div>
                             <div className="input-group">
                                 <label>National Currency Symbol:</label>
                                 <select name="ncCurrencySymbol" value={formData.ncCurrencySymbol} onChange={handleInputChange}>
