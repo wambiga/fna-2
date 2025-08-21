@@ -107,7 +107,7 @@ const currencyList = [
     { abbr: 'KZT', symbol: '₸' },
     { abbr: 'LAK', symbol: '₭' },
     { abbr: 'LBP', symbol: '£' },
-    { abbr: 'LKR', symbol: 'Rs' },
+    { abbr: 'LKR', symbol: '₨' },
     { abbr: 'LRD', symbol: '$' },
     { abbr: 'LSL', symbol: 'L' },
     { abbr: 'LYD', symbol: 'ل.د' },
@@ -625,7 +625,7 @@ const initialFormData = {
 const App = () => {
     const [formData, setFormData] = useState(initialFormData);
     const [activeTab, setActiveTab] = useState('general');
-    const [excelFile, setExcelFile] = useState(null); // New state to hold the selected file
+    const [excelFile, setExcelFile] = useState(null);
     const pdfContentRef = useRef(null);
 
     const [maxScholarshipPercentages, setMaxScholarshipPercentages] = useState({});
@@ -660,16 +660,14 @@ const App = () => {
             initialPercentages[school.name] = 0;
         });
         setMaxScholarshipPercentages(initialPercentages);
-        setExcelFile(null); // Also clear the file state
+        setExcelFile(null);
         setActiveTab('general');
     };
 
-    // New function to handle file selection
     const handleFileSelect = (e) => {
         setExcelFile(e.target.files[0]);
     };
 
-    // New function to process the selected Excel file
     const processFile = () => {
         if (!excelFile) {
             alert("Please select an Excel file first.");
@@ -678,44 +676,57 @@ const App = () => {
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            const data = event.target.result;
-            const workbook = XLSX.read(data, { type: 'binary' });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
+            try {
+                const data = event.target.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
 
-            // Assuming data is in column B, starting from row 4
-            const newFormData = {
-                applicantName: worksheet['B1'] ? worksheet['B1'].v : '',
-                applicantDob: worksheet['B2'] ? XLSX.utils.formatDate(worksheet['B2'].v, 'YYYY-MM-DD') : '',
-                ncCurrencySymbol: worksheet['B4'] ? worksheet['B4'].v : 'N/A',
-                exchangeRateToUSD: getNum(worksheet['B5'] ? worksheet['B5'].v : 0),
-                exchangeRateDate: worksheet['B6'] ? XLSX.utils.formatDate(worksheet['B6'].v, 'YYYY-MM-DD') : '',
-                annualReturnOnAssets: getNum(worksheet['B7'] ? worksheet['B7'].v / 100 : 0),
-                annualTravelCostUSD: getNum(worksheet['B8'] ? worksheet['B8'].v : 0),
-                pg1AnnualIncomePrimaryParent: getNum(worksheet['B11'] ? worksheet['B11'].v : 0),
-                pg1AnnualIncomeOtherParent: getNum(worksheet['B12'] ? worksheet['B12'].v : 0),
-                pg1AnnualBenefits: getNum(worksheet['B13'] ? worksheet['B13'].v : 0),
-                pg1OtherAnnualIncome: getNum(worksheet['B14'] ? worksheet['B14'].v : 0),
-                otherPropertiesNetIncome: getNum(worksheet['B15'] ? worksheet['B15'].v : 0),
-                assetsAnotherCountryNetIncome: getNum(worksheet['B16'] ? worksheet['B16'].v : 0),
-                pg1CashSavings: getNum(worksheet['B18'] ? worksheet['B18'].v : 0),
-                pg1OtherAssets: getNum(worksheet['B19'] ? worksheet['B19'].v : 0),
-                pg1HomeMarketValue: getNum(worksheet['B20'] ? worksheet['B20'].v : 0),
-                pg1HomeOutstandingMortgage: getNum(worksheet['B21'] ? worksheet['B21'].v : 0),
-                totalAnnualLivingExpensesNC: getNum(worksheet['B23'] ? worksheet['B23'].v : 0),
-                annualSchoolFeesForOtherChildren: getNum(worksheet['B24'] ? worksheet['B24'].v : 0),
-                annualSchoolFeesForNonDependentChildren: getNum(worksheet['B25'] ? worksheet['B25'].v : 0),
-                currentSchoolFees: getNum(worksheet['B26'] ? worksheet['B26'].v : 0),
-                pg2StudentAnnualIncome: getNum(worksheet['B29'] ? worksheet['B29'].v : 0),
-                pg2StudentCashSavings: getNum(worksheet['B30'] ? worksheet['B30'].v : 0),
-                pg2StudentOtherAssets: getNum(worksheet['B31'] ? worksheet['B31'].v : 0),
-                ncScholarshipProvidedTwoYearsUSD: getNum(worksheet['B34'] ? worksheet['B34'].v : 0),
-                potentialLoanAmount: getNum(worksheet['B35'] ? worksheet['B35'].v : 0),
-                unusualCircumstances: worksheet['B38'] ? worksheet['B38'].v : '',
-            };
+                const getCellValue = (cellAddress) => {
+                    const cell = worksheet[cellAddress];
+                    return cell ? cell.v : null;
+                };
 
-            setFormData(newFormData);
-            setActiveTab('results'); // Automatically go to results after upload
+                const newFormData = {
+                    applicantName: getCellValue('B1'),
+                    applicantDob: getCellValue('B2') ? XLSX.utils.formatDate(getCellValue('B2'), 'YYYY-MM-DD') : '',
+                    ncCurrencySymbol: getCellValue('B4'),
+                    exchangeRateToUSD: getNum(getCellValue('B5')),
+                    exchangeRateDate: getCellValue('B6') ? XLSX.utils.formatDate(getCellValue('B6'), 'YYYY-MM-DD') : '',
+                    annualReturnOnAssets: getNum(getCellValue('B7')) / 100,
+                    annualTravelCostUSD: getNum(getCellValue('B8')),
+                    pg1AnnualIncomePrimaryParent: getNum(getCellValue('B11')),
+                    pg1AnnualIncomeOtherParent: getNum(getCellValue('B12')),
+                    pg1AnnualBenefits: getNum(getCellValue('B13')),
+                    pg1OtherAnnualIncome: getNum(getCellValue('B14')),
+                    otherPropertiesNetIncome: getNum(getCellValue('B15')),
+                    assetsAnotherCountryNetIncome: getNum(getCellValue('B16')),
+                    pg1CashSavings: getNum(getCellValue('B18')),
+                    pg1OtherAssets: getNum(getCellValue('B19')),
+                    pg1HomeMarketValue: getNum(getCellValue('B20')),
+                    pg1HomeOutstandingMortgage: getNum(getCellValue('B21')),
+                    totalAnnualLivingExpensesNC: getNum(getCellValue('B23')),
+                    annualSchoolFeesForOtherChildren: getNum(getCellValue('B24')),
+                    annualSchoolFeesForNonDependentChildren: getNum(getCellValue('B25')),
+                    currentSchoolFees: getNum(getCellValue('B26')),
+                    pg2StudentAnnualIncome: getNum(getCellValue('B29')),
+                    pg2StudentCashSavings: getNum(getCellValue('B30')),
+                    pg2StudentOtherAssets: getNum(getCellValue('B31')),
+                    ncScholarshipProvidedTwoYearsUSD: getNum(getCellValue('B34')),
+                    potentialLoanAmount: getNum(getCellValue('B35')),
+                    unusualCircumstances: getCellValue('B38'),
+                };
+
+                setFormData(newFormData);
+                setActiveTab('results');
+            } catch (error) {
+                console.error("Error processing file:", error);
+                alert("An error occurred while processing the file. Please ensure it is a valid Excel file and follows the correct format.");
+            }
+        };
+        reader.onerror = (error) => {
+            console.error("File reader error:", error);
+            alert("Failed to read the file.");
         };
         reader.readAsBinaryString(excelFile);
     };
