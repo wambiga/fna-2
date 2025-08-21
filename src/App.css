@@ -218,6 +218,13 @@ body {
     background-color: #eef1f4;
 }
 
+/* Specific column alignment for a cleaner look */
+.desktop-view th:nth-child(2), .desktop-view td:nth-child(2),
+.desktop-view th:nth-child(3), .desktop-view td:nth-child(3),
+.desktop-view th:nth-child(4), .desktop-view td:nth-child(4) {
+    text-align: right;
+}
+
 /* Mobile card view styles */
 .mobile-view {
     display: none;
@@ -321,13 +328,13 @@ body {
         page-break-after: auto;
     }
     /* Explicitly set column widths to prevent overflow */
-    .desktop-view th:nth-child(1), .desktop-view td:nth-child(1) { width: 14%; } /* School Name */
-    .desktop-view th:nth-child(2), .desktop-view td:nth-child(2) { width: 12%; } /* Total Cost */
-    .desktop-view th:nth-child(3), .desktop-view td:nth-child(3) { width: 15%; } /* Assessed Funds */
-    .desktop-view th:nth-child(4), .desktop-view td:nth-child(4) { width: 12%; } /* Scholarship Needed */
-    .desktop-view th:nth-child(5), .desktop-view td:nth-child(5) { width: 22%; } /* Max Scholarship */
-    .desktop-view th:nth-child(6), .desktop-view td:nth-child(6) { width: 12%; } /* Status */
-    .desktop-view th:nth-child(7), .desktop-view td:nth-child(7) { width: 13%; } /* Age Eligibility */
+    .desktop-view th:nth-child(1), .desktop-view td:nth-child(1) { width: 14%; text-align: left; } /* School Name */
+    .desktop-view th:nth-child(2), .desktop-view td:nth-child(2) { width: 12%; text-align: right; } /* Total Cost */
+    .desktop-view th:nth-child(3), .desktop-view td:nth-child(3) { width: 15%; text-align: right; } /* Funds available */
+    .desktop-view th:nth-child(4), .desktop-view td:nth-child(4) { width: 12%; text-align: right; } /* Scholarship Needed */
+    .desktop-view th:nth-child(5), .desktop-view td:nth-child(5) { width: 22%; text-align: left; } /* Max scholarship */
+    .desktop-view th:nth-child(6), .desktop-view td:nth-child(6) { width: 12%; text-align: center; } /* Status */
+    .desktop-view th:nth-child(7), .desktop-view td:nth-child(7) { width: 13%; text-align: center; } /* Age Eligibility */
 
     /* Ensure table cells have proper spacing and text wrapping */
     .desktop-view th, .desktop-view td {
