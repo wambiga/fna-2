@@ -622,7 +622,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
 // Initial form data structure for all input fields.
 const initialFormData = {
     applicantName: '', // New: Applicant's Full Name
-    applicantDob: '2007-01-01', // Changed default date to 2007-01-01
+    applicantDob: '', // New: Applicant's Date of Birth
     ncCurrencySymbol: 'USD',
     exchangeRateToUSD: 1.0,
     exchangeRateDate: new Date().toISOString().split('T')[0],
@@ -666,7 +666,7 @@ const App = () => {
     useEffect(() => {
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = 0; // Set initial percentage to 0
+            initialPercentages[school.name] = school.maxScholarshipPercentage * 100; // Store as percentage (0-100)
         });
         setMaxScholarshipPercentages(initialPercentages);
     }, []); // Empty dependency array ensures this runs only once
@@ -694,7 +694,7 @@ const App = () => {
         // Also reset max scholarship percentages to their defaults
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = 0; // Reset to 0
+            initialPercentages[school.name] = school.maxScholarshipPercentage * 100;
         });
         setMaxScholarshipPercentages(initialPercentages);
         setActiveTab('general'); // Navigate back to the first tab
@@ -746,6 +746,7 @@ const App = () => {
                     (allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2), // Ensure this calculation is correct for CSV
                     school.finalScholarshipNeededFromSchool,
                     school.maxScholarshipPercentage,
+                    `"${school.localCurrencySymbol} ${school.maxScholarshipLocal}"`,
                     school.maxScholarshipAvailableUSD,
                     `"${school.contributionStatus}"`, // Enclose status in quotes
                     `"${school.ageEligibility}"` // Add age eligibility to CSV row
@@ -783,13 +784,13 @@ const App = () => {
                             <div className="input-group">
                                 <label htmlFor="applicantDob">Applicant's Date of Birth (YYYY-MM-DD):</label>
                                 <input
-                                    type="text" // Changed from type="date"
+                                    type="text"
                                     id="applicantDob"
                                     name="applicantDob"
                                     value={formData.applicantDob}
                                     onChange={handleInputChange}
-                                    pattern="\d{4}-\d{2}-\d{2}" // Added pattern for YYYY-MM-DD format validation
-                                    placeholder="YYYY-MM-DD" // Added placeholder to guide user input
+                                    pattern="\d{4}-\d{2}-\d{2}"
+                                    placeholder="YYYY-MM-DD"
                                 />
                             </div>
                             <div className="input-group">
