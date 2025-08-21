@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react'; // Keep useEffect as it is used below
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
 import './App.css';
 
@@ -221,7 +221,7 @@ const ageCriteriaData = [
         "maxAgeCutoff": "2007-05-31"
     },
     {
-        "schoolName": "UWC Li Po Chun",
+        "schoolName": "UWC Li Po Chun", // This name is used in ageCriteriaData as a shorter form
         "minAgeCutoff": "2009-09-02",
         "maxAgeCutoff": "2007-08-31"
     },
@@ -231,7 +231,7 @@ const ageCriteriaData = [
         "maxAgeCutoff": "2007-08-06"
     },
     {
-        "schoolName": "UWC Mahindra",
+        "schoolName": "UWC Mahindra", // This name is used in ageCriteriaData as a shorter form
         "minAgeCutoff": "2009-09-02",
         "maxAgeCutoff": "2007-08-31"
     },
@@ -271,7 +271,7 @@ const ageCriteriaData = [
         "maxAgeCutoff": "2007-08-31"
     },
     {
-        "schoolName": "UWC Waterford",
+        "schoolName": "UWC Waterford", // This name is used in ageCriteriaData as a shorter form
         "minAgeCutoff": "2010-01-01",
         "maxAgeCutoff": "2005-12-31"
     }
@@ -350,6 +350,7 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
                     needsBasedScholarshipGap: '0.00',
                     contributionStatus: 'N/A',
                     contributionColor: 'grey',
+                    // Correctly find the age criteria for the school
                     ageEligibility: checkAgeEligibility(applicantDob, ageCriteriaData.find(ac => ac.schoolName.includes(school.name.replace('Li Po Chun United World College of Hong Kong', 'UWC Li Po Chun').replace('Waterford Kamhlaba UWC of Southern Africa', 'UWC Waterford').replace('UWC Mahindra College', 'UWC Mahindra').replace('UWC Pearson College', 'UWC Pearson College')))),
                 })),
             };
@@ -419,7 +420,14 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
             }
 
             // Get age eligibility for the current school
-            const ageCriteria = ageCriteriaData.find(ac => ac.schoolName.includes(school.name.replace('Li Po Chun United World College of Hong Kong', 'UWC Li Po Chun').replace('Waterford Kamhlaba UWC of Southern Africa', 'UWC Waterford').replace('UWC Mahindra College', 'UWC Mahindra').replace('UWC Pearson College', 'UWC Pearson College')));
+            // Using a mapping for school names that differ between schoolCostsData and ageCriteriaData
+            const ageCriteriaSchoolName = school.name
+                .replace('Li Po Chun United World College of Hong Kong', 'UWC Li Po Chun')
+                .replace('Waterford Kamhlaba UWC of Southern Africa', 'UWC Waterford')
+                .replace('UWC Mahindra College', 'UWC Mahindra')
+                .replace('UWC Pearson College', 'UWC Pearson College');
+
+            const ageCriteria = ageCriteriaData.find(ac => ac.schoolName === ageCriteriaSchoolName);
             const ageEligibility = ageCriteria ? checkAgeEligibility(applicantDob, ageCriteria) : 'N/A';
 
             return {
