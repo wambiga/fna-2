@@ -708,7 +708,7 @@ const App = () => {
         if (pdfContentRef.current) {
             const element = pdfContentRef.current;
             const opt = {
-                margin: 1,
+                margin: 0.5,
                 filename: 'financial_need_assessment_report.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
