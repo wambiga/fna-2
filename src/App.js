@@ -666,7 +666,7 @@ const App = () => {
     useEffect(() => {
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = school.maxScholarshipPercentage * 100; // Store as percentage (0-100)
+            initialPercentages[school.name] = 0; // Set initial percentage to 0
         });
         setMaxScholarshipPercentages(initialPercentages);
     }, []); // Empty dependency array ensures this runs only once
@@ -694,7 +694,7 @@ const App = () => {
         // Also reset max scholarship percentages to their defaults
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = school.maxScholarshipPercentage * 100;
+            initialPercentages[school.name] = 0; // Reset to 0
         });
         setMaxScholarshipPercentages(initialPercentages);
         setActiveTab('general'); // Navigate back to the first tab
