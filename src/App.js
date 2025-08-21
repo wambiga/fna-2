@@ -440,7 +440,7 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
 
             return {
                 schoolName: school.name,
-                totalGrossAnnualCostOfAttendanceUSD: totalGrossAnnualCostOfAttendanceUSD.toFixed(2),
+                totalGrossAnnualCostOfAttendanceUSD: totalAllInclusiveCostTwoYearsUSD.toFixed(2), // Corrected variable
                 totalAllInclusiveCostTwoYearsUSD: totalAllInclusiveCostTwoYearsUSD.toFixed(2),
                 maxScholarshipAvailableUSD: maxScholarshipFromSchoolUSD.toFixed(2),
                 maxScholarshipLocal: maxScholarshipLocal.toFixed(2),

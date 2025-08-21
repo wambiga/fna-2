@@ -1,4 +1,3 @@
-/* App.css */
 /* General body and container styles */
 body {
     font-family: Arial, sans-serif;
@@ -49,22 +48,37 @@ body {
     background-color: transparent;
     border: none;
     padding: 10px 20px;
-    cursor: pointer;
     font-size: 16px;
+    cursor: pointer;
+    transition: color 0.3s, border-bottom 0.3s;
+    outline: none;
     color: #555;
-    transition: all 0.3s ease;
 }
 
 .tabs button.active {
-    border-bottom: 3px solid #004d99;
     color: #004d99;
+    border-bottom: 3px solid #004d99;
     font-weight: bold;
 }
 
-/* Form section and input styles */
+.tab-content {
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+}
+
+/* Form and input styles */
 .form-section {
-    display: flex;
-    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.form-section h3 {
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    color: #004d99;
 }
 
 .input-group {
@@ -76,7 +90,7 @@ body {
 .input-group label {
     font-weight: bold;
     margin-bottom: 5px;
-    color: #555;
+    color: #333;
 }
 
 .input-group input[type="text"],
@@ -84,126 +98,130 @@ body {
 .input-group input[type="date"],
 .input-group select,
 .input-group textarea {
-    padding: 8px;
+    padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 16px;
+    transition: border-color 0.3s;
     width: 100%;
-    box-sizing: border-box;
-}
-
-.input-group textarea {
-    resize: vertical;
+    box-sizing: border-box; /* Ensures padding doesn't affect total width */
 }
 
 .input-group input:focus,
 .input-group select:focus,
 .input-group textarea:focus {
-    outline: none;
     border-color: #004d99;
-    box-shadow: 0 0 5px rgba(0, 77, 153, 0.2);
+    outline: none;
+}
+
+.input-group select {
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: 16px 16px;
+}
+
+.input-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 10px;
 }
 
 /* Button styles */
-.button-group {
+.button-group, .download-buttons, .reset-button-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     margin-top: 20px;
+    gap: 10px;
 }
 
-.button-group button, .reset-button {
-    background-color: #004d99;
+.button-group button, .download-buttons button {
+    padding: 12px 24px;
+    font-size: 16px;
     color: #fff;
+    background-color: #004d99;
     border: none;
-    padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s;
 }
 
-.button-group button:hover, .reset-button:hover {
+.button-group button:hover, .download-buttons button:hover {
     background-color: #003366;
 }
 
 .reset-button-container {
-    text-align: center;
+    justify-content: center;
     margin-top: 20px;
 }
 
-/* Assessment results section styles */
-.assessment-results {
-    padding: 20px;
+.reset-button {
+    background-color: #f44336;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
-.report-title {
-    text-align: center;
+.reset-button:hover {
+    background-color: #d32f2f;
+}
+
+/* Assessment Results styles */
+.assessment-results h4 {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
     color: #004d99;
-    font-size: 24px;
-    margin-bottom: 20px;
-}
-
-.summary-section {
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-}
-
-.summary-section h4 {
-    margin-top: 0;
-    color: #333;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 10px;
 }
 
 .summary-section p {
-    margin: 8px 0;
-    color: #666;
-    line-height: 1.5;
+    margin: 5px 0;
 }
 
-/* School-specific breakdown table */
-.school-assessment-section {
+/* Table styles for desktop view */
+.desktop-view {
     overflow-x: auto;
 }
 
 .desktop-view table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
+    margin-top: 20px;
 }
 
 .desktop-view th, .desktop-view td {
     border: 1px solid #ddd;
     padding: 12px;
     text-align: left;
-    font-size: 14px;
+    white-space: nowrap; /* Prevents text from wrapping in cells */
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .desktop-view th {
-    background-color: #004d99;
-    color: #fff;
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #333;
 }
 
 .desktop-view tr:nth-child(even) {
-    background-color: #f2f2f2;
+    background-color: #f9f9f9;
 }
 
 .desktop-view tr:hover {
-    background-color: #e9e9e9;
+    background-color: #f1f1f1;
 }
 
-/* Status badges for "Fully Funded" and "Shortfall" */
 .status-badge {
-    color: #fff;
     padding: 4px 8px;
     border-radius: 12px;
-    font-size: 12px;
+    color: white;
+    font-size: 0.8em;
     font-weight: bold;
-    display: inline-block;
-    text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .max-scholarship-input {
@@ -213,23 +231,54 @@ body {
 }
 
 .max-scholarship-input input {
-    width: 50px;
-    text-align: center;
+    width: 60px;
+    text-align: right;
+    padding: 5px;
 }
 
 .scholarship-details {
-    font-size: 12px;
-    color: #777;
+    font-size: 0.8em;
+    color: #666;
     margin-top: 5px;
 }
 
-.download-buttons {
-    text-align: center;
-    margin-top: 20px;
+/* Mobile card view styles */
+.mobile-view {
+    display: none; /* Hide by default */
 }
 
-.download-buttons button {
-    margin: 0 10px;
+.school-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #fafafa;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.card-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.card-label {
+    font-weight: bold;
+    color: #555;
+}
+
+.max-scholarship-input-mobile {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: nowrap;
+}
+
+.max-scholarship-input-mobile input {
+    width: 60px;
+    margin-right: 5px;
+    text-align: center;
 }
 
 /* PDF-specific styles - these are crucial for print layout */
@@ -273,38 +322,17 @@ body {
     .form-container {
         padding: 15px;
     }
+
+    .tabs button {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
     .desktop-view {
         display: none;
     }
+
     .mobile-view {
         display: block;
-    }
-    .school-card-list {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-    .school-card {
-        background-color: #f9f9f9;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 15px;
-    }
-    .card-item {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 5px;
-    }
-    .card-label {
-        font-weight: bold;
-        color: #555;
-    }
-    .card-value {
-        text-align: right;
-    }
-    .max-scholarship-input-mobile input {
-        width: 60px;
-        margin-right: 5px;
-        text-align: center;
     }
 }
