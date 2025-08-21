@@ -1,3 +1,4 @@
+// App.js
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
 import './App.css';
@@ -377,53 +378,59 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
         const totalAnnualLivingExpensesUSD = convertNcToUsd(totalAnnualLivingExpensesNC, exchangeRateToUSD);
 
         // Core financial model calculations
-        const totalAnnualIncome = ncIncomePrimaryParentUSD + ncIncomeOtherParentUSD + ncAnnualBenefitsUSD + ncOtherAnnualIncomeUSD + ncOtherPropertiesNetIncomeUSD + ncAssetsAnotherCountryNetIncomeUSD;
+        const totalAnnualIncome =
+            ncIncomePrimaryParentUSD + ncIncomeOtherParentUSD + ncAnnualBenefitsUSD +
+            ncOtherAnnualIncomeUSD + ncOtherPropertiesNetIncomeUSD + ncAssetsAnotherCountryNetIncomeUSD;
         const homeEquity = Math.max(0, convertNcToUsd(pg1HomeMarketValue, exchangeRateToUSD) - convertNcToUsd(pg1HomeOutstandingMortgage, exchangeRateToUSD));
         const totalFamilyAssetsUSD = ncCashSavingsUSD + ncOtherAssetsUSD + homeEquity;
         const totalAssetsContribution = totalFamilyAssetsUSD * getNum(annualReturnOnAssets); // Annual return on assets
-        const totalAnnualFixedExpenditure = totalAnnualLivingExpensesUSD + convertNcToUsd(annualSchoolFeesForOtherChildren, exchangeRateToUSD) + convertNcToUsd(annualSchoolFeesForNonDependentChildren, exchangeRateToUSD);
-
+        const totalAnnualFixedExpenditure = totalAnnualLivingExpensesUSD +
+            convertNcToUsd(annualSchoolFeesForOtherChildren, exchangeRateToUSD) +
+            convertNcToUsd(annualSchoolFeesForNonDependentChildren, exchangeRateToUSD);
+            
         // Formula 1: Family Contribution based on Income and Expenditure
-        const formula1_familyContributionUSD = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure);
+        const formula1_familyContributionUSD = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure + totalAssetsContribution);
+            
+        // Formula 2: Student Contribution
+        const formula2_studentContributionUSD = ncStudentAnnualIncomeUSD + (ncStudentCashSavingsUSD * 0.1) + (ncStudentOtherAssetsUSD * 0.05);
+            
+        // The overall required family contribution is the maximum of these two formulas
+        const uwcFamilyContributionRequiredUSD = Math.max(0, formula1_familyContributionUSD, formula2_studentContributionUSD);
 
-        // Formula 2: Family Contribution from Assets and Student's Income/Assets
-        const studentContribution = ncStudentAnnualIncomeUSD + ncStudentCashSavingsUSD + ncStudentOtherAssetsUSD;
-        const formula2_familyContributionUSD = totalAssetsContribution + studentContribution;
+        const finalUwcFamilyContributionTwoYears = uwcFamilyContributionRequiredUSD * 2; // Total contribution over two years
 
-        // UWC Family Contribution is the sum of contributions from income/expenditure and assets/student
-        const uwcFamilyContributionRequiredUSD = formula1_familyContributionUSD + formula2_familyContributionUSD;
-
-        // Calculate and process results for each individual school
+        // Calculate results for each UWC school
         const calculatedSchoolResults = schoolCostsData.map(school => {
-            const schoolMaxScholarshipPercentage = maxScholarshipPercentages[school.name] / 100; // Use the user-adjusted percentage
+            const schoolAnnualFeesUSD = school.annualFeesUSD;
+            const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
+            
+            // Total cost for a student to attend a school for two years (including all fees and average additional costs)
+            const totalAllInclusiveCostTwoYearsUSD = ((schoolAnnualFeesUSD + schoolAvgAdditionalCostsUSD) * 2) + getNum(annualTravelCostUSD);
 
-            // Total 2-year costs
-            const totalGrossAnnualCostOfAttendanceUSD = school.annualFeesUSD + school.avgAdditionalCostsUSD;
-            const totalAllInclusiveCostTwoYearsUSD = totalGrossAnnualCostOfAttendanceUSD * 2 + getNum(annualTravelCostUSD);
-
-            // Calculate max scholarship available from school based on adjusted percentage
-            const maxScholarshipFromSchoolUSD = totalAllInclusiveCostTwoYearsUSD * getNum(schoolMaxScholarshipPercentage);
+            // Calculate the total scholarship needed from the school, taking into account the family contribution and other scholarships/loans
+            const totalScholarshipNeeded = Math.max(0, totalAllInclusiveCostTwoYearsUSD - finalUwcFamilyContributionTwoYears - getNum(potentialLoanAmount));
+            
+            // Get the max scholarship percentage for the current school from the user-adjustable state
+            const maxScholarshipPercentage = getNum(maxScholarshipPercentages[school.name]) / 100;
+            const maxScholarshipFromSchoolUSD = totalAllInclusiveCostTwoYearsUSD * maxScholarshipPercentage;
             const maxScholarshipLocal = maxScholarshipFromSchoolUSD * school.localCurrencyExchangeRateToUSD;
 
-            // Total scholarship needed
-            const totalScholarshipNeeded = totalAllInclusiveCostTwoYearsUSD - (uwcFamilyContributionRequiredUSD * 2) - getNum(potentialLoanAmount);
-
-            // Final scholarship needed specifically from the UWC school
+            // Determine the final scholarship needed from the school after accounting for the max available scholarship from the NC
             const finalScholarshipNeededFromSchool = Math.max(0, totalScholarshipNeeded - getNum(ncScholarshipProvidedTwoYearsUSD));
 
             let contributionStatus = '';
             let contributionColor = '';
             let shortfall = 0;
-
+            
             // Determine funding status and color code
             if (finalScholarshipNeededFromSchool <= maxScholarshipFromSchoolUSD) {
                 contributionStatus = 'Fully Funded';
-                contributionColor = '#d4edda'; // Light green for fully funded
+                contributionColor = '#00C853'; // A vibrant green
                 shortfall = 0;
             } else {
                 shortfall = finalScholarshipNeededFromSchool - maxScholarshipFromSchoolUSD;
                 contributionStatus = `Shortfall of $${shortfall.toFixed(2)}`;
-                contributionColor = '#f8d7da'; // Light red for shortfall
+                contributionColor = '#D50000'; // A vibrant red
             }
 
             // Get age eligibility for the current school using the checkAgeEligibility function
@@ -437,7 +444,7 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
                 totalAllInclusiveCostTwoYearsUSD: totalAllInclusiveCostTwoYearsUSD.toFixed(2),
                 maxScholarshipAvailableUSD: maxScholarshipFromSchoolUSD.toFixed(2),
                 maxScholarshipLocal: maxScholarshipLocal.toFixed(2),
-                maxScholarshipPercentage: (schoolMaxScholarshipPercentage * 100).toFixed(0),
+                maxScholarshipPercentage: (maxScholarshipPercentage * 100).toFixed(0),
                 localCurrencySymbol: school.localCurrency,
                 finalScholarshipNeededFromSchool: finalScholarshipNeededFromSchool.toFixed(2),
                 contributionStatus,
@@ -471,136 +478,148 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
             <section className="assessment-results">
                 <div ref={pdfContentRef} className="pdf-content">
                     <h3 className="report-title">Financial Need Assessment Report</h3>
-
-                    <div className="summary-section">
+                    <section className="summary-section">
                         <h4>General Application Details</h4>
-                        <div className="summary-item"><span className="summary-label">Applicant Name:</span> {formData.applicantName || 'N/A'}</div>
-                        <div className="summary-item"><span className="summary-label">Date of Birth:</span> {formData.applicantDob || 'N/A'}</div>
-                        <div className="summary-item"><span className="summary-label">National Currency Symbol:</span> {formData.ncCurrencySymbol || 'N/A'}</div>
-                        <div className="summary-item"><span className="summary-label">Exchange Rate (1 USD = X NC Currency):</span> {formData.exchangeRateToUSD || 'N/A'}</div>
-                        <div className="summary-item"><span className="summary-label">Date of Exchange Rate:</span> {formData.exchangeRateDate || 'N/A'}</div>
-                        <div className="summary-item"><span className="summary-label">Annual Return on Assets (%):</span> {formData.annualReturnOnAssets || '0.00'}%</div>
-                        <div className="summary-item"><span className="summary-label">Annual Travel Cost (USD):</span> ${getNum(formData.annualTravelCostUSD).toFixed(2)}</div>
-                    </div>
-
-                    <div className="summary-section">
+                        {/* Display Applicant Name and Date of Birth from formData */}
+                        <p><strong>Applicant Name:</strong> {formData.applicantName || 'N/A'}</p>
+                        <p><strong>Date of Birth:</strong> {formData.applicantDob || 'N/A'}</p>
+                        <p><strong>National Currency Symbol:</strong> {formData.ncCurrencySymbol || 'N/A'}</p>
+                        <p><strong>Exchange Rate (1 USD = X NC Currency):</strong> {getNum(formData.exchangeRateToUSD) || 'N/A'}</p>
+                        <p><strong>Exchange Rate Date:</strong> {formData.exchangeRateDate || 'N/A'}</p>
+                        <p><strong>Annual Return on Assets (%):</strong> {(getNum(formData.annualReturnOnAssets) * 100).toFixed(2) || '0.00'}%</p>
+                        <p><strong>Annual Travel Cost (USD):</strong> ${getNum(formData.annualTravelCostUSD).toFixed(2) || '0.00'}</p>
+                        <p><strong>Current School Fees for Applicant (for discussion):</strong> ${allSchoolResults.currentSchoolFeesUSD || '0.00'} per year</p>
+                    </section>
+                    <section className="summary-section">
                         <h4>Family Financial Summary (USD)</h4>
-                        <div className="summary-item"><span className="summary-label">Assessed Funds Available for Fees (2 Years):</span> ${(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</div>
-                        <div className="summary-item"><span className="summary-label">Current School Fees for Applicant (for discussion):</span> ${getNum(allSchoolResults.currentSchoolFeesUSD).toFixed(2)} per year</div>
-                        <div className="summary-item"><span className="summary-label">Scholarship from NC (2 years):</span> ${getNum(formData.ncScholarshipProvidedTwoYearsUSD).toFixed(2)}</div>
-                        <div className="summary-item"><span className="summary-label">Potential Loan Amount (2 years):</span> ${getNum(formData.potentialLoanAmount).toFixed(2)}</div>
-                    </div>
-
-                    <div className="summary-section">
+                        <p><strong>Assessed Funds Available for Fees (2 Years):</strong> ${(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2) || '0.00'}</p>
+                        <p><strong>Scholarship from NC (2 years):</strong> ${getNum(formData.ncScholarshipProvidedTwoYearsUSD).toFixed(2) || '0.00'}</p>
+                        <p><strong>Potential Loan Amount (2 years):</strong> ${getNum(formData.potentialLoanAmount).toFixed(2) || '0.00'}</p>
+                        {formData.unusualCircumstances && (
+                            <p><strong>Unusual Circumstances:</strong> {formData.unusualCircumstances}</p>
+                        )}
+                    </section>
+                    <section className="school-assessment-section">
                         <h4>School-Specific Assessment Breakdown</h4>
-                    </div>
-
-                    {/* Desktop Table View */}
-                    <div className="desktop-view">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>School</th>
-                                    <th>Total All-Inclusive Cost (2 years)</th>
-                                    <th>Assessed Funds Available for Fees (2 years)</th>
-                                    <th>Final Scholarship Needed From School (2 years)</th>
-                                    <th>Max Scholarship Available</th>
-                                    <th>Financial Contribution Status</th>
-                                    <th>Age Eligibility</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {allSchoolResults.allSchoolResults.map((school, index) => (
-                                    <tr key={index}>
-                                        <td>{school.schoolName}</td>
-                                        <td>${school.totalAllInclusiveCostTwoYearsUSD}</td>
-                                        <td>${(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</td>
-                                        <td>${school.finalScholarshipNeededFromSchool}</td>
-                                        <td>
-                                            <div className="max-scholarship-input">
-                                                <input type="number" value={school.maxScholarshipPercentage} onChange={(e) => handleMaxScholarshipChange(school.schoolName, e.target.value)} min="0" max="100" />
-                                                <span>% of fees</span>
-                                            </div>
-                                            <p className="scholarship-details"> (~ {school.localCurrencySymbol} {school.maxScholarshipLocal}) = ${school.maxScholarshipAvailableUSD} USD </p>
-                                        </td>
-                                        <td>
-                                            <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
-                                                {school.contributionStatus}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className="status-badge" style={{ backgroundColor: school.ageEligibility === 'Eligible' ? '#d4edda' : (school.ageEligibility === 'Not Eligible' ? '#f8d7da' : 'grey') }}>
-                                                {school.ageEligibility}
-                                            </span>
-                                        </td>
+                        {/* Desktop Table View (visible on large screens) */}
+                        <div className="desktop-view">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>School</th>
+                                        <th>Total All-Inclusive Cost (2 years)</th>
+                                        <th>Assessed Funds Available for Fees (2 years)</th>
+                                        <th>Final Scholarship Needed From School (2 years)</th>
+                                        <th>Max Scholarship Available</th>
+                                        <th>Financial Contribution Status</th>
+                                        <th>Age Eligibility</th> {/* Added Age Eligibility header for desktop table */}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Mobile Card View */}
-                    <div className="mobile-view">
-                        <div className="school-card-list">
-                            {allSchoolResults.allSchoolResults.map((school, index) => (
-                                <div key={index} className="school-card">
-                                    <div className="card-item">
-                                        <span className="card-label">School:</span>
-                                        <span className="card-value">{school.schoolName}</span>
-                                    </div>
-                                    <div className="card-item">
-                                        <span className="card-label">Total Cost (2 years):</span>
-                                        <span className="card-value">${school.totalAllInclusiveCostTwoYearsUSD}</span>
-                                    </div>
-                                    <div className="card-item">
-                                        <span className="card-label">Your Contribution (2 years):</span>
-                                        <span className="card-value">${(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</span>
-                                    </div>
-                                    <div className="card-item">
-                                        <span className="card-label">Scholarship Needed:</span>
-                                        <span className="card-value">${school.finalScholarshipNeededFromSchool}</span>
-                                    </div>
-                                    <div className="card-item">
-                                        <span className="card-label">Max Scholarship:</span>
-                                        <span className="card-value">
-                                            <div className="max-scholarship-input-mobile">
-                                                <input type="number" value={school.maxScholarshipPercentage} onChange={(e) => handleMaxScholarshipChange(school.schoolName, e.target.value)} min="0" max="100" />
-                                                <span>% of fees</span>
-                                            </div>
-                                            <p className="scholarship-details"> (~ {school.localCurrencySymbol} {school.maxScholarshipLocal}) = ${school.maxScholarshipAvailableUSD} USD </p>
-                                        </span>
-                                    </div>
-                                    <div className="card-item">
-                                        <span className="card-label">Status:</span>
-                                        <span className="card-value">
-                                            <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
-                                                {school.contributionStatus}
-                                            </span>
-                                        </span>
-                                    </div>
-                                    <div className="card-item">
-                                        <span className="card-label">Age Eligibility:</span>
-                                        <span className="card-value">
-                                            <span className="status-badge" style={{ backgroundColor: school.ageEligibility === 'Eligible' ? '#d4edda' : (school.ageEligibility === 'Not Eligible' ? '#f8d7da' : 'grey') }}>
-                                                {school.ageEligibility}
-                                            </span>
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+                                </thead>
+                                <tbody>
+                                    {allSchoolResults.allSchoolResults.map((school, index) => (
+                                        <tr key={index}>
+                                            <td>{school.schoolName}</td>
+                                            <td>${school.totalAllInclusiveCostTwoYearsUSD}</td>
+                                            <td>${(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</td>
+                                            <td>${school.finalScholarshipNeededFromSchool}</td>
+                                            <td>
+                                                <div className="max-scholarship-input">
+                                                    <input
+                                                        type="number"
+                                                        value={school.maxScholarshipPercentage}
+                                                        onChange={(e) => handleMaxScholarshipChange(school.schoolName, e.target.value)}
+                                                        min="0"
+                                                        max="100"
+                                                    />
+                                                    <span>% of fees</span>
+                                                </div>
+                                                <p className="scholarship-details">
+                                                    (~ {school.localCurrencySymbol} {school.maxScholarshipLocal}) = ${school.maxScholarshipAvailableUSD} USD
+                                                </p>
+                                            </td>
+                                            <td>
+                                                <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
+                                                    {school.contributionStatus}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {/* Display Age Eligibility with color coding for desktop */}
+                                                <span className="status-badge" style={{ backgroundColor: school.ageEligibility === 'Eligible' ? '#00C853' : (school.ageEligibility === 'Not Eligible' ? '#D50000' : '#424242') }}>
+                                                    {school.ageEligibility}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
-                </div>
 
+                        {/* Mobile Card View (visible on small screens) */}
+                        <div className="mobile-view">
+                            <div className="school-card-list">
+                                {allSchoolResults.allSchoolResults.map((school, index) => (
+                                    <div key={index} className="school-card">
+                                        <div className="card-item">
+                                            <span className="card-label">School:</span>
+                                            <span className="card-value">{school.schoolName}</span>
+                                        </div>
+                                        <div className="card-item">
+                                            <span className="card-label">Total Cost (2 years):</span>
+                                            <span className="card-value">${school.totalAllInclusiveCostTwoYearsUSD}</span>
+                                        </div>
+                                        <div className="card-item">
+                                            <span className="card-label">Your Contribution (2 years):</span>
+                                            <span className="card-value">${(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</span>
+                                        </div>
+                                        <div className="card-item">
+                                            <span className="card-label">Scholarship Needed:</span>
+                                            <span className="card-value">${school.finalScholarshipNeededFromSchool}</span>
+                                        </div>
+                                        <div className="card-item">
+                                            <span className="card-label">Max Scholarship Available:</span>
+                                            <span className="card-value max-scholarship-input-mobile">
+                                                <input
+                                                    type="number"
+                                                    value={school.maxScholarshipPercentage}
+                                                    onChange={(e) => handleMaxScholarshipChange(school.schoolName, e.target.value)}
+                                                    min="0"
+                                                    max="100"
+                                                />
+                                                % of fees
+                                            </span>
+                                        </div>
+                                        <div className="card-item">
+                                            <span className="card-label">Financial Status:</span>
+                                            <span className="card-value">
+                                                <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
+                                                    {school.contributionStatus}
+                                                </span>
+                                            </span>
+                                        </div>
+                                        <div className="card-item">
+                                            <span className="card-label">Age Eligibility:</span>
+                                            <span className="card-value">
+                                                <span className="status-badge" style={{ backgroundColor: school.ageEligibility === 'Eligible' ? '#00C853' : (school.ageEligibility === 'Not Eligible' ? '#D50000' : '#424242') }}>
+                                                    {school.ageEligibility}
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                </div>
                 <div className="download-buttons">
-                    <button onClick={onDownloadPdf}>Download PDF Report</button>
-                    <button onClick={onDownloadCsv}>Download CSV Summary</button>
+                    <button onClick={onDownloadPdf}>Download as PDF</button>
+                    <button onClick={onDownloadCsv}>Download as CSV</button>
                 </div>
             </section>
         </div>
     );
 };
 
+// Initial state for the form data
 const initialFormData = {
     applicantName: '',
     applicantDob: '',
@@ -608,8 +627,8 @@ const initialFormData = {
     exchangeRateToUSD: 1,
     exchangeRateDate: new Date().toISOString().split('T')[0],
     annualReturnOnAssets: 0,
-    annualTravelCostUSD: 0,
-    ncScholarshipProvidedTwoYearsUSD: 0,
+    annualSchoolFeesForOtherChildren: 0,
+    annualSchoolFeesForNonDependentChildren: 0,
     currentSchoolFees: 0,
     pg1AnnualIncomePrimaryParent: 0,
     pg1AnnualIncomeOtherParent: 0,
@@ -621,11 +640,11 @@ const initialFormData = {
     pg1HomeOutstandingMortgage: 0,
     otherPropertiesNetIncome: 0,
     assetsAnotherCountryNetIncome: 0,
-    annualSchoolFeesForOtherChildren: 0,
-    annualSchoolFeesForNonDependentChildren: 0,
     pg2StudentAnnualIncome: 0,
     pg2StudentCashSavings: 0,
     pg2StudentOtherAssets: 0,
+    annualTravelCostUSD: 0,
+    ncScholarshipProvidedTwoYearsUSD: 0,
     totalAnnualLivingExpensesNC: 0,
     potentialLoanAmount: 0,
     unusualCircumstances: '',
@@ -645,7 +664,7 @@ const App = () => {
     useEffect(() => {
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = school.maxScholarshipPercentage * 100; // Store as percentage (0-100)
+            initialPercentages[school.name] = 0; // Set initial value to 0%
         });
         setMaxScholarshipPercentages(initialPercentages);
     }, []); // Empty dependency array ensures this runs only once
@@ -691,13 +710,13 @@ const App = () => {
                 filename: 'financial_need_assessment_report.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
             html2pdf().from(element).set(opt).save();
         }
     };
 
-    // Handles downloading a CSV summary of school results
+    // Handles exporting the assessment summary to a CSV file
     const handleDownloadCsv = () => {
         const data = allSchoolResults.allSchoolResults;
         if (!data || data.length === 0) {
@@ -705,16 +724,11 @@ const App = () => {
             return;
         }
 
+        // Define the headers for the CSV file
         const headers = [
-            "School",
-            "Total All-Inclusive Cost (2 years)",
-            "Assessed Funds Available for Fees (2 years)",
-            "Final Scholarship Needed From School (2 years)",
-            "Max Scholarship Percentage (%)",
-            "Max Scholarship Available (Local)",
-            "Max Scholarship Available (USD)",
-            "Financial Contribution Status",
-            "Age Eligibility",
+            "School", "Total All-Inclusive Cost (2 years) (USD)", "Assessed Funds Available for Fees (2 years) (USD)",
+            "Final Scholarship Needed From School (2 years) (USD)", "Max Scholarship Percentage (%)", "Max Scholarship Available (Local)",
+            "Max Scholarship Available (USD)", "Financial Contribution Status", "Age Eligibility", // Added to CSV headers
         ];
 
         // Map school results data to CSV rows
@@ -730,8 +744,7 @@ const App = () => {
                 school.maxScholarshipAvailableUSD,
                 `"${school.contributionStatus}"`, // Enclose status in quotes
                 `"${school.ageEligibility}"` // Add age eligibility to CSV row
-            ].join(',')
-            )
+            ].join(','))
         ].join('\n'); // Join all rows with newlines
 
         // Create a Blob and a download link for the CSV
@@ -759,11 +772,24 @@ const App = () => {
                             {/* Applicant Name and Date of Birth Fields - New inputs */}
                             <div className="input-group">
                                 <label htmlFor="applicantName">Applicant's Full Name:</label>
-                                <input type="text" id="applicantName" name="applicantName" value={formData.applicantName} onChange={handleInputChange} placeholder="e.g., John Doe" />
+                                <input
+                                    type="text"
+                                    id="applicantName"
+                                    name="applicantName"
+                                    value={formData.applicantName}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., John Doe"
+                                />
                             </div>
                             <div className="input-group">
                                 <label htmlFor="applicantDob">Applicant's Date of Birth (YYYY-MM-DD):</label>
-                                <input type="date" id="applicantDob" name="applicantDob" value={formData.applicantDob} onChange={handleInputChange} />
+                                <input
+                                    type="date"
+                                    id="applicantDob"
+                                    name="applicantDob"
+                                    value={formData.applicantDob}
+                                    onChange={handleInputChange}
+                                />
                             </div>
                             <div className="input-group">
                                 <label>National Currency Symbol:</label>
@@ -775,19 +801,64 @@ const App = () => {
                             </div>
                             <div className="input-group">
                                 <label>Exchange Rate (1 USD = X NC Currency):</label>
-                                <input type="number" name="exchangeRateToUSD" value={formData.exchangeRateToUSD} onChange={handleInputChange} placeholder="e.g., 129.5" step="0.01" />
+                                <input
+                                    type="number"
+                                    name="exchangeRateToUSD"
+                                    value={formData.exchangeRateToUSD}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 129.5"
+                                    step="0.01"
+                                />
                             </div>
                             <div className="input-group">
                                 <label>Date of Exchange Rate (YYYY-MM-DD):</label>
-                                <input type="date" name="exchangeRateDate" value={formData.exchangeRateDate} onChange={handleInputChange} />
+                                <input
+                                    type="date"
+                                    name="exchangeRateDate"
+                                    value={formData.exchangeRateDate}
+                                    onChange={handleInputChange}
+                                />
                             </div>
                             <div className="input-group">
                                 <label>Annual Return on Assets (%):</label>
-                                <input type="number" name="annualReturnOnAssets" value={formData.annualReturnOnAssets} onChange={handleInputChange} placeholder="e.g., 0.05" step="0.01" />
+                                <input
+                                    type="number"
+                                    name="annualReturnOnAssets"
+                                    value={formData.annualReturnOnAssets * 100}
+                                    onChange={e => handleInputChange({ target: { name: 'annualReturnOnAssets', value: parseFloat(e.target.value) / 100 } })}
+                                    placeholder="e.g., 5"
+                                    step="0.01"
+                                />
                             </div>
                             <div className="input-group">
                                 <label>Annual Travel Cost (USD):</label>
-                                <input type="number" name="annualTravelCostUSD" value={formData.annualTravelCostUSD} onChange={handleInputChange} placeholder="e.g., 2000" />
+                                <input
+                                    type="number"
+                                    name="annualTravelCostUSD"
+                                    value={formData.annualTravelCostUSD}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 1500"
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Current School Fees for Applicant (for discussion):</label>
+                                <input
+                                    type="number"
+                                    name="currentSchoolFees"
+                                    value={formData.currentSchoolFees}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 5000"
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Scholarship Provided by NC (2 years) (USD):</label>
+                                <input
+                                    type="number"
+                                    name="ncScholarshipProvidedTwoYearsUSD"
+                                    value={formData.ncScholarshipProvidedTwoYearsUSD}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 10000"
+                                />
                             </div>
                         </div>
                         <div className="button-group">
@@ -842,11 +913,6 @@ const App = () => {
                                 <label>Home Outstanding Mortgage:</label>
                                 <input type="number" name="pg1HomeOutstandingMortgage" value={formData.pg1HomeOutstandingMortgage} onChange={handleInputChange} placeholder="Optional" />
                             </div>
-                            <h4>Expenditure (National Currency)</h4>
-                            <div className="input-group">
-                                <label>Total Annual Living Expenses:</label>
-                                <input type="number" name="totalAnnualLivingExpensesNC" value={formData.totalAnnualLivingExpensesNC} onChange={handleInputChange} placeholder="e.g., 3000000" />
-                            </div>
                             <div className="input-group">
                                 <label>Annual School Fees for Other Children:</label>
                                 <input type="number" name="annualSchoolFeesForOtherChildren" value={formData.annualSchoolFeesForOtherChildren} onChange={handleInputChange} placeholder="Optional" />
@@ -855,10 +921,9 @@ const App = () => {
                                 <label>Annual School Fees for Non-Dependent Children:</label>
                                 <input type="number" name="annualSchoolFeesForNonDependentChildren" value={formData.annualSchoolFeesForNonDependentChildren} onChange={handleInputChange} placeholder="Optional" />
                             </div>
-                            <h4>Notes</h4>
                             <div className="input-group">
-                                <label htmlFor="pg1JobNotes">Notes on Parent/Guardian's Jobs:</label>
-                                <textarea id="pg1JobNotes" name="pg1JobNotes" value={formData.pg1JobNotes} onChange={handleInputChange} rows="3" placeholder="e.g., 'Primary parent is a teacher at a public school.'"></textarea>
+                                <label>Total Annual Living Expenses:</label>
+                                <input type="number" name="totalAnnualLivingExpensesNC" value={formData.totalAnnualLivingExpensesNC} onChange={handleInputChange} placeholder="e.g., 3000000" />
                             </div>
                         </div>
                         <div className="button-group">
@@ -872,32 +937,27 @@ const App = () => {
                     <div className="tab-content">
                         <div className="form-section">
                             <h3>Student Financial Information</h3>
-                            <h4>Income (National Currency)</h4>
+                            <h4>Student's Contribution (National Currency)</h4>
                             <div className="input-group">
-                                <label>Annual Income from Jobs:</label>
+                                <label>Student's Annual Income:</label>
                                 <input type="number" name="pg2StudentAnnualIncome" value={formData.pg2StudentAnnualIncome} onChange={handleInputChange} placeholder="Optional" />
                             </div>
-                            <h4>Assets (National Currency)</h4>
                             <div className="input-group">
-                                <label>Cash and Savings:</label>
+                                <label>Student's Cash and Savings:</label>
                                 <input type="number" name="pg2StudentCashSavings" value={formData.pg2StudentCashSavings} onChange={handleInputChange} placeholder="Optional" />
                             </div>
                             <div className="input-group">
-                                <label>Other Assets:</label>
+                                <label>Student's Other Assets:</label>
                                 <input type="number" name="pg2StudentOtherAssets" value={formData.pg2StudentOtherAssets} onChange={handleInputChange} placeholder="Optional" />
                             </div>
-                            <h4>Other Information</h4>
+                            <h4>Other Financial Information</h4>
                             <div className="input-group">
-                                <label>Scholarship from National Committee (2 years, USD):</label>
-                                <input type="number" name="ncScholarshipProvidedTwoYearsUSD" value={formData.ncScholarshipProvidedTwoYearsUSD} onChange={handleInputChange} placeholder="Optional" />
+                                <label>Potential Loan Amount (2 years) (USD):</label>
+                                <input type="number" name="potentialLoanAmount" value={formData.potentialLoanAmount} onChange={handleInputChange} placeholder="e.g., 10000" />
                             </div>
                             <div className="input-group">
-                                <label>Potential Loan Amount (2 years, USD):</label>
-                                <input type="number" name="potentialLoanAmount" value={formData.potentialLoanAmount} onChange={handleInputChange} placeholder="Optional" />
-                            </div>
-                            <div className="input-group">
-                                <label htmlFor="unusualCircumstances">Unusual Circumstances:</label>
-                                <textarea id="unusualCircumstances" name="unusualCircumstances" value={formData.unusualCircumstances} onChange={handleInputChange} rows="3" placeholder="e.g., 'Recent job loss due to economic changes,' or 'Significant medical expenses.'" />
+                                <label>Unusual Circumstances:</label>
+                                <textarea name="unusualCircumstances" value={formData.unusualCircumstances} onChange={handleInputChange} rows="3" placeholder="e.g., 'Recent job loss due to economic changes,' or 'Significant medical expenses.'" />
                             </div>
                         </div>
                         <div className="button-group">
@@ -908,7 +968,15 @@ const App = () => {
                 );
             case 'results':
                 return (
-                    <AssessmentResultsTab formData={formData} allSchoolResults={allSchoolResults} onDownloadPdf={handleDownloadPdf} onDownloadCsv={handleDownloadCsv} pdfContentRef={pdfContentRef} maxScholarshipPercentages={maxScholarshipPercentages} handleMaxScholarshipChange={handleMaxScholarshipChange} />
+                    <AssessmentResultsTab
+                        formData={formData}
+                        allSchoolResults={allSchoolResults}
+                        onDownloadPdf={handleDownloadPdf}
+                        onDownloadCsv={handleDownloadCsv}
+                        pdfContentRef={pdfContentRef}
+                        maxScholarshipPercentages={maxScholarshipPercentages}
+                        handleMaxScholarshipChange={handleMaxScholarshipChange}
+                    />
                 );
             default:
                 return null;
