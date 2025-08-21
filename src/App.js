@@ -726,9 +726,9 @@ const App = () => {
 
         // Define the headers for the CSV file
         const headers = [
-            "School", "Total All-Inclusive Cost (2 years) (USD)", "Assessed Funds Available for Fees (2 years) (USD)",
-            "Final Scholarship Needed From School (2 years) (USD)", "Max Scholarship Percentage (%)", "Max Scholarship Available (Local)",
-            "Max Scholarship Available (USD)", "Financial Contribution Status", "Age Eligibility", // Added to CSV headers
+            "School", "Total Cost (2 years) (USD)", "Funds Available (2 years) (USD)",
+            "Scholarship Needed (2 years) (USD)", "Max Scholarship (%)", "Max Scholarship (Local)",
+            "Max Scholarship (USD)", "Financial Contribution Status", "Age Eligibility", // Added to CSV headers
         ];
 
         // Map school results data to CSV rows
