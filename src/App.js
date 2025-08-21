@@ -609,7 +609,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
 };
 
 // Component for the General Info tab
-const GeneralInfoTab = ({ formData, handleInputChange }) => {
+const GeneralInfoTab = ({ formData, handleInputChange, setActiveTab }) => {
     return (
         <div className="tab-content">
             <div className="form-section">
@@ -655,7 +655,7 @@ const GeneralInfoTab = ({ formData, handleInputChange }) => {
 };
 
 // Component for the Parent/Guardian tab
-const ParentGuardianTab = ({ formData, handleInputChange }) => {
+const ParentGuardianTab = ({ formData, handleInputChange, setActiveTab }) => {
     return (
         <div className="tab-content">
             <div className="form-section">
@@ -729,7 +729,7 @@ const ParentGuardianTab = ({ formData, handleInputChange }) => {
 };
 
 // Component for the Student tab
-const StudentTab = ({ formData, handleInputChange }) => {
+const StudentTab = ({ formData, handleInputChange, setActiveTab }) => {
     return (
         <div className="tab-content">
             <div className="form-section">
@@ -910,11 +910,11 @@ const App = () => {
     const renderTabContent = () => {
         switch (activeTab) {
             case 'general':
-                return <GeneralInfoTab formData={formData} handleInputChange={handleInputChange} />;
+                return <GeneralInfoTab formData={formData} handleInputChange={handleInputChange} setActiveTab={setActiveTab} />;
             case 'parent':
-                return <ParentGuardianTab formData={formData} handleInputChange={handleInputChange} />;
+                return <ParentGuardianTab formData={formData} handleInputChange={handleInputChange} setActiveTab={setActiveTab} />;
             case 'student':
-                return <StudentTab formData={formData} handleInputChange={handleInputChange} />;
+                return <StudentTab formData={formData} handleInputChange={handleInputChange} setActiveTab={setActiveTab} />;
             case 'results':
                 return (
                     <AssessmentResultsTab
