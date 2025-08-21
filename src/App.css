@@ -312,16 +312,16 @@ body {
     }
     .desktop-view table {
         width: 100%;
-        table-layout: fixed; /* This is crucial for fixing column widths */
-        font-size: 8px; /* Reduce font size to fit more content */
+        table-layout: auto; /* Changed to auto for better content fitting */
     }
     .desktop-view th, .desktop-view td {
-        padding: 2px;
+        font-size: 6px; /* Reduced font size to fit more content */
+        padding: 1px; /* Reduced padding for more space */
         word-wrap: break-word; /* Prevents overflow */
     }
     .desktop-view .status-badge,
     .desktop-view .scholarship-details {
-        font-size: 7px;
+        font-size: 5px;
     }
     .mobile-view, .tabs, .button-group, .reset-button-container {
         display: none;
