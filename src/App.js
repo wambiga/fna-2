@@ -252,7 +252,6 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
         const ncStudentOtherAssetsUSD = convertNcToUsd(pg2StudentOtherAssets, exchangeRateToUSD);
         const totalAnnualLivingExpensesUSD = convertNcToUsd(totalAnnualLivingExpensesNC, exchangeRateToUSD);
 
-        // Calculation Formulas based on the UWC model, adjusted to your request
         const totalAnnualIncome =
             ncIncomePrimaryParentUSD + ncIncomeOtherParentUSD + ncAnnualBenefitsUSD +
             ncOtherAnnualIncomeUSD + ncOtherPropertiesNetIncomeUSD + ncAssetsAnotherCountryNetIncomeUSD;
@@ -262,32 +261,27 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
         const totalAnnualFixedExpenditure = totalAnnualLivingExpensesUSD +
             convertNcToUsd(annualSchoolFeesForOtherChildren, exchangeRateToUSD) +
             convertNcToUsd(annualSchoolFeesForNonDependentChildren, exchangeRateToUSD);
-        
-        // Formula 1 (Income/Expenditure)
-        const formula1_familyContributionUSD = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure + totalAssetsContribution);
-        
-        // Formula 2 (Student Contribution)
-        const formula2_studentContributionUSD = ncStudentAnnualIncomeUSD + (ncStudentCashSavingsUSD * 0.1) + (ncStudentOtherAssetsUSD * 0.05);
-        
-        // The required contribution is the maximum of these two
-        const uwcFamilyContributionRequiredUSD = Math.max(0, formula1_familyContributionUSD, formula2_studentContributionUSD);
 
+        const formula1_familyContributionUSD = Math.max(0, totalAnnualIncome - totalAnnualFixedExpenditure + totalAssetsContribution);
+        const formula2_studentContributionUSD = ncStudentAnnualIncomeUSD + (ncStudentCashSavingsUSD * 0.1) + (ncStudentOtherAssetsUSD * 0.05);
+
+        const uwcFamilyContributionRequiredUSD = Math.max(0, formula1_familyContributionUSD, formula2_studentContributionUSD);
         const finalUwcFamilyContributionTwoYears = uwcFamilyContributionRequiredUSD * 2;
 
         const calculatedSchoolResults = schoolCostsData.map(school => {
             const schoolAnnualFeesUSD = school.annualFeesUSD;
             const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
-            
+
             const maxScholarshipPercentage = getNum(maxScholarshipPercentages[school.name]) / 100;
             const maxScholarshipLocal = (school.annualFeesLocalCurrency * 2) * maxScholarshipPercentage;
             const maxScholarshipFromSchoolUSD = maxScholarshipLocal / school.localCurrencyExchangeRateToUSD;
-            
+
             const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
             const totalAllInclusiveCostTwoYearsUSD = totalGrossAnnualCostOfAttendanceUSD * 2;
-            
+
             const totalScholarshipNeeded = totalAllInclusiveCostTwoYearsUSD - finalUwcFamilyContributionTwoYears - getNum(potentialLoanAmount);
             const finalScholarshipNeededFromSchool = Math.max(0, totalScholarshipNeeded - getNum(ncScholarshipProvidedTwoYearsUSD));
-            
+
             let contributionStatus = '';
             let contributionColor = '';
             let shortfall = 0;
@@ -359,7 +353,6 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                     <section className="schools-section">
                         <h4>School-Specific Assessment Breakdown</h4>
 
-                        {/* --- NEW: Desktop Table View (visible on large screens) --- */}
                         <div className="table-container desktop-view">
                             <table>
                                 <thead>
@@ -405,7 +398,6 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                             </table>
                         </div>
 
-                        {/* --- NEW: Mobile Card View (visible on small screens) --- */}
                         <div className="mobile-view">
                             <div className="school-card-list">
                                 {allSchoolResults.allSchoolResults.map((school, index) => (
@@ -535,51 +527,52 @@ const App = () => {
         setActiveTab('general');
     };
 
-    // New function to handle Excel file upload
+    // This is the updated function that now handles both file selection and processing.
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const data = event.target.result;
-                const workbook = XLSX.read(data, { type: 'binary' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                
-                // Assuming data is in column B, starting from row 4
-                const newFormData = {
-                    ncCurrencySymbol: worksheet['B4'] ? worksheet['B4'].v : 'N/A',
-                    exchangeRateToUSD: getNum(worksheet['B5'] ? worksheet['B5'].v : 0),
-                    exchangeRateDate: worksheet['B6'] ? XLSX.utils.formatDate(worksheet['B6'].v, 'YYYY-MM-DD') : '',
-                    annualReturnOnAssets: getNum(worksheet['B7'] ? worksheet['B7'].v / 100 : 0),
-                    annualTravelCostUSD: getNum(worksheet['B8'] ? worksheet['B8'].v : 0),
-                    pg1AnnualIncomePrimaryParent: getNum(worksheet['B11'] ? worksheet['B11'].v : 0),
-                    pg1AnnualIncomeOtherParent: getNum(worksheet['B12'] ? worksheet['B12'].v : 0),
-                    pg1AnnualBenefits: getNum(worksheet['B13'] ? worksheet['B13'].v : 0),
-                    pg1OtherAnnualIncome: getNum(worksheet['B14'] ? worksheet['B14'].v : 0),
-                    otherPropertiesNetIncome: getNum(worksheet['B15'] ? worksheet['B15'].v : 0),
-                    assetsAnotherCountryNetIncome: getNum(worksheet['B16'] ? worksheet['B16'].v : 0),
-                    pg1CashSavings: getNum(worksheet['B18'] ? worksheet['B18'].v : 0),
-                    pg1OtherAssets: getNum(worksheet['B19'] ? worksheet['B19'].v : 0),
-                    pg1HomeMarketValue: getNum(worksheet['B20'] ? worksheet['B20'].v : 0),
-                    pg1HomeOutstandingMortgage: getNum(worksheet['B21'] ? worksheet['B21'].v : 0),
-                    totalAnnualLivingExpensesNC: getNum(worksheet['B23'] ? worksheet['B23'].v : 0),
-                    annualSchoolFeesForOtherChildren: getNum(worksheet['B24'] ? worksheet['B24'].v : 0),
-                    annualSchoolFeesForNonDependentChildren: getNum(worksheet['B25'] ? worksheet['B25'].v : 0),
-                    currentSchoolFees: getNum(worksheet['B26'] ? worksheet['B26'].v : 0),
-                    pg2StudentAnnualIncome: getNum(worksheet['B29'] ? worksheet['B29'].v : 0),
-                    pg2StudentCashSavings: getNum(worksheet['B30'] ? worksheet['B30'].v : 0),
-                    pg2StudentOtherAssets: getNum(worksheet['B31'] ? worksheet['B31'].v : 0),
-                    ncScholarshipProvidedTwoYearsUSD: getNum(worksheet['B34'] ? worksheet['B34'].v : 0),
-                    potentialLoanAmount: getNum(worksheet['B35'] ? worksheet['B35'].v : 0),
-                    unusualCircumstances: worksheet['B38'] ? worksheet['B38'].v : '',
-                };
-
-                setFormData(newFormData);
-                setActiveTab('results'); // Automatically go to results after upload
-            };
-            reader.readAsBinaryString(file);
+        if (!file) {
+            return;
         }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const data = event.target.result;
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+
+            const newFormData = {
+                ncCurrencySymbol: worksheet['B4'] ? worksheet['B4'].v : 'N/A',
+                exchangeRateToUSD: getNum(worksheet['B5'] ? worksheet['B5'].v : 0),
+                exchangeRateDate: worksheet['B6'] ? XLSX.utils.formatDate(worksheet['B6'].v, 'YYYY-MM-DD') : '',
+                annualReturnOnAssets: getNum(worksheet['B7'] ? worksheet['B7'].v / 100 : 0),
+                annualTravelCostUSD: getNum(worksheet['B8'] ? worksheet['B8'].v : 0),
+                pg1AnnualIncomePrimaryParent: getNum(worksheet['B11'] ? worksheet['B11'].v : 0),
+                pg1AnnualIncomeOtherParent: getNum(worksheet['B12'] ? worksheet['B12'].v : 0),
+                pg1AnnualBenefits: getNum(worksheet['B13'] ? worksheet['B13'].v : 0),
+                pg1OtherAnnualIncome: getNum(worksheet['B14'] ? worksheet['B14'].v : 0),
+                otherPropertiesNetIncome: getNum(worksheet['B15'] ? worksheet['B15'].v : 0),
+                assetsAnotherCountryNetIncome: getNum(worksheet['B16'] ? worksheet['B16'].v : 0),
+                pg1CashSavings: getNum(worksheet['B18'] ? worksheet['B18'].v : 0),
+                pg1OtherAssets: getNum(worksheet['B19'] ? worksheet['B19'].v : 0),
+                pg1HomeMarketValue: getNum(worksheet['B20'] ? worksheet['B20'].v : 0),
+                pg1HomeOutstandingMortgage: getNum(worksheet['B21'] ? worksheet['B21'].v : 0),
+                totalAnnualLivingExpensesNC: getNum(worksheet['B23'] ? worksheet['B23'].v : 0),
+                annualSchoolFeesForOtherChildren: getNum(worksheet['B24'] ? worksheet['B24'].v : 0),
+                annualSchoolFeesForNonDependentChildren: getNum(worksheet['B25'] ? worksheet['B25'].v : 0),
+                currentSchoolFees: getNum(worksheet['B26'] ? worksheet['B26'].v : 0),
+                pg2StudentAnnualIncome: getNum(worksheet['B29'] ? worksheet['B29'].v : 0),
+                pg2StudentCashSavings: getNum(worksheet['B30'] ? worksheet['B30'].v : 0),
+                pg2StudentOtherAssets: getNum(worksheet['B31'] ? worksheet['B31'].v : 0),
+                ncScholarshipProvidedTwoYearsUSD: getNum(worksheet['B34'] ? worksheet['B34'].v : 0),
+                potentialLoanAmount: getNum(worksheet['B35'] ? worksheet['B35'].v : 0),
+                unusualCircumstances: worksheet['B38'] ? worksheet['B38'].v : '',
+            };
+
+            setFormData(newFormData);
+            setActiveTab('results'); // Automatically go to results after upload
+        };
+        reader.readAsBinaryString(file);
     };
 
     const allSchoolResults = useFinancialCalculations(formData, maxScholarshipPercentages);
