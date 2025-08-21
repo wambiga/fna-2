@@ -622,7 +622,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
 // Initial form data structure for all input fields.
 const initialFormData = {
     applicantName: '', // New: Applicant's Full Name
-    applicantDob: '', // New: Applicant's Date of Birth
+    applicantDob: '2007-01-01', // Changed default date to 2007-01-01
     ncCurrencySymbol: 'USD',
     exchangeRateToUSD: 1.0,
     exchangeRateDate: new Date().toISOString().split('T')[0],
@@ -746,7 +746,6 @@ const App = () => {
                     (allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2), // Ensure this calculation is correct for CSV
                     school.finalScholarshipNeededFromSchool,
                     school.maxScholarshipPercentage,
-                    school.maxScholarshipLocal,
                     school.maxScholarshipAvailableUSD,
                     `"${school.contributionStatus}"`, // Enclose status in quotes
                     `"${school.ageEligibility}"` // Add age eligibility to CSV row
@@ -783,7 +782,15 @@ const App = () => {
                             </div>
                             <div className="input-group">
                                 <label htmlFor="applicantDob">Applicant's Date of Birth (YYYY-MM-DD):</label>
-                                <input type="date" id="applicantDob" name="applicantDob" value={formData.applicantDob} onChange={handleInputChange} />
+                                <input
+                                    type="text" // Changed from type="date"
+                                    id="applicantDob"
+                                    name="applicantDob"
+                                    value={formData.applicantDob}
+                                    onChange={handleInputChange}
+                                    pattern="\d{4}-\d{2}-\d{2}" // Added pattern for YYYY-MM-DD format validation
+                                    placeholder="YYYY-MM-DD" // Added placeholder to guide user input
+                                />
                             </div>
                             <div className="input-group">
                                 <label>National Currency Symbol:</label>
