@@ -496,7 +496,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                         <p><strong>Assessed Funds Available for Fees (2 Years):</strong> ${getNum(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</p>
                         <p><strong>Current School Fees for Applicant (for discussion):</strong> ${allSchoolResults.currentSchoolFeesUSD.toFixed(2)} per year</p>
                         <p><strong>Scholarship from NC (2 years):</strong> ${getNum(formData.ncScholarshipProvidedTwoYearsUSD).toFixed(2)}</p>
-                        <p><strong>Potential Loan Amount (2 years):</strong> ${getNum(allSchoolResults.potentialLoanAmount).toFixed(2)}</p>
+                        <p><strong>Potential Loan Amount (2 years):</strong> ${getNum(formData.potentialLoanAmount).toFixed(2)}</p>
                     </section>
 
                     <section className="schools-section">
@@ -621,36 +621,36 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
 
 // Initial form data structure for all input fields.
 const initialFormData = {
-    applicantName: '', // New: Applicant's Full Name
-    applicantDob: '', // New: Applicant's Date of Birth
-    ncCurrencySymbol: 'USD',
-    exchangeRateToUSD: 1.0,
-    exchangeRateDate: new Date().toISOString().split('T')[0],
-    annualReturnOnAssets: 0,
-    pg1NumberIndependentAdults: 0,
-    pg1NumberFinancialDependents: 0,
-    annualSchoolFeesForOtherChildren: 0,
-    annualSchoolFeesForNonDependentChildren: 0,
-    currentSchoolFees: 0,
-    pg1AnnualIncomePrimaryParent: 0,
-    pg1AnnualIncomeOtherParent: 0,
-    pg1AnnualBenefits: 0,
-    pg1OtherAnnualIncome: 0,
-    pg1CashSavings: 0,
-    pg1OtherAssets: 0,
-    pg1HomeMarketValue: 0,
-    pg1HomeOutstandingMortgage: 0,
-    otherPropertiesNetIncome: 0,
-    assetsAnotherCountryNetIncome: 0,
-    pg2StudentAnnualIncome: 0,
-    pg2StudentCashSavings: 0,
-    pg2StudentOtherAssets: 0,
-    annualTravelCostUSD: 0,
-    ncScholarshipProvidedTwoYearsUSD: 0,
-    totalAnnualLivingExpensesNC: 0,
-    potentialLoanAmount: 0,
-    unusualCircumstances: '',
-    pg1JobNotes: '', // Added for Parent/Guardian notes
+    applicantName: '', // Initializes to empty string
+    applicantDob: '', // Initializes to empty string for date
+    ncCurrencySymbol: 'USD', // Default selected currency
+    exchangeRateToUSD: 0, // Changed from 1.0 to 0 as per request
+    exchangeRateDate: '', // Changed from current date to empty string as per request
+    annualReturnOnAssets: 0, // Initializes to 0
+    pg1NumberIndependentAdults: 0, // Initializes to 0
+    pg1NumberFinancialDependents: 0, // Initializes to 0
+    annualSchoolFeesForOtherChildren: 0, // Initializes to 0
+    annualSchoolFeesForNonDependentChildren: 0, // Initializes to 0
+    currentSchoolFees: 0, // Initializes to 0
+    pg1AnnualIncomePrimaryParent: 0, // Initializes to 0
+    pg1AnnualIncomeOtherParent: 0, // Initializes to 0
+    pg1AnnualBenefits: 0, // Initializes to 0
+    pg1OtherAnnualIncome: 0, // Initializes to 0
+    pg1CashSavings: 0, // Initializes to 0
+    pg1OtherAssets: 0, // Initializes to 0
+    pg1HomeMarketValue: 0, // Initializes to 0
+    pg1HomeOutstandingMortgage: 0, // Initializes to 0
+    otherPropertiesNetIncome: 0, // Initializes to 0
+    assetsAnotherCountryNetIncome: 0, // Initializes to 0
+    pg2StudentAnnualIncome: 0, // Initializes to 0
+    pg2StudentCashSavings: 0, // Initializes to 0
+    pg2StudentOtherAssets: 0, // Initializes to 0
+    annualTravelCostUSD: 0, // Initializes to 0
+    ncScholarshipProvidedTwoYearsUSD: 0, // Initializes to 0
+    totalAnnualLivingExpensesNC: 0, // Initializes to 0
+    potentialLoanAmount: 0, // Initializes to 0
+    unusualCircumstances: '', // Initializes to empty string
+    pg1JobNotes: '', // Initializes to empty string
 };
 
 // Main App component
@@ -662,11 +662,12 @@ const App = () => {
     // State to manage max scholarship percentages for each school, allowing user adjustments
     const [maxScholarshipPercentages, setMaxScholarshipPercentages] = useState({});
 
-    // Initialize maxScholarshipPercentages on component mount using default values from schoolCostsData
+    // Initialize maxScholarshipPercentages on component mount.
+    // Modified: Now initializes all scholarship percentages to 0.
     useEffect(() => {
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = school.maxScholarshipPercentage * 100; // Store as percentage (0-100)
+            initialPercentages[school.name] = 0; // Initialize all to 0% as requested
         });
         setMaxScholarshipPercentages(initialPercentages);
     }, []); // Empty dependency array ensures this runs only once
@@ -689,12 +690,13 @@ const App = () => {
     };
 
     // Resets all form fields to their initial state
+    // Modified: Ensures max scholarship percentages are reset to 0.
     const handleResetForm = () => {
         setFormData(initialFormData);
-        // Also reset max scholarship percentages to their defaults
+        // Also reset max scholarship percentages to 0%
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = school.maxScholarshipPercentage * 100;
+            initialPercentages[school.name] = 0; // Always reset to 0%
         });
         setMaxScholarshipPercentages(initialPercentages);
         setActiveTab('general'); // Navigate back to the first tab
@@ -776,7 +778,7 @@ const App = () => {
                     <div className="tab-content">
                         <div className="form-section">
                             <h3>General Information</h3>
-                            {/* Applicant Name and Date of Birth Fields - New inputs */}
+                            {/* Applicant Name and Date of Birth Fields */}
                             <div className="input-group">
                                 <label htmlFor="applicantName">Applicant's Full Name:</label>
                                 <input type="text" id="applicantName" name="applicantName" value={formData.applicantName} onChange={handleInputChange} placeholder="e.g., John Doe" />
@@ -795,7 +797,7 @@ const App = () => {
                             </div>
                             <div className="input-group">
                                 <label>Exchange Rate (1 USD = X NC Currency):</label>
-                                <input type="number" name="exchangeRateToUSD" value={formData.exchangeRateToUSD} onChange={handleInputChange} placeholder="e.g., 129.5" step="0.01" />
+                                <input type="number" name="exchangeRateToUSD" value={formData.exchangeRateToUSD} onChange={handleInputChange} placeholder="e.g., 0" step="0.01" />
                             </div>
                             <div className="input-group">
                                 <label>Date of Exchange Rate (YYYY-MM-DD):</label>
@@ -803,11 +805,11 @@ const App = () => {
                             </div>
                             <div className="input-group">
                                 <label>Annual Return on Assets (%):</label>
-                                <input type="number" name="annualReturnOnAssets" value={formData.annualReturnOnAssets * 100} onChange={e => handleInputChange({ target: { name: 'annualReturnOnAssets', value: parseFloat(e.target.value) / 100 } })} placeholder="e.g., 5" />
+                                <input type="number" name="annualReturnOnAssets" value={formData.annualReturnOnAssets * 100} onChange={e => handleInputChange({ target: { name: 'annualReturnOnAssets', value: parseFloat(e.target.value) / 100 } })} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Annual Travel Cost to UWC (USD):</label>
-                                <input type="number" name="annualTravelCostUSD" value={formData.annualTravelCostUSD} onChange={handleInputChange} placeholder="e.g., 1200" />
+                                <input type="number" name="annualTravelCostUSD" value={formData.annualTravelCostUSD} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                         </div>
                         <div className="button-group">
@@ -822,70 +824,70 @@ const App = () => {
                             <h3>Parent/Guardian Financial Information (NC)</h3>
                             <div className="input-group">
                                 <label>Number of Independent Adults:</label>
-                                <input type="number" name="pg1NumberIndependentAdults" value={formData.pg1NumberIndependentAdults} onChange={handleInputChange} />
+                                <input type="number" name="pg1NumberIndependentAdults" value={formData.pg1NumberIndependentAdults} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Number of Financial Dependents:</label>
-                                <input type="number" name="pg1NumberFinancialDependents" value={formData.pg1NumberFinancialDependents} onChange={handleInputChange} />
+                                <input type="number" name="pg1NumberFinancialDependents" value={formData.pg1NumberFinancialDependents} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <h4>Income (National Currency)</h4>
                             <div className="input-group">
                                 <label>Annual Income of Primary Parent:</label>
-                                <input type="number" name="pg1AnnualIncomePrimaryParent" value={formData.pg1AnnualIncomePrimaryParent} onChange={handleInputChange} placeholder="e.g., 5000000" />
+                                <input type="number" name="pg1AnnualIncomePrimaryParent" value={formData.pg1AnnualIncomePrimaryParent} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Annual Income of Other Parent:</label>
-                                <input type="number" name="pg1AnnualIncomeOtherParent" value={formData.pg1AnnualIncomeOtherParent} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="pg1AnnualIncomeOtherParent" value={formData.pg1AnnualIncomeOtherParent} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Annual Benefits:</label>
-                                <input type="number" name="pg1AnnualBenefits" value={formData.pg1AnnualBenefits} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="pg1AnnualBenefits" value={formData.pg1AnnualBenefits} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Other Annual Income:</label>
-                                <input type="number" name="pg1OtherAnnualIncome" value={formData.pg1OtherAnnualIncome} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="pg1OtherAnnualIncome" value={formData.pg1OtherAnnualIncome} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Net Income from Other Properties:</label>
-                                <input type="number" name="otherPropertiesNetIncome" value={formData.otherPropertiesNetIncome} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="otherPropertiesNetIncome" value={formData.otherPropertiesNetIncome} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Net Income from Assets in Another Country:</label>
-                                <input type="number" name="assetsAnotherCountryNetIncome" value={formData.assetsAnotherCountryNetIncome} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="assetsAnotherCountryNetIncome" value={formData.assetsAnotherCountryNetIncome} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <h4>Assets (National Currency)</h4>
                             <div className="input-group">
                                 <label>Cash and Savings:</label>
-                                <input type="number" name="pg1CashSavings" value={formData.pg1CashSavings} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="pg1CashSavings" value={formData.pg1CashSavings} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Other Assets:</label>
-                                <input type="number" name="pg1OtherAssets" value={formData.pg1OtherAssets} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="pg1OtherAssets" value={formData.pg1OtherAssets} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Home Market Value:</label>
-                                <input type="number" name="pg1HomeMarketValue" value={formData.pg1HomeMarketValue} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="pg1HomeMarketValue" value={formData.pg1HomeMarketValue} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Home Outstanding Mortgage:</label>
-                                <input type="number" name="pg1HomeOutstandingMortgage" value={formData.pg1HomeOutstandingMortgage} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="pg1HomeOutstandingMortgage" value={formData.pg1HomeOutstandingMortgage} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <h4>Annual Expenses (National Currency)</h4>
                             <div className="input-group">
                                 <label>Total Annual Living Expenses:</label>
-                                <input type="number" name="totalAnnualLivingExpensesNC" value={formData.totalAnnualLivingExpensesNC} onChange={handleInputChange} placeholder="e.g., 1000000" />
+                                <input type="number" name="totalAnnualLivingExpensesNC" value={formData.totalAnnualLivingExpensesNC} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Annual School Fees for Other Children:</label>
-                                <input type="number" name="annualSchoolFeesForOtherChildren" value={formData.annualSchoolFeesForOtherChildren} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="annualSchoolFeesForOtherChildren" value={formData.annualSchoolFeesForOtherChildren} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Annual School Fees for Non-Dependent Children:</label>
-                                <input type="number" name="annualSchoolFeesForNonDependentChildren" value={formData.annualSchoolFeesForNonDependentChildren} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="annualSchoolFeesForNonDependentChildren" value={formData.annualSchoolFeesForNonDependentChildren} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Current Annual School Fees for Applicant:</label>
-                                <input type="number" name="currentSchoolFees" value={formData.currentSchoolFees} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="currentSchoolFees" value={formData.currentSchoolFees} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Job Type / Income Stability Notes:</label>
@@ -906,24 +908,24 @@ const App = () => {
                             <h4>Income (National Currency)</h4>
                             <div className="input-group">
                                 <label>Student's Annual Income:</label>
-                                <input type="number" name="pg2StudentAnnualIncome" value={formData.pg2StudentAnnualIncome} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="pg2StudentAnnualIncome" value={formData.pg2StudentAnnualIncome} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <h4>Assets (National Currency)</h4>
                             <div className="input-group">
                                 <label>Student's Cash and Savings:</label>
-                                <input type="number" name="pg2StudentCashSavings" value={formData.pg2StudentCashSavings} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="pg2StudentCashSavings" value={formData.pg2StudentCashSavings} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Student's Other Assets:</label>
-                                <input type="number" name="pg2StudentOtherAssets" value={formData.pg2StudentOtherAssets} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="pg2StudentOtherAssets" value={formData.pg2StudentOtherAssets} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Scholarship from National Committee (2 years) (USD):</label>
-                                <input type="number" name="ncScholarshipProvidedTwoYearsUSD" value={formData.ncScholarshipProvidedTwoYearsUSD} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="ncScholarshipProvidedTwoYearsUSD" value={formData.ncScholarshipProvidedTwoYearsUSD} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Potential Loan Amount (2 years) (USD):</label>
-                                <input type="number" name="potentialLoanAmount" value={formData.potentialLoanAmount} onChange={handleInputChange} placeholder="Optional" />
+                                <input type="number" name="potentialLoanAmount" value={formData.potentialLoanAmount} onChange={handleInputChange} placeholder="e.g., 0" />
                             </div>
                             <div className="input-group">
                                 <label>Unusual Circumstances / Notes:</label>
