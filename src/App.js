@@ -662,11 +662,12 @@ const App = () => {
     // State to manage max scholarship percentages for each school, allowing user adjustments
     const [maxScholarshipPercentages, setMaxScholarshipPercentages] = useState({});
 
-    // Initialize maxScholarshipPercentages on component mount using default values from schoolCostsData
+    // Initialize maxScholarshipPercentages on component mount
     useEffect(() => {
         const initialPercentages = {};
+        // Set the initial percentage for all schools to 0%
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = school.maxScholarshipPercentage * 100; // Store as percentage (0-100)
+            initialPercentages[school.name] = 0;
         });
         setMaxScholarshipPercentages(initialPercentages);
     }, []); // Empty dependency array ensures this runs only once
@@ -691,10 +692,10 @@ const App = () => {
     // Resets all form fields to their initial state
     const handleResetForm = () => {
         setFormData(initialFormData);
-        // Also reset max scholarship percentages to their defaults
+        // Also reset max scholarship percentages to 0%
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = school.maxScholarshipPercentage * 100;
+            initialPercentages[school.name] = 0;
         });
         setMaxScholarshipPercentages(initialPercentages);
         setActiveTab('general'); // Navigate back to the first tab
