@@ -196,9 +196,7 @@ body {
     border: 1px solid #ddd;
     padding: 12px;
     text-align: left;
-    white-space: nowrap; /* Prevents text from wrapping in cells */
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* Removed white-space, overflow, and text-overflow to allow content to wrap */
 }
 
 .desktop-view th {
@@ -318,7 +316,7 @@ body {
 }
 
 /* Responsive styles for mobile view */
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
     .form-container {
         padding: 15px;
     }
@@ -335,4 +333,4 @@ body {
     .mobile-view {
         display: block;
     }
-}
+} */
