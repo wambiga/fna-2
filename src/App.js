@@ -508,12 +508,12 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                                 <thead>
                                     <tr>
                                         <th>School</th>
-                                        <th>Total All-Inclusive Cost (2 years)</th>
-                                        <th>Assessed Funds Available for Fees (2 years)</th>
-                                        <th>Final Scholarship Needed From School (2 years)</th>
+                                        <th>Total Cost (2 years)</th>
+                                        <th>Assessed Funds Available (2 years)</th>
+                                        <th>Scholarship Needed</th>
                                         <th>Max Scholarship Available</th>
-                                        <th>Financial Contribution Status</th>
-                                        <th>Age Eligibility</th> {/* Added Age Eligibility header for desktop table */}
+                                        <th>Status</th>
+                                        <th>Age Eligibility</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -662,12 +662,11 @@ const App = () => {
     // State to manage max scholarship percentages for each school, allowing user adjustments
     const [maxScholarshipPercentages, setMaxScholarshipPercentages] = useState({});
 
-    // Initialize maxScholarshipPercentages on component mount
+    // Initialize maxScholarshipPercentages on component mount using default values from schoolCostsData
     useEffect(() => {
         const initialPercentages = {};
-        // Set the initial percentage for all schools to 0%
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = 0;
+            initialPercentages[school.name] = school.maxScholarshipPercentage * 100; // Store as percentage (0-100)
         });
         setMaxScholarshipPercentages(initialPercentages);
     }, []); // Empty dependency array ensures this runs only once
@@ -692,10 +691,10 @@ const App = () => {
     // Resets all form fields to their initial state
     const handleResetForm = () => {
         setFormData(initialFormData);
-        // Also reset max scholarship percentages to 0%
+        // Also reset max scholarship percentages to their defaults
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = 0;
+            initialPercentages[school.name] = school.maxScholarshipPercentage * 100;
         });
         setMaxScholarshipPercentages(initialPercentages);
         setActiveTab('general'); // Navigate back to the first tab
@@ -747,7 +746,6 @@ const App = () => {
                     (allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2), // Ensure this calculation is correct for CSV
                     school.finalScholarshipNeededFromSchool,
                     school.maxScholarshipPercentage,
-                    `"${school.localCurrencySymbol} ${school.maxScholarshipLocal}"`,
                     school.maxScholarshipAvailableUSD,
                     `"${school.contributionStatus}"`, // Enclose status in quotes
                     `"${school.ageEligibility}"` // Add age eligibility to CSV row
@@ -784,15 +782,7 @@ const App = () => {
                             </div>
                             <div className="input-group">
                                 <label htmlFor="applicantDob">Applicant's Date of Birth (YYYY-MM-DD):</label>
-                                <input
-                                    type="text"
-                                    id="applicantDob"
-                                    name="applicantDob"
-                                    value={formData.applicantDob}
-                                    onChange={handleInputChange}
-                                    pattern="\d{4}-\d{2}-\d{2}"
-                                    placeholder="YYYY-MM-DD"
-                                />
+                                <input type="date" id="applicantDob" name="applicantDob" value={formData.applicantDob} onChange={handleInputChange} />
                             </div>
                             <div className="input-group">
                                 <label>National Currency Symbol:</label>
@@ -879,7 +869,6 @@ const App = () => {
                                 <label>Home Outstanding Mortgage:</label>
                                 <input type="number" name="pg1HomeOutstandingMortgage" value={formData.pg1HomeOutstandingMortgage} onChange={handleInputChange} placeholder="Optional" />
                             </div>
-                            <h4>Annual Expenses (National Currency)</h4>
                             <div className="input-group">
                                 <label>Total Annual Living Expenses:</label>
                                 <input type="number" name="totalAnnualLivingExpensesNC" value={formData.totalAnnualLivingExpensesNC} onChange={handleInputChange} placeholder="e.g., 1000000" />
