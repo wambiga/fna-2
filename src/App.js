@@ -667,7 +667,7 @@ const App = () => {
     const handleFileSelect = (e) => {
         setExcelFile(e.target.files[0]);
     };
-
+    
     const processFile = () => {
         if (!excelFile) {
             alert("Please select an Excel file first.");
@@ -687,41 +687,59 @@ const App = () => {
                     return cell ? cell.v : null;
                 };
 
-                const newFormData = {
-                    applicantName: getCellValue('B1'),
-                    applicantDob: getCellValue('B2') ? XLSX.utils.formatDate(getCellValue('B2'), 'YYYY-MM-DD') : '',
-                    ncCurrencySymbol: getCellValue('B4'),
-                    exchangeRateToUSD: getNum(getCellValue('B5')),
-                    exchangeRateDate: getCellValue('B6') ? XLSX.utils.formatDate(getCellValue('B6'), 'YYYY-MM-DD') : '',
-                    annualReturnOnAssets: getNum(getCellValue('B7')) / 100,
-                    annualTravelCostUSD: getNum(getCellValue('B8')),
-                    pg1AnnualIncomePrimaryParent: getNum(getCellValue('B11')),
-                    pg1AnnualIncomeOtherParent: getNum(getCellValue('B12')),
-                    pg1AnnualBenefits: getNum(getCellValue('B13')),
-                    pg1OtherAnnualIncome: getNum(getCellValue('B14')),
-                    otherPropertiesNetIncome: getNum(getCellValue('B15')),
-                    assetsAnotherCountryNetIncome: getNum(getCellValue('B16')),
-                    pg1CashSavings: getNum(getCellValue('B18')),
-                    pg1OtherAssets: getNum(getCellValue('B19')),
-                    pg1HomeMarketValue: getNum(getCellValue('B20')),
-                    pg1HomeOutstandingMortgage: getNum(getCellValue('B21')),
-                    totalAnnualLivingExpensesNC: getNum(getCellValue('B23')),
-                    annualSchoolFeesForOtherChildren: getNum(getCellValue('B24')),
-                    annualSchoolFeesForNonDependentChildren: getNum(getCellValue('B25')),
-                    currentSchoolFees: getNum(getCellValue('B26')),
-                    pg2StudentAnnualIncome: getNum(getCellValue('B29')),
-                    pg2StudentCashSavings: getNum(getCellValue('B30')),
-                    pg2StudentOtherAssets: getNum(getCellValue('B31')),
-                    ncScholarshipProvidedTwoYearsUSD: getNum(getCellValue('B34')),
-                    potentialLoanAmount: getNum(getCellValue('B35')),
-                    unusualCircumstances: getCellValue('B38'),
-                };
+                const newFormData = {};
+                const cellMappings = [
+                    { name: 'applicantName', cell: 'B1' },
+                    { name: 'applicantDob', cell: 'B2', type: 'date' },
+                    { name: 'ncCurrencySymbol', cell: 'B4' },
+                    { name: 'exchangeRateToUSD', cell: 'B5', type: 'number' },
+                    { name: 'exchangeRateDate', cell: 'B6', type: 'date' },
+                    { name: 'annualReturnOnAssets', cell: 'B7', type: 'number', divider: 100 },
+                    { name: 'annualTravelCostUSD', cell: 'B8', type: 'number' },
+                    { name: 'pg1AnnualIncomePrimaryParent', cell: 'B11', type: 'number' },
+                    { name: 'pg1AnnualIncomeOtherParent', cell: 'B12', type: 'number' },
+                    { name: 'pg1AnnualBenefits', cell: 'B13', type: 'number' },
+                    { name: 'pg1OtherAnnualIncome', cell: 'B14', type: 'number' },
+                    { name: 'otherPropertiesNetIncome', cell: 'B15', type: 'number' },
+                    { name: 'assetsAnotherCountryNetIncome', cell: 'B16', type: 'number' },
+                    { name: 'pg1CashSavings', cell: 'B18', type: 'number' },
+                    { name: 'pg1OtherAssets', cell: 'B19', type: 'number' },
+                    { name: 'pg1HomeMarketValue', cell: 'B20', type: 'number' },
+                    { name: 'pg1HomeOutstandingMortgage', cell: 'B21', type: 'number' },
+                    { name: 'totalAnnualLivingExpensesNC', cell: 'B23', type: 'number' },
+                    { name: 'annualSchoolFeesForOtherChildren', cell: 'B24', type: 'number' },
+                    { name: 'annualSchoolFeesForNonDependentChildren', cell: 'B25', type: 'number' },
+                    { name: 'currentSchoolFees', cell: 'B26', type: 'number' },
+                    { name: 'pg2StudentAnnualIncome', cell: 'B29', type: 'number' },
+                    { name: 'pg2StudentCashSavings', cell: 'B30', type: 'number' },
+                    { name: 'pg2StudentOtherAssets', cell: 'B31', type: 'number' },
+                    { name: 'ncScholarshipProvidedTwoYearsUSD', cell: 'B34', type: 'number' },
+                    { name: 'potentialLoanAmount', cell: 'B35', type: 'number' },
+                    { name: 'unusualCircumstances', cell: 'B38' },
+                ];
+
+                for (const mapping of cellMappings) {
+                    try {
+                        let value = getCellValue(mapping.cell);
+                        if (mapping.type === 'date' && value) {
+                            value = XLSX.utils.formatDate(value, 'YYYY-MM-DD');
+                        } else if (mapping.type === 'number' && value) {
+                            value = getNum(value);
+                            if (mapping.divider) {
+                                value /= mapping.divider;
+                            }
+                        }
+                        newFormData[mapping.name] = value;
+                    } catch (e) {
+                        throw new Error(`Failed to read data from cell ${mapping.cell}. Please check the data format.`);
+                    }
+                }
 
                 setFormData(newFormData);
                 setActiveTab('results');
             } catch (error) {
                 console.error("Error processing file:", error);
-                alert("An error occurred while processing the file. Please ensure it is a valid Excel file and follows the correct format.");
+                alert(`An error occurred while processing the file: ${error.message}.`);
             }
         };
         reader.onerror = (error) => {
