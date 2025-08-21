@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
+import * as XLSX from 'xlsx';
 import './App.css';
 
 // Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
@@ -443,7 +444,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                                         <div className="card-item">
                                             <span className="card-label">Max Scholarship Details:</span>
                                             <span className="card-value scholarship-details">
-                                                (~ {school.localCurrencySymbol} {school.maxScholarshipLocal}) = ${school.maxScholarshipAvailableUSD} USD
+                                                (~ {school.localCurrencySymbol} {school.localCurrencySymbol} {school.maxScholarshipLocal}) = ${school.maxScholarshipAvailableUSD} USD
                                             </span>
                                         </div>
                                         <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
@@ -534,6 +535,53 @@ const App = () => {
         setActiveTab('general');
     };
 
+    // New function to handle Excel file upload
+    const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const data = event.target.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Assuming data is in column B, starting from row 4
+                const newFormData = {
+                    ncCurrencySymbol: worksheet['B4'] ? worksheet['B4'].v : 'N/A',
+                    exchangeRateToUSD: getNum(worksheet['B5'] ? worksheet['B5'].v : 0),
+                    exchangeRateDate: worksheet['B6'] ? XLSX.utils.formatDate(worksheet['B6'].v, 'YYYY-MM-DD') : '',
+                    annualReturnOnAssets: getNum(worksheet['B7'] ? worksheet['B7'].v / 100 : 0),
+                    annualTravelCostUSD: getNum(worksheet['B8'] ? worksheet['B8'].v : 0),
+                    pg1AnnualIncomePrimaryParent: getNum(worksheet['B11'] ? worksheet['B11'].v : 0),
+                    pg1AnnualIncomeOtherParent: getNum(worksheet['B12'] ? worksheet['B12'].v : 0),
+                    pg1AnnualBenefits: getNum(worksheet['B13'] ? worksheet['B13'].v : 0),
+                    pg1OtherAnnualIncome: getNum(worksheet['B14'] ? worksheet['B14'].v : 0),
+                    otherPropertiesNetIncome: getNum(worksheet['B15'] ? worksheet['B15'].v : 0),
+                    assetsAnotherCountryNetIncome: getNum(worksheet['B16'] ? worksheet['B16'].v : 0),
+                    pg1CashSavings: getNum(worksheet['B18'] ? worksheet['B18'].v : 0),
+                    pg1OtherAssets: getNum(worksheet['B19'] ? worksheet['B19'].v : 0),
+                    pg1HomeMarketValue: getNum(worksheet['B20'] ? worksheet['B20'].v : 0),
+                    pg1HomeOutstandingMortgage: getNum(worksheet['B21'] ? worksheet['B21'].v : 0),
+                    totalAnnualLivingExpensesNC: getNum(worksheet['B23'] ? worksheet['B23'].v : 0),
+                    annualSchoolFeesForOtherChildren: getNum(worksheet['B24'] ? worksheet['B24'].v : 0),
+                    annualSchoolFeesForNonDependentChildren: getNum(worksheet['B25'] ? worksheet['B25'].v : 0),
+                    currentSchoolFees: getNum(worksheet['B26'] ? worksheet['B26'].v : 0),
+                    pg2StudentAnnualIncome: getNum(worksheet['B29'] ? worksheet['B29'].v : 0),
+                    pg2StudentCashSavings: getNum(worksheet['B30'] ? worksheet['B30'].v : 0),
+                    pg2StudentOtherAssets: getNum(worksheet['B31'] ? worksheet['B31'].v : 0),
+                    ncScholarshipProvidedTwoYearsUSD: getNum(worksheet['B34'] ? worksheet['B34'].v : 0),
+                    potentialLoanAmount: getNum(worksheet['B35'] ? worksheet['B35'].v : 0),
+                    unusualCircumstances: worksheet['B38'] ? worksheet['B38'].v : '',
+                };
+
+                setFormData(newFormData);
+                setActiveTab('results'); // Automatically go to results after upload
+            };
+            reader.readAsBinaryString(file);
+        }
+    };
+
     const allSchoolResults = useFinancialCalculations(formData, maxScholarshipPercentages);
 
     const handleDownloadPdf = () => {
@@ -599,6 +647,12 @@ const App = () => {
                     <div className="tab-content">
                         <div className="form-section">
                             <h3>General Information</h3>
+                            <div className="input-group">
+                                <label>Upload Parent/Guardian Excel Form:</label>
+                                <input type="file" onChange={handleFileUpload} accept=".xlsx, .xls" />
+                            </div>
+                            <hr style={{ margin: '20px 0' }} />
+                            <h3>Or, Manually Enter Data Below</h3>
                             <div className="input-group">
                                 <label>National Currency Symbol:</label>
                                 <select name="ncCurrencySymbol" value={formData.ncCurrencySymbol} onChange={handleInputChange}>
