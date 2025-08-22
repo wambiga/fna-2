@@ -277,41 +277,6 @@ body {
     text-align: center;
 }
 
-/* PDF-specific styles - these are crucial for print layout */
-@media print {
-    body {
-        margin: 0;
-        padding: 0;
-        background: #fff;
-        font-size: 12px;
-    }
-    .pdf-content {
-        padding: 20px;
-        box-shadow: none;
-    }
-    .tab-content {
-        border: none;
-    }
-    .desktop-view table {
-        width: 100%;
-        table-layout: fixed; /* This is crucial for fixing column widths */
-        font-size: 7px; /* Reduced font size to fit more content */
-    }
-    .desktop-view th, .desktop-view td {
-        padding: 1px; /* Reduced padding */
-        word-wrap: break-word; /* Prevents overflow */
-    }
-    .desktop-view .status-badge,
-    .desktop-view .scholarship-details {
-        font-size: 6px; /* Further reduced font size for badges and details */
-    }
-    .mobile-view, .tabs, .button-group, .reset-button-container {
-        display: none;
-    }
-    .download-buttons {
-        display: none;
-    }
-}
 
 /* Responsive styles for mobile view */
 @media (max-width: 768px) {
