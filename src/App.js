@@ -2,26 +2,26 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
 import './App.css';
 
-// Embedded data from "FNA Tool.xlsx - Totals school costs.csv"
+// Embedded data from "FEES AND COSTS.xlsx - Totals school costs.csv"
 const schoolCostsData = [
-    { name: 'UWC South East Asia', annualFeesUSD: 68249, annualFeesLocalCurrency: 91400, avgAdditionalCostsUSD: 7918.91, maxScholarshipPercentage: 0, localCurrency: 'SGD', localCurrencyExchangeRateToUSD: 1.34 },
-    { name: 'Li Po Chun United World College of Hong Kong', annualFeesUSD: 49883, annualFeesLocalCurrency: 391617, avgAdditionalCostsUSD: 2613.76, maxScholarshipPercentage: 0, localCurrency: 'HKD', localCurrencyExchangeRateToUSD: 7.85 },
-    { name: 'UWC Robert Bosch College', annualFeesUSD: 41395, annualFeesLocalCurrency: 38083, avgAdditionalCostsUSD: 4073.40, maxScholarshipPercentage: 0, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
-    { name: 'UWC Costa Rica', annualFeesUSD: 43000, annualFeesLocalCurrency: 43000, avgAdditionalCostsUSD: 3140, maxScholarshipPercentage: 0, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
-    { name: 'Waterford Kamhlaba UWC of Southern Africa', annualFeesUSD: 30925, annualFeesLocalCurrency: 556650, avgAdditionalCostsUSD: 2270.62, maxScholarshipPercentage: 0, localCurrency: 'SZL', localCurrencyExchangeRateToUSD: 18.0 },
-    { name: 'UWC Dilijan', annualFeesUSD: 44000, annualFeesLocalCurrency: 44000, avgAdditionalCostsUSD: 800, maxScholarshipPercentage: 0, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
-    { name: 'UWC Atlantic', annualFeesUSD: 42000, annualFeesLocalCurrency: 33180, avgAdditionalCostsUSD: 3800, maxScholarshipPercentage: 0, localCurrency: 'GBP', localCurrencyExchangeRateToUSD: 0.79 },
-    { name: 'UWC Mahindra College', annualFeesUSD: 40000, annualFeesLocalCurrency: 3320000, avgAdditionalCostsUSD: 3000, maxScholarshipPercentage: 0, localCurrency: 'INR', localCurrencyExchangeRateToUSD: 83.0 },
-    { name: 'UWC Pearson College', annualFeesUSD: 45000, annualFeesLocalCurrency: 61650, avgAdditionalCostsUSD: 4200, maxScholarshipPercentage: 0, localCurrency: 'CAD', localCurrencyExchangeRateToUSD: 1.37 },
-    { name: 'UWC Changshu China', annualFeesUSD: 46000, annualFeesLocalCurrency: 333500, avgAdditionalCostsUSD: 3500, maxScholarshipPercentage: 0, localCurrency: 'CNY', localCurrencyExchangeRateToUSD: 7.25 },
-    { name: 'UWC Red Cross Nordic', annualFeesUSD: 41000, annualFeesLocalCurrency: 438700, avgAdditionalCostsUSD: 3000, maxScholarshipPercentage: 0, localCurrency: 'NOK', localCurrencyExchangeRateToUSD: 10.7 },
-    { name: 'UWC Adriatic', annualFeesUSD: 39000, annualFeesLocalCurrency: 35880, avgAdditionalCostsUSD: 3200, maxScholarshipPercentage: 0, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
-    { name: 'UWC ISAK Japan', annualFeesUSD: 48000, annualFeesLocalCurrency: 7440000, avgAdditionalCostsUSD: 4000, maxScholarshipPercentage: 0, localCurrency: 'JPY', localCurrencyExchangeRateToUSD: 155.0 },
-    { name: 'UWC Thailand', annualFeesUSD: 43000, annualFeesLocalCurrency: 1570000, avgAdditionalCostsUSD: 3500, maxScholarshipPercentage: 0, localCurrency: 'THB', localCurrencyExchangeRateToUSD: 36.5 },
-    { name: 'UWC Mostar', annualFeesUSD: 38000, annualFeesLocalCurrency: 34960, avgAdditionalCostsUSD: 2800, maxScholarshipPercentage: 0, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
-    { name: 'UWC Maastricht', annualFeesUSD: 40000, annualFeesLocalCurrency: 36800, avgAdditionalCostsUSD: 3000, maxScholarshipPercentage: 0, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.92 },
-    { name: 'UWC East Africa', annualFeesUSD: 47000, annualFeesLocalCurrency: 117500000, avgAdditionalCostsUSD: 4000, maxScholarshipPercentage: 0, localCurrency: 'TZS', localCurrencyExchangeRateToUSD: 2500.0 },
-    { name: 'UWC USA', annualFeesUSD: 60000, annualFeesLocalCurrency: 60000, avgAdditionalCostsUSD: 5000, maxScholarshipPercentage: 0, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
+    { name: 'UWC South East Asia', annualFeesUSD: 68249, annualFeesLocalCurrency: 89152, avgAdditionalCostsUSD: 7918.91, localCurrency: 'SGD', localCurrencyExchangeRateToUSD: 1.306 },
+    { name: 'Li Po Chun United World College of Hong Kong', annualFeesUSD: 49883, annualFeesLocalCurrency: 389000, avgAdditionalCostsUSD: 2613.76, localCurrency: 'HKD', localCurrencyExchangeRateToUSD: 7.798 },
+    { name: 'UWC Robert Bosch College', annualFeesUSD: 41395, annualFeesLocalCurrency: 37480, avgAdditionalCostsUSD: 4073.40, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.905 },
+    { name: 'UWC Costa Rica', annualFeesUSD: 43000, annualFeesLocalCurrency: 43000, avgAdditionalCostsUSD: 3140, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
+    { name: 'Waterford Kamhlaba UWC of Southern Africa', annualFeesUSD: 30925, annualFeesLocalCurrency: 28000, avgAdditionalCostsUSD: 2270.62, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.905 },
+    { name: 'UWC Dilijan', annualFeesUSD: 44000, annualFeesLocalCurrency: 44000, avgAdditionalCostsUSD: 800, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
+    { name: 'UWC Changshu China', annualFeesUSD: 54419, annualFeesLocalCurrency: 386000, avgAdditionalCostsUSD: 787.49, localCurrency: 'CNY', localCurrencyExchangeRateToUSD: 7.093 },
+    { name: 'UWC Maastricht', annualFeesUSD: 36698, annualFeesLocalCurrency: 35625, avgAdditionalCostsUSD: 2361.31, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.971 },
+    { name: 'UWC Adriatic', annualFeesUSD: 28716, annualFeesLocalCurrency: 26000, avgAdditionalCostsUSD: 2484.08, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.905 },
+    { name: 'Pearson College UWC', annualFeesUSD: 51699, annualFeesLocalCurrency: 69750, avgAdditionalCostsUSD: 3390.08, localCurrency: 'CAD', localCurrencyExchangeRateToUSD: 1.349 },
+    { name: 'UWC Thailand', annualFeesUSD: 51481, annualFeesLocalCurrency: 1753970, avgAdditionalCostsUSD: 3848.74, localCurrency: 'THB', localCurrencyExchangeRateToUSD: 34.072 },
+    { name: 'UWC Mostar', annualFeesUSD: 21097, annualFeesLocalCurrency: 19500, avgAdditionalCostsUSD: 2875.60, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.924 },
+    { name: 'UWC-USA', annualFeesUSD: 54100, annualFeesLocalCurrency: 54100, avgAdditionalCostsUSD: 4713, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
+    { name: 'UWC ISAK Japan', annualFeesUSD: 45700, annualFeesLocalCurrency: 6690000, avgAdditionalCostsUSD: 2922.50, localCurrency: 'JPY', localCurrencyExchangeRateToUSD: 146.389 },
+    { name: 'UWC Mahindra College', annualFeesUSD: 38200, annualFeesLocalCurrency: 38200, avgAdditionalCostsUSD: 3948, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
+    { name: 'UWC Red Cross Nordic', annualFeesUSD: 38896, annualFeesLocalCurrency: 435000, avgAdditionalCostsUSD: 2799, localCurrency: 'NOK', localCurrencyExchangeRateToUSD: 11.185 },
+    { name: 'UWC Atlantic', annualFeesUSD: 60388, annualFeesLocalCurrency: 46000, avgAdditionalCostsUSD: 2842.65, localCurrency: 'GBP', localCurrencyExchangeRateToUSD: 0.762 },
+    { name: 'UWC East Africa', annualFeesUSD: 34250, annualFeesLocalCurrency: 34250, avgAdditionalCostsUSD: 1710, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
 ];
 
 const currencyList = [
@@ -243,7 +243,7 @@ const ageCriteriaData = [
         "maxAgeCutoff": "2007-07-31"
     },
     {
-        "schoolName": "UWC Pearson College",
+        "schoolName": "Pearson College UWC",
         "minAgeCutoff": "2009-09-02",
         "maxAgeCutoff": "2006-08-31"
     },
@@ -268,7 +268,7 @@ const ageCriteriaData = [
         "maxAgeCutoff": "2007-05-31"
     },
     {
-        "schoolName": "UWC USA",
+        "schoolName": "UWC-USA",
         "minAgeCutoff": "2009-09-02",
         "maxAgeCutoff": "2007-08-31"
     },
@@ -658,11 +658,11 @@ const App = () => {
     // State to manage max scholarship percentages for each school, allowing user adjustments
     const [maxScholarshipPercentages, setMaxScholarshipPercentages] = useState({});
 
-    // Initialize maxScholarshipPercentages on component mount using default values from schoolCostsData
+    // Initialize maxScholarshipPercentages on component mount. It should start at 0%
     useEffect(() => {
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = school.maxScholarshipPercentage * 100; // Store as percentage (0-100)
+            initialPercentages[school.name] = 0; // Initialize scholarship percentage to 0
         });
         setMaxScholarshipPercentages(initialPercentages);
     }, []); // Empty dependency array ensures this runs only once
@@ -690,7 +690,7 @@ const App = () => {
         // Also reset max scholarship percentages to their defaults
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = school.maxScholarshipPercentage * 100;
+            initialPercentages[school.name] = 0;
         });
         setMaxScholarshipPercentages(initialPercentages);
         setActiveTab('general'); // Navigate back to the first tab
@@ -738,7 +738,6 @@ const App = () => {
                 (allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2), // Ensure this calculation is correct for CSV
                 school.finalScholarshipNeededFromSchool,
                 school.maxScholarshipPercentage,
-                school.maxScholarshipLocal,
                 school.maxScholarshipAvailableUSD,
                 `"${school.contributionStatus}"`, // Enclose status in quotes
                 `"${school.ageEligibility}"` // Add age eligibility to CSV row
