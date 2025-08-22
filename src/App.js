@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import html2pdf from 'html2pdf.js';
 import './App.css';
 
 // Embedded data from "FEES AND COSTS.xlsx - Totals school costs.csv"
@@ -464,11 +463,11 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
 };
 
 // Component for the Assessment Results tab - Displays the calculated financial assessment results.
-const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDownloadCsv, pdfContentRef, maxScholarshipPercentages, handleMaxScholarshipChange }) => {
+const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadCsv, maxScholarshipPercentages, handleMaxScholarshipChange }) => {
     return (
         <div className="tab-content">
             <section className="assessment-results">
-                <div ref={pdfContentRef} className="pdf-content">
+                <div className="pdf-content">
                     <h3 className="report-title">Financial Need Assessment Report</h3>
 
                     <section className="summary-section">
@@ -607,15 +606,12 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                 </div>
 
                 <div className="download-buttons">
-                    <button onClick={onDownloadPdf}>Download as PDF</button>
                     <button onClick={onDownloadCsv}>Download as CSV</button>
                 </div>
             </section>
         </div>
     );
 };
-
-// ... (remaining code)
 
 const initialFormData = {
     // ... (existing initial form data)
@@ -653,7 +649,6 @@ const initialFormData = {
 const App = () => {
     const [formData, setFormData] = useState(initialFormData);
     const [activeTab, setActiveTab] = useState('general'); // Manages active tab state
-    const pdfContentRef = useRef(null); // Ref for PDF export
 
     // State to manage max scholarship percentages for each school, allowing user adjustments
     const [maxScholarshipPercentages, setMaxScholarshipPercentages] = useState({});
@@ -698,21 +693,6 @@ const App = () => {
 
     // Calculate all financial results using the custom hook
     const allSchoolResults = useFinancialCalculations(formData, maxScholarshipPercentages);
-
-    // Handles downloading the assessment report as a PDF
-    const handleDownloadPdf = () => {
-        if (pdfContentRef.current) {
-            const element = pdfContentRef.current;
-            const opt = {
-                margin: 1,
-                filename: 'financial_need_assessment_report.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-            html2pdf().from(element).set(opt).save();
-        }
-    };
 
     // Handles exporting the assessment summary to a CSV file
     const handleDownloadCsv = () => {
@@ -1088,9 +1068,7 @@ const App = () => {
                     <AssessmentResultsTab
                         formData={formData}
                         allSchoolResults={allSchoolResults}
-                        onDownloadPdf={handleDownloadPdf}
                         onDownloadCsv={handleDownloadCsv}
-                        pdfContentRef={pdfContentRef}
                         maxScholarshipPercentages={maxScholarshipPercentages}
                         handleMaxScholarshipChange={handleMaxScholarshipChange}
                     />
