@@ -34,6 +34,7 @@ body {
     width: 100%;
     max-width: 900px;
     box-sizing: border-box;
+    margin: auto; /* Added to center the container */
 }
 
 /* Tab navigation styles */
@@ -152,7 +153,9 @@ body {
 
 .summary-section h4 {
     margin-top: 0;
-    color: #004d99;
+    color: #333;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
 }
 
 .summary-section p {
@@ -160,20 +163,23 @@ body {
     font-size: 14px;
 }
 
-/* Table styles for desktop view */
-.results-table-container {
-    overflow-x: auto;
+.schools-section h4 {
+    text-align: center;
+    color: #004d99;
+    font-size: 20px;
+    margin-bottom: 15px;
 }
 
+/* Table styles for desktop view */
 .desktop-view table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
 .desktop-view th, .desktop-view td {
     border: 1px solid #ddd;
-    padding: 10px;
+    padding: 12px;
     text-align: left;
     font-size: 14px;
 }
@@ -189,46 +195,6 @@ body {
 
 .desktop-view tr:hover {
     background-color: #e9e9e9;
-}
-
-/* Styles for Max Scholarship column */
-.scholarship-cell {
-    background-color: #ffffe0; /* Bright, professional color */
-    color: #004d99;
-    text-align: center;
-}
-
-.scholarship-cell input {
-    border-color: #007bff;
-}
-
-/* Max scholarship input styling */
-.max-scholarship-input {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.max-scholarship-input input {
-    width: 50px;
-    margin-right: 5px;
-    text-align: center;
-}
-
-.scholarship-details {
-    font-size: 12px;
-    margin: 5px 0 0 0;
-}
-
-/* Status badge styling */
-.status-badge {
-    display: inline-block;
-    padding: 5px 10px;
-    border-radius: 12px;
-    font-weight: bold;
-    color: #333;
-    font-size: 12px;
-    text-align: center;
 }
 
 /* Mobile card view styles */
@@ -273,43 +239,42 @@ body {
 }
 
 .download-buttons button {
-    background-color: #28a745;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-    margin: 0 5px;
+    margin: 0 10px;
 }
 
-.download-buttons button:hover {
-    background-color: #218838;
+/* Badge styles for status */
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 12px;
+    color: #333;
+    font-weight: bold;
+    text-align: center;
+    display: inline-block;
+    font-size: 12px;
+    white-space: nowrap;
 }
 
-/* Responsive styles for mobile view */
-@media (max-width: 768px) {
-    .desktop-view {
-        display: none;
-    }
+/* Max scholarship input styles */
+.max-scholarship-input {
+    display: flex;
+    align-items: center;
+}
 
-    .mobile-view {
-        display: block;
-    }
+.max-scholarship-input input {
+    width: 60px;
+    margin-right: 5px;
+    text-align: center;
+}
 
-    .max-scholarship-input-mobile {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        flex-grow: 1;
-    }
+.max-scholarship-input-mobile {
+    display: flex;
+    align-items: center;
+}
 
-    .max-scholarship-input-mobile input {
-        width: 60px;
-        margin-right: 5px;
-        text-align: center;
-    }
+.max-scholarship-input-mobile input {
+    width: 60px;
+    margin-right: 5px;
+    text-align: center;
 }
 
 /* PDF-specific styles - these are crucial for print layout */
@@ -345,5 +310,37 @@ body {
     }
     .download-buttons {
         display: none;
+    }
+}
+
+/* Responsive styles for mobile view */
+@media (max-width: 768px) {
+    .desktop-view {
+        display: none;
+    }
+    .mobile-view {
+        display: block;
+    }
+    .form-container {
+        padding: 10px;
+    }
+    .tabs button {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    .input-group label {
+        font-size: 14px;
+    }
+    .input-group input, .input-group select, .input-group textarea {
+        font-size: 14px;
+    }
+    .form-container {
+      max-width: 100%;
+      box-sizing: border-box;
+      padding: 0 10px; /* Adjusted padding to prevent content from being cut off */
+    }
+    .input-group {
+      margin-left: 0;
+      margin-right: 0;
     }
 }
