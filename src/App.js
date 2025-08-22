@@ -762,11 +762,12 @@ const App = () => {
                             <div className="input-group">
                                 <label htmlFor="applicantDob">Applicant's Date of Birth (YYYY-MM-DD):</label>
                                 <input
-                                    type="date"
+                                    type="text"
                                     id="applicantDob"
                                     name="applicantDob"
                                     value={formData.applicantDob}
                                     onChange={handleInputChange}
+                                    placeholder="YYYY-MM-DD"
                                 />
                             </div>
                             <div className="input-group">
