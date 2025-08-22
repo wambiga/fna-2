@@ -295,15 +295,15 @@ body {
     .desktop-view table {
         width: 100%;
         table-layout: fixed; /* This is crucial for fixing column widths */
-        font-size: 8px; /* Reduce font size to fit more content */
+        font-size: 7px; /* Reduced font size to fit more content */
     }
     .desktop-view th, .desktop-view td {
-        padding: 2px;
+        padding: 1px; /* Reduced padding */
         word-wrap: break-word; /* Prevents overflow */
     }
     .desktop-view .status-badge,
     .desktop-view .scholarship-details {
-        font-size: 7px;
+        font-size: 6px; /* Further reduced font size for badges and details */
     }
     .mobile-view, .tabs, .button-group, .reset-button-container {
         display: none;
