@@ -501,10 +501,10 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadCsv, maxSc
                         <h4>General Application Details</h4>
                         {/* Display Applicant Name and Date of Birth from formData */}
                         <p><strong>Applicant Name:</strong> {formData.applicantName || 'N/A'}</p>
-                        <p><strong>Date of Birth:</strong> {formData.applicantDob || 'N/A'}</p>
+                        <p><strong>Date of Birth:</strong> {formatDateDdMmYyyy(formData.applicantDob) || 'N/A'}</p>
                         <p><strong>National Currency Symbol:</strong> {formData.ncCurrencySymbol || 'N/A'}</p>
                         <p><strong>Exchange Rate (1 USD = X NC Currency):</strong> {formData.exchangeRateToUSD || 'N/A'}</p>
-                        <p><strong>Date of Exchange Rate:</strong> {formData.exchangeRateDate || 'N/A'}</p>
+                        <p><strong>Date of Exchange Rate:</strong> {formatDateDdMmYyyy(formData.exchangeRateDate) || 'N/A'}</p>
                         <p><strong>Annual Return on Assets (%):</strong> {getNum(formData.annualReturnOnAssets * 100).toFixed(2) || '0.00'}%</p>
                         <p><strong>Annual Travel Cost (USD):</strong> ${getNum(formData.annualTravelCostUSD).toFixed(2) || '0.00'}</p>
                     </section>
