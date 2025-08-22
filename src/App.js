@@ -284,6 +284,32 @@ const getNum = (value) => {
     return isNaN(num) ? 0 : num;
 };
 
+// Helper function to parse a DD-MM-YYYY date string into a Date object.
+const parseDateDdMmYyyy = (dateString) => {
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+        // Rearrange to YYYY-MM-DD for reliable Date object creation
+        const [day, month, year] = parts;
+        const isoString = `${year}-${month}-${day}`;
+        const date = new Date(isoString);
+        // Check if the date is valid (e.g., prevents "31-02-2023")
+        if (!isNaN(date.getTime()) && date.toISOString().slice(0, 10) === isoString) {
+            return date;
+        }
+    }
+    return null;
+};
+
+// Helper function to format a Date object or YYYY-MM-DD string to DD-MM-YYYY format for display
+const formatDateDdMmYyyy = (date) => {
+    if (!date) return '';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const year = dateObj.getFullYear();
+    return `${day}-${month}-${year}`;
+};
+
 // Helper function to convert National Currency (NC) to USD using the provided exchange rate.
 const convertNcToUsd = (valueInNcCurrency, exchangeRate) => {
     if (exchangeRate <= 0) {
@@ -294,11 +320,12 @@ const convertNcToUsd = (valueInNcCurrency, exchangeRate) => {
 
 // Function to check applicant's age eligibility against school-specific criteria.
 const checkAgeEligibility = (dob, schoolAgeCriteria) => {
-    if (!dob) {
+    const applicantDob = parseDateDdMmYyyy(dob);
+
+    if (!applicantDob) {
         return 'N/A'; // No date of birth provided, cannot assess
     }
 
-    const applicantDob = new Date(dob);
     const minCutoffDate = new Date(schoolAgeCriteria.minAgeCutoff);
     const maxCutoffDate = new Date(schoolAgeCriteria.maxAgeCutoff);
 
@@ -760,14 +787,14 @@ const App = () => {
                                 />
                             </div>
                             <div className="input-group">
-                                <label htmlFor="applicantDob">Applicant's Date of Birth (YYYY-MM-DD):</label>
+                                <label htmlFor="applicantDob">Applicant's Date of Birth (DD-MM-YYYY):</label>
                                 <input
                                     type="text"
                                     id="applicantDob"
                                     name="applicantDob"
                                     value={formData.applicantDob}
                                     onChange={handleInputChange}
-                                    placeholder="YYYY-MM-DD"
+                                    placeholder="DD-MM-YYYY"
                                 />
                             </div>
                             <div className="input-group">
@@ -790,12 +817,13 @@ const App = () => {
                                 />
                             </div>
                             <div className="input-group">
-                                <label>Date of Exchange Rate (YYYY-MM-DD):</label>
+                                <label>Date of Exchange Rate (DD-MM-YYYY):</label>
                                 <input
-                                    type="date"
+                                    type="text"
                                     name="exchangeRateDate"
                                     value={formData.exchangeRateDate}
                                     onChange={handleInputChange}
+                                    placeholder="DD-MM-YYYY"
                                 />
                             </div>
                             <div className="input-group">
