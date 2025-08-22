@@ -400,35 +400,43 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
 
         // Calculate results for each UWC school
         const calculatedSchoolResults = schoolCostsData.map(school => {
-            const annualFeesUSD = school.annualFeesUSD;
-            const twoYearFeesInUSD = annualFeesUSD * 2;
-            const totalAllInclusiveCostTwoYearsUSD = twoYearFeesInUSD + (school.avgAdditionalCostsUSD * 2) + getNum(annualTravelCostUSD) + getNum(potentialLoanAmount);
-            const totalGrossAnnualCostOfAttendanceUSD = (annualFeesUSD + school.avgAdditionalCostsUSD) + (getNum(annualTravelCostUSD) / 2);
-
-            // Updated line: Use the percentage from state directly, converting to a decimal
+            const schoolAnnualFeesUSD = school.annualFeesUSD;
+            const schoolAvgAdditionalCostsUSD = school.avgAdditionalCostsUSD;
+            
+            // Get the scholarship percentage for the current school from state
             const maxScholarshipPercentage = getNum(maxScholarshipPercentages[school.name]) / 100;
-
-            const maxScholarshipFromSchoolUSD = twoYearFeesInUSD * maxScholarshipPercentage;
-            const maxScholarshipLocal = school.localCurrencyExchangeRateToUSD > 0
-                ? twoYearFeesInUSD * maxScholarshipPercentage * school.localCurrencyExchangeRateToUSD
-                : 0;
+            // Calculate maximum scholarship available from the school in local currency over two years
+            const maxScholarshipLocal = (school.annualFeesLocalCurrency * 2) * maxScholarshipPercentage;
+            // Convert maximum scholarship from local currency to USD
+            const maxScholarshipFromSchoolUSD = maxScholarshipLocal / school.localCurrencyExchangeRateToUSD;
+            
+            // Calculate total annual cost of attendance, including travel
+            const totalGrossAnnualCostOfAttendanceUSD = getNum(schoolAnnualFeesUSD) + getNum(schoolAvgAdditionalCostsUSD) + getNum(annualTravelCostUSD);
+            // Calculate total cost over two years
+            const totalAllInclusiveCostTwoYearsUSD = totalGrossAnnualCostOfAttendanceUSD * 2;
+            
+            // Calculate the total scholarship needed from all sources
             const totalScholarshipNeeded = totalAllInclusiveCostTwoYearsUSD - finalUwcFamilyContributionTwoYears - getNum(potentialLoanAmount);
+            // Calculate the final scholarship needed specifically from the UWC school
             const finalScholarshipNeededFromSchool = Math.max(0, totalScholarshipNeeded - getNum(ncScholarshipProvidedTwoYearsUSD));
-
+            
             let contributionStatus = '';
             let contributionColor = '';
             let shortfall = 0;
 
+            // Determine funding status and color code
             if (finalScholarshipNeededFromSchool <= maxScholarshipFromSchoolUSD) {
-                contributionStatus = 'Fully Funded';
-                contributionColor = '#d4edda';
-                shortfall = 0;
+                shortfall = maxScholarshipFromSchoolUSD - finalScholarshipNeededFromSchool;
+                contributionStatus = `Surplus of $${shortfall.toFixed(2)}`;
+                contributionColor = '#d4edda'; // Light green for surplus
             } else {
                 shortfall = finalScholarshipNeededFromSchool - maxScholarshipFromSchoolUSD;
                 contributionStatus = `Shortfall of $${shortfall.toFixed(2)}`;
-                contributionColor = '#f8d7da';
+                contributionColor = '#f8d7da'; // Light red for shortfall
             }
 
+            // Get age eligibility for the current school using the checkAgeEligibility function
+            // Find the corresponding age criteria for the current school
             const ageCriteriaForSchool = ageCriteriaData.find(ac => ac.schoolName === school.name);
             const ageEligibility = ageCriteriaForSchool ? checkAgeEligibility(applicantDob, ageCriteriaForSchool) : 'N/A';
 
@@ -444,10 +452,11 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
                 contributionStatus,
                 contributionColor,
                 shortfall: shortfall.toFixed(2),
-                ageEligibility,
+                ageEligibility, // Include age eligibility in the results for display
             };
         });
 
+        // Return all calculated financial results
         return {
             totalAnnualIncome: totalAnnualIncome.toFixed(2),
             totalFamilyAssetsUSD: totalFamilyAssetsUSD.toFixed(2),
@@ -459,12 +468,12 @@ const useFinancialCalculations = (formData, maxScholarshipPercentages) => {
             potentialLoanAmount: getNum(formData.potentialLoanAmount).toFixed(2),
             allSchoolResults: calculatedSchoolResults,
         };
-    }, [formData, maxScholarshipPercentages]);
+    }, [formData, maxScholarshipPercentages]); // Re-run memoization if formData or maxScholarshipPercentages change
 
     return allSchoolResults;
 };
 
-// Component for the Assessment Results tab
+// Component for the Assessment Results tab - Displays the calculated financial assessment results.
 const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDownloadCsv, pdfContentRef, maxScholarshipPercentages, handleMaxScholarshipChange }) => {
     return (
         <div className="tab-content">
@@ -473,35 +482,38 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                     <h3 className="report-title">Financial Need Assessment Report</h3>
                     <section className="summary-section">
                         <h4>General Application Details</h4>
+                        {/* Display Applicant Name and Date of Birth from formData */}
                         <p><strong>Applicant Name:</strong> {formData.applicantName || 'N/A'}</p>
                         <p><strong>Date of Birth:</strong> {formData.applicantDob || 'N/A'}</p>
                         <p><strong>National Currency Symbol:</strong> {formData.ncCurrencySymbol || 'N/A'}</p>
                         <p><strong>Exchange Rate (1 USD = X NC Currency):</strong> {formData.exchangeRateToUSD || 'N/A'}</p>
                         <p><strong>Exchange Rate Date:</strong> {formData.exchangeRateDate || 'N/A'}</p>
-                        <p><strong>Annual Return on Assets (%):</strong> {getNum(formData.annualReturnOnAssets) * 100}%</p>
+                        <p><strong>Annual Return on Assets (%):</strong> {(formData.annualReturnOnAssets * 100).toFixed(2)}%</p>
                         <p><strong>Annual Travel Cost (USD):</strong> ${getNum(formData.annualTravelCostUSD).toFixed(2)}</p>
                     </section>
                     <section className="summary-section">
                         <h4>Family Financial Summary (USD)</h4>
-                        <p><strong>Assessed Funds Available for Fees (2 Years):</strong> ${allSchoolResults.uwcFamilyContributionRequiredUSD}</p>
+                        <p><strong>Assessed Funds Available for Fees (2 Years):</strong> ${getNum(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</p>
                         <p><strong>Current School Fees for Applicant (for discussion):</strong> ${allSchoolResults.currentSchoolFeesUSD.toFixed(2)} per year</p>
                         <p><strong>Scholarship from NC (2 years):</strong> ${getNum(formData.ncScholarshipProvidedTwoYearsUSD).toFixed(2)}</p>
-                        <p><strong>Potential Loan Amount (2 years):</strong> ${getNum(formData.potentialLoanAmount).toFixed(2)}</p>
+                        <p><strong>Potential Loan Amount (2 years):</strong> ${getNum(allSchoolResults.potentialLoanAmount).toFixed(2)}</p>
                     </section>
-                    <section className="details-section">
+
+                    <section className="schools-section">
                         <h4>School-Specific Assessment Breakdown</h4>
-                        {/* Desktop Table View (visible on larger screens) */}
-                        <div className="desktop-view">
+
+                        {/* Desktop Table View (visible on large screens) */}
+                        <div className="table-container desktop-view">
                             <table>
                                 <thead>
                                     <tr>
                                         <th>School</th>
-                                        <th>Total All-Inclusive Cost (2 years)</th>
-                                        <th>Assessed Funds Available for Fees (2 years)</th>
-                                        <th>Final Scholarship Needed From School (2 years)</th>
-                                        <th>Max Scholarship Available</th>
-                                        <th>Financial Contribution Status</th>
-                                        <th>Age Eligibility</th>
+                                        <th>All-inclusive cost (2 years)</th>
+                                        <th>Funds available for fees (2 years)</th>
+                                        <th>Scholarship Needed (2 years)</th>
+                                        <th>Max Scholarship (2 years)</th>
+                                        <th>Shortfall/Surplus</th>
+                                        <th>Age Eligibility</th> {/* Added Age Eligibility header for desktop table */}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -515,7 +527,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                                                 <div className="max-scholarship-input">
                                                     <input
                                                         type="number"
-                                                        value={maxScholarshipPercentages[school.name]}
+                                                        value={school.maxScholarshipPercentage}
                                                         onChange={(e) => handleMaxScholarshipChange(school.schoolName, e.target.value)}
                                                         min="0"
                                                         max="100"
@@ -532,6 +544,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                                                 </span>
                                             </td>
                                             <td>
+                                                {/* Display Age Eligibility with color coding for desktop */}
                                                 <span className="status-badge" style={{ backgroundColor: school.ageEligibility === 'Eligible' ? '#d4edda' : (school.ageEligibility === 'Not Eligible' ? '#f8d7da' : 'grey') }}>
                                                     {school.ageEligibility}
                                                 </span>
@@ -541,6 +554,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                                 </tbody>
                             </table>
                         </div>
+
                         {/* Mobile Card View (visible on small screens) */}
                         <div className="mobile-view">
                             <div className="school-card-list">
@@ -551,48 +565,45 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                                             <span className="card-value">{school.schoolName}</span>
                                         </div>
                                         <div className="card-item">
-                                            <span className="card-label">Total Cost (2 years):</span>
+                                            <span className="card-label">All-inclusive cost (2 years):</span>
                                             <span className="card-value">${school.totalAllInclusiveCostTwoYearsUSD}</span>
                                         </div>
                                         <div className="card-item">
-                                            <span className="card-label">Your Contribution (2 years):</span>
+                                            <span className="card-label">Funds available for fees (2 years):</span>
                                             <span className="card-value">${(allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2)}</span>
                                         </div>
                                         <div className="card-item">
-                                            <span className="card-label">Scholarship Needed:</span>
+                                            <span className="card-label">Scholarship Needed (2 years):</span>
                                             <span className="card-value">${school.finalScholarshipNeededFromSchool}</span>
                                         </div>
                                         <div className="card-item">
-                                            <span className="card-label">Max Scholarship Available:</span>
-                                            <div className="card-value max-scholarship-input-mobile">
-                                                <input
-                                                    type="number"
-                                                    value={maxScholarshipPercentages[school.name]}
-                                                    onChange={(e) => handleMaxScholarshipChange(school.schoolName, e.target.value)}
-                                                    min="0"
-                                                    max="100"
-                                                />
-                                                <span>% of fees</span>
-                                            </div>
+                                            <span className="card-label">Max Scholarship (2 years):</span>
+                                            <span className="card-value">
+                                                <div className="max-scholarship-input-mobile">
+                                                    <input
+                                                        type="number"
+                                                        value={school.maxScholarshipPercentage}
+                                                        onChange={(e) => handleMaxScholarshipChange(school.schoolName, e.target.value)}
+                                                        min="0"
+                                                        max="100"
+                                                    />
+                                                    <span>% of fees</span>
+                                                </div>
+                                            </span>
                                         </div>
                                         <div className="card-item">
-                                            <span className="card-label">Details:</span>
+                                            <span className="card-label">Max Scholarship Details:</span>
                                             <span className="card-value scholarship-details">
                                                 (~ {school.localCurrencySymbol} {school.maxScholarshipLocal}) = ${school.maxScholarshipAvailableUSD} USD
                                             </span>
                                         </div>
-                                        <div className="card-item">
-                                            <span className="card-label">Status:</span>
-                                            <span className="card-value status-badge" style={{ backgroundColor: school.contributionColor }}>
-                                                {school.contributionStatus}
-                                            </span>
-                                        </div>
-                                        <div className="card-item">
-                                            <span className="card-label">Age Eligibility:</span>
-                                            <span className="card-value status-badge" style={{ backgroundColor: school.ageEligibility === 'Eligible' ? '#d4edda' : (school.ageEligibility === 'Not Eligible' ? '#f8d7da' : 'grey') }}>
-                                                {school.ageEligibility}
-                                            </span>
-                                        </div>
+                                        <span className="status-badge" style={{ backgroundColor: school.contributionColor }}>
+                                            {school.contributionStatus}
+                                        </span>
+                                        {/* Display Age Eligibility in mobile view with color coding */}
+                                        <span className="status-badge" style={{ backgroundColor: school.ageEligibility === 'Eligible' ? '#d4edda' : (school.ageEligibility === 'Not Eligible' ? '#f8d7da' : 'grey') }}>
+                                            {school.ageEligibility}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
@@ -600,252 +611,99 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadPdf, onDow
                     </section>
                 </div>
                 <div className="download-buttons">
-                    <button onClick={onDownloadPdf}>Download PDF Report</button>
-                    <button onClick={onDownloadCsv}>Download CSV Summary</button>
+                    <button onClick={onDownloadPdf}>Download as PDF</button>
+                    <button onClick={onDownloadCsv}>Export to CSV</button>
                 </div>
             </section>
         </div>
     );
 };
 
-// Component for the General Info tab
-const GeneralInfoTab = ({ formData, handleInputChange, setActiveTab }) => {
-    return (
-        <div className="tab-content">
-            <div className="form-section">
-                <h3>General Information</h3>
-                <div className="input-group">
-                    <label htmlFor="applicantName">Applicant's Full Name:</label>
-                    <input type="text" id="applicantName" name="applicantName" value={formData.applicantName} onChange={handleInputChange} placeholder="e.g., John Doe" />
-                </div>
-                <div className="input-group">
-                    <label htmlFor="applicantDob">Applicant's Date of Birth (YYYY-MM-DD):</label>
-                    <input type="date" id="applicantDob" name="applicantDob" value={formData.applicantDob} onChange={handleInputChange} />
-                </div>
-                <div className="input-group">
-                    <label>National Currency Symbol:</label>
-                    <select name="ncCurrencySymbol" value={formData.ncCurrencySymbol} onChange={handleInputChange}>
-                        {currencyList.map(currency => (
-                            <option key={currency.abbr} value={currency.abbr}>{currency.abbr} ({currency.symbol})</option>
-                        ))}
-                    </select>
-                </div>
-                <div className="input-group">
-                    <label>Exchange Rate (1 USD = X NC Currency):</label>
-                    <input type="number" name="exchangeRateToUSD" value={formData.exchangeRateToUSD} onChange={handleInputChange} placeholder="e.g., 129.5" step="0.01" />
-                </div>
-                <div className="input-group">
-                    <label>Date of Exchange Rate (YYYY-MM-DD):</label>
-                    <input type="date" name="exchangeRateDate" value={formData.exchangeRateDate} onChange={handleInputChange} />
-                </div>
-                <div className="input-group">
-                    <label>Annual Return on Assets (%):</label>
-                    <input type="number" name="annualReturnOnAssets" value={formData.annualReturnOnAssets * 100} onChange={e => handleInputChange({ target: { name: 'annualReturnOnAssets', value: parseFloat(e.target.value) / 100 } })} placeholder="e.g., 5" step="0.1" />
-                </div>
-                <div className="input-group">
-                    <label>Annual Travel Cost (USD):</label>
-                    <input type="number" name="annualTravelCostUSD" value={formData.annualTravelCostUSD} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-            </div>
-            <div className="button-group">
-                <button onClick={() => setActiveTab('parent')}>Next</button>
-            </div>
-        </div>
-    );
-};
-
-// Component for the Parent/Guardian tab
-const ParentGuardianTab = ({ formData, handleInputChange, setActiveTab }) => {
-    return (
-        <div className="tab-content">
-            <div className="form-section">
-                <h3>Parent/Guardian Financials</h3>
-                <h4>Income (National Currency)</h4>
-                <div className="input-group">
-                    <label>Annual Income of Primary Parent:</label>
-                    <input type="number" name="pg1AnnualIncomePrimaryParent" value={formData.pg1AnnualIncomePrimaryParent} onChange={handleInputChange} placeholder="e.g., 5000000" />
-                </div>
-                <div className="input-group">
-                    <label>Annual Income of Other Parent:</label>
-                    <input type="number" name="pg1AnnualIncomeOtherParent" value={formData.pg1AnnualIncomeOtherParent} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label>Annual Benefits:</label>
-                    <input type="number" name="pg1AnnualBenefits" value={formData.pg1AnnualBenefits} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label>Other Annual Income:</label>
-                    <input type="number" name="pg1OtherAnnualIncome" value={formData.pg1OtherAnnualIncome} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label>Net Income from Other Properties:</label>
-                    <input type="number" name="otherPropertiesNetIncome" value={formData.otherPropertiesNetIncome} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label>Net Income from Assets in Another Country:</label>
-                    <input type="number" name="assetsAnotherCountryNetIncome" value={formData.assetsAnotherCountryNetIncome} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <h4>Assets (National Currency)</h4>
-                <div className="input-group">
-                    <label>Cash and Savings:</label>
-                    <input type="number" name="pg1CashSavings" value={formData.pg1CashSavings} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label>Other Assets:</label>
-                    <input type="number" name="pg1OtherAssets" value={formData.pg1OtherAssets} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label>Home Market Value:</label>
-                    <input type="number" name="pg1HomeMarketValue" value={formData.pg1HomeMarketValue} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label>Home Outstanding Mortgage:</label>
-                    <input type="number" name="pg1HomeOutstandingMortgage" value={formData.pg1HomeOutstandingMortgage} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <h4>Expenses (National Currency)</h4>
-                <div className="input-group">
-                    <label>Total Annual Living Expenses:</label>
-                    <input type="number" name="totalAnnualLivingExpensesNC" value={formData.totalAnnualLivingExpensesNC} onChange={handleInputChange} placeholder="e.g., 2000000" />
-                </div>
-                <div className="input-group">
-                    <label>Annual School Fees for Other Children:</label>
-                    <input type="number" name="annualSchoolFeesForOtherChildren" value={formData.annualSchoolFeesForOtherChildren} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label>Annual School Fees for Non-Dependent Children:</label>
-                    <input type="number" name="annualSchoolFeesForNonDependentChildren" value={formData.annualSchoolFeesForNonDependentChildren} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label>Current School Fees for Applicant:</label>
-                    <input type="number" name="currentSchoolFees" value={formData.currentSchoolFees} onChange={handleInputChange} placeholder="For discussion purposes" />
-                </div>
-            </div>
-            <div className="button-group">
-                <button onClick={() => setActiveTab('general')}>Back</button>
-                <button onClick={() => setActiveTab('student')}>Next</button>
-            </div>
-        </div>
-    );
-};
-
-// Component for the Student tab
-const StudentTab = ({ formData, handleInputChange, setActiveTab }) => {
-    return (
-        <div className="tab-content">
-            <div className="form-section">
-                <h3>Student Financials</h3>
-                <div className="input-group">
-                    <label>Student's Annual Income (National Currency):</label>
-                    <input type="number" name="pg2StudentAnnualIncome" value={formData.pg2StudentAnnualIncome} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label>Student's Cash/Savings (National Currency):</label>
-                    <input type="number" name="pg2StudentCashSavings" value={formData.pg2StudentCashSavings} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label>Student's Other Assets (National Currency):</label>
-                    <input type="number" name="pg2StudentOtherAssets" value={formData.pg2StudentOtherAssets} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <h4>Other Information</h4>
-                <div className="input-group">
-                    <label>Scholarship Provided by National Committee (2 years, USD):</label>
-                    <input type="number" name="ncScholarshipProvidedTwoYearsUSD" value={formData.ncScholarshipProvidedTwoYearsUSD} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label>Potential Loan Amount (2 years, USD):</label>
-                    <input type="number" name="potentialLoanAmount" value={formData.potentialLoanAmount} onChange={handleInputChange} placeholder="Optional" />
-                </div>
-                <div className="input-group">
-                    <label htmlFor="unusualCircumstances">Unusual Circumstances:</label>
-                    <textarea id="unusualCircumstances" name="unusualCircumstances" value={formData.unusualCircumstances} onChange={handleInputChange} rows="3" placeholder="e.g., 'Recent job loss due to economic changes,' or 'Significant medical expenses.'" />
-                </div>
-                <div className="input-group">
-                    <label htmlFor="pg1JobNotes">Parent/Guardian Job Notes:</label>
-                    <textarea id="pg1JobNotes" name="pg1JobNotes" value={formData.pg1JobNotes} onChange={handleInputChange} rows="3" placeholder="e.g., 'Primary parent is a freelancer with fluctuating income.'" />
-                </div>
-            </div>
-            <div className="button-group">
-                <button onClick={() => setActiveTab('parent')}>Back</button>
-                <button onClick={() => setActiveTab('results')}>View Assessment Results</button>
-            </div>
-        </div>
-    );
-};
-
-// Initial state for the form data
+// Initial form data structure for all input fields.
 const initialFormData = {
-    applicantName: '',
-    applicantDob: '',
+    applicantName: '', // New: Applicant's Full Name
+    applicantDob: '', // New: Applicant's Date of Birth
     ncCurrencySymbol: 'USD',
-    exchangeRateToUSD: 1,
-    exchangeRateDate: '',
-    annualReturnOnAssets: 0.0,
-    annualTravelCostUSD: 0,
+    exchangeRateToUSD: 1.0,
+    exchangeRateDate: new Date().toISOString().split('T')[0],
+    annualReturnOnAssets: 0,
+    pg1NumberIndependentAdults: 0,
+    pg1NumberFinancialDependents: 0,
+    annualSchoolFeesForOtherChildren: 0,
+    annualSchoolFeesForNonDependentChildren: 0,
+    currentSchoolFees: 0,
     pg1AnnualIncomePrimaryParent: 0,
     pg1AnnualIncomeOtherParent: 0,
     pg1AnnualBenefits: 0,
     pg1OtherAnnualIncome: 0,
-    otherPropertiesNetIncome: 0,
-    assetsAnotherCountryNetIncome: 0,
     pg1CashSavings: 0,
     pg1OtherAssets: 0,
     pg1HomeMarketValue: 0,
     pg1HomeOutstandingMortgage: 0,
-    totalAnnualLivingExpensesNC: 0,
-    annualSchoolFeesForOtherChildren: 0,
-    annualSchoolFeesForNonDependentChildren: 0,
-    currentSchoolFees: 0,
+    otherPropertiesNetIncome: 0,
+    assetsAnotherCountryNetIncome: 0,
     pg2StudentAnnualIncome: 0,
     pg2StudentCashSavings: 0,
     pg2StudentOtherAssets: 0,
+    annualTravelCostUSD: 0,
     ncScholarshipProvidedTwoYearsUSD: 0,
+    totalAnnualLivingExpensesNC: 0,
     potentialLoanAmount: 0,
     unusualCircumstances: '',
-    pg1JobNotes: '',
+    pg1JobNotes: '', // Added for Parent/Guardian notes
 };
 
 // Main App component
 const App = () => {
     const [formData, setFormData] = useState(initialFormData);
-    const [activeTab, setActiveTab] = useState('general');
-    const pdfContentRef = useRef(null);
+    const [activeTab, setActiveTab] = useState('general'); // Manages active tab state
+    const pdfContentRef = useRef(null); // Ref for PDF export
+
+    // State to manage max scholarship percentages for each school, allowing user adjustments
     const [maxScholarshipPercentages, setMaxScholarshipPercentages] = useState({});
 
+    // Initialize maxScholarshipPercentages on component mount using default values from schoolCostsData
     useEffect(() => {
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
-            initialPercentages[school.name] = school.maxScholarshipPercentage * 100;
+            initialPercentages[school.name] = school.maxScholarshipPercentage * 100; // Store as percentage (0-100)
         });
         setMaxScholarshipPercentages(initialPercentages);
-    }, []);
+    }, []); // Empty dependency array ensures this runs only once
 
+    // Generic handler for form input changes
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prevData => ({
             ...prevData,
-            [name]: type === 'checkbox' ? checked : value,
+            [name]: type === 'checkbox' ? checked : value, // Handle checkbox values appropriately
         }));
     };
 
+    // Handler for changing individual school's max scholarship percentage
     const handleMaxScholarshipChange = (schoolName, value) => {
         setMaxScholarshipPercentages(prevPercentages => ({
             ...prevPercentages,
-            [schoolName]: value,
+            [schoolName]: value, // Update specific school's percentage
         }));
     };
 
+    // Resets all form fields to their initial state
     const handleResetForm = () => {
         setFormData(initialFormData);
+        // Also reset max scholarship percentages to their defaults
         const initialPercentages = {};
         schoolCostsData.forEach(school => {
             initialPercentages[school.name] = school.maxScholarshipPercentage * 100;
         });
         setMaxScholarshipPercentages(initialPercentages);
-        setActiveTab('general');
+        setActiveTab('general'); // Navigate back to the first tab
     };
 
+    // Calculate all financial results using the custom hook
     const allSchoolResults = useFinancialCalculations(formData, maxScholarshipPercentages);
 
+    // Handles downloading the assessment report as a PDF
     const handleDownloadPdf = () => {
         if (pdfContentRef.current) {
             const element = pdfContentRef.current;
@@ -860,40 +718,43 @@ const App = () => {
         }
     };
 
+    // Handles exporting the assessment summary to a CSV file
     const handleDownloadCsv = () => {
         const data = allSchoolResults.allSchoolResults;
-        if (!data || data.length === 0) {
-            alert("No data to export.");
-            return;
-        }
+        if (!data || data.length === 0) return; // Exit if no data
 
+        // Define CSV headers
         const headers = [
             "School",
-            "Total All-Inclusive Cost (2 years, USD)",
-            "Assessed Funds Available for Fees (2 years, USD)",
-            "Final Scholarship Needed From School (2 years, USD)",
+            "All-inclusive cost (2 years) (USD)",
+            "Funds available for fees (2 years) (USD)",
+            "Scholarship Needed (2 years) (USD)",
             "Max Scholarship Percentage (%)",
             "Max Scholarship Available (Local)",
             "Max Scholarship Available (USD)",
-            "Financial Contribution Status",
-            "Age Eligibility",
+            "Shortfall/Surplus",
+            "Age Eligibility", // Added to CSV headers
         ];
 
+        // Map school results data to CSV rows
         const csvContent = [
-            headers.join(','),
-            ...data.map(school => [
-                `"${school.schoolName}"`,
-                school.totalAllInclusiveCostTwoYearsUSD,
-                (allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2),
-                school.finalScholarshipNeededFromSchool,
-                school.maxScholarshipPercentage,
-                school.maxScholarshipLocal,
-                school.maxScholarshipAvailableUSD,
-                `"${school.contributionStatus}"`,
-                `"${school.ageEligibility}"`
-            ].join(','))
-        ].join('\n');
+            headers.join(','), // Join headers with commas
+            ...data.map(school =>
+                [
+                    `"${school.schoolName}"`, // Enclose school name in quotes for safety
+                    school.totalAllInclusiveCostTwoYearsUSD,
+                    (allSchoolResults.uwcFamilyContributionRequiredUSD * 2).toFixed(2), // Ensure this calculation is correct for CSV
+                    school.finalScholarshipNeededFromSchool,
+                    school.maxScholarshipPercentage,
+                    school.maxScholarshipLocal,
+                    school.maxScholarshipAvailableUSD,
+                    `"${school.contributionStatus}"`, // Enclose status in quotes
+                    `"${school.ageEligibility}"` // Add age eligibility to CSV row
+                ].join(',')
+            )
+        ].join('\n'); // Join all rows with newlines
 
+        // Create a Blob and a download link for the CSV
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         if (link.download !== undefined) {
@@ -907,14 +768,174 @@ const App = () => {
         }
     };
 
+    // Renders content based on the active tab
     const renderTabContent = () => {
         switch (activeTab) {
             case 'general':
-                return <GeneralInfoTab formData={formData} handleInputChange={handleInputChange} setActiveTab={setActiveTab} />;
+                return (
+                    <div className="tab-content">
+                        <div className="form-section">
+                            <h3>General Information</h3>
+                            {/* Applicant Name and Date of Birth Fields - New inputs */}
+                            <div className="input-group">
+                                <label htmlFor="applicantName">Applicant's Full Name:</label>
+                                <input type="text" id="applicantName" name="applicantName" value={formData.applicantName} onChange={handleInputChange} placeholder="e.g., John Doe" />
+                            </div>
+                            <div className="input-group">
+                                <label htmlFor="applicantDob">Applicant's Date of Birth (YYYY-MM-DD):</label>
+                                <input type="date" id="applicantDob" name="applicantDob" value={formData.applicantDob} onChange={handleInputChange} />
+                            </div>
+                            <div className="input-group">
+                                <label>National Currency Symbol:</label>
+                                <select name="ncCurrencySymbol" value={formData.ncCurrencySymbol} onChange={handleInputChange}>
+                                    {currencyList.map(currency => (
+                                        <option key={currency.abbr} value={currency.abbr}>{currency.abbr} ({currency.symbol})</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="input-group">
+                                <label>Exchange Rate (1 USD = X NC Currency):</label>
+                                <input type="number" name="exchangeRateToUSD" value={formData.exchangeRateToUSD} onChange={handleInputChange} placeholder="e.g., 129.5" step="0.01" />
+                            </div>
+                            <div className="input-group">
+                                <label>Date of Exchange Rate (YYYY-MM-DD):</label>
+                                <input type="date" name="exchangeRateDate" value={formData.exchangeRateDate} onChange={handleInputChange} />
+                            </div>
+                            <div className="input-group">
+                                <label>Annual Return on Assets (%):</label>
+                                <input type="number" name="annualReturnOnAssets" value={formData.annualReturnOnAssets * 100} onChange={e => handleInputChange({ target: { name: 'annualReturnOnAssets', value: parseFloat(e.target.value) / 100 } })} placeholder="e.g., 5" />
+                            </div>
+                            <div className="input-group">
+                                <label>Annual Travel Cost to UWC (USD):</label>
+                                <input type="number" name="annualTravelCostUSD" value={formData.annualTravelCostUSD} onChange={handleInputChange} placeholder="e.g., 1200" />
+                            </div>
+                        </div>
+                        <div className="button-group">
+                            <button onClick={() => setActiveTab('parent')}>Next: Parent/Guardian Info</button>
+                        </div>
+                    </div>
+                );
             case 'parent':
-                return <ParentGuardianTab formData={formData} handleInputChange={handleInputChange} setActiveTab={setActiveTab} />;
+                return (
+                    <div className="tab-content">
+                        <div className="form-section">
+                            <h3>Parent/Guardian Financial Information (NC)</h3>
+                            <div className="input-group">
+                                <label>Number of Independent Adults:</label>
+                                <input type="number" name="pg1NumberIndependentAdults" value={formData.pg1NumberIndependentAdults} onChange={handleInputChange} />
+                            </div>
+                            <div className="input-group">
+                                <label>Number of Financial Dependents:</label>
+                                <input type="number" name="pg1NumberFinancialDependents" value={formData.pg1NumberFinancialDependents} onChange={handleInputChange} />
+                            </div>
+                            <h4>Income (National Currency)</h4>
+                            <div className="input-group">
+                                <label>Annual Income of Primary Parent:</label>
+                                <input type="number" name="pg1AnnualIncomePrimaryParent" value={formData.pg1AnnualIncomePrimaryParent} onChange={handleInputChange} placeholder="e.g., 5000000" />
+                            </div>
+                            <div className="input-group">
+                                <label>Annual Income of Other Parent:</label>
+                                <input type="number" name="pg1AnnualIncomeOtherParent" value={formData.pg1AnnualIncomeOtherParent} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Annual Benefits:</label>
+                                <input type="number" name="pg1AnnualBenefits" value={formData.pg1AnnualBenefits} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Other Annual Income:</label>
+                                <input type="number" name="pg1OtherAnnualIncome" value={formData.pg1OtherAnnualIncome} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Net Income from Other Properties:</label>
+                                <input type="number" name="otherPropertiesNetIncome" value={formData.otherPropertiesNetIncome} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Net Income from Assets in Another Country:</label>
+                                <input type="number" name="assetsAnotherCountryNetIncome" value={formData.assetsAnotherCountryNetIncome} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <h4>Assets (National Currency)</h4>
+                            <div className="input-group">
+                                <label>Cash and Savings:</label>
+                                <input type="number" name="pg1CashSavings" value={formData.pg1CashSavings} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Other Assets:</label>
+                                <input type="number" name="pg1OtherAssets" value={formData.pg1OtherAssets} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Home Market Value:</label>
+                                <input type="number" name="pg1HomeMarketValue" value={formData.pg1HomeMarketValue} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Home Outstanding Mortgage:</label>
+                                <input type="number" name="pg1HomeOutstandingMortgage" value={formData.pg1HomeOutstandingMortgage} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <h4>Annual Expenses (National Currency)</h4>
+                            <div className="input-group">
+                                <label>Total Annual Living Expenses:</label>
+                                <input type="number" name="totalAnnualLivingExpensesNC" value={formData.totalAnnualLivingExpensesNC} onChange={handleInputChange} placeholder="e.g., 1000000" />
+                            </div>
+                            <div className="input-group">
+                                <label>Annual School Fees for Other Children:</label>
+                                <input type="number" name="annualSchoolFeesForOtherChildren" value={formData.annualSchoolFeesForOtherChildren} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Annual School Fees for Non-Dependent Children:</label>
+                                <input type="number" name="annualSchoolFeesForNonDependentChildren" value={formData.annualSchoolFeesForNonDependentChildren} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Current Annual School Fees for Applicant:</label>
+                                <input type="number" name="currentSchoolFees" value={formData.currentSchoolFees} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Job Type / Income Stability Notes:</label>
+                                <textarea name="pg1JobNotes" value={formData.pg1JobNotes} onChange={handleInputChange} rows="3" placeholder="e.g., 'Independent contractor with highly variable income,' 'Seasonal worker,' or 'Recently took on a part-time job.'" />
+                            </div>
+                        </div>
+                        <div className="button-group">
+                            <button onClick={() => setActiveTab('general')}>Back</button>
+                            <button onClick={() => setActiveTab('student')}>Next: Student Info</button>
+                        </div>
+                    </div>
+                );
             case 'student':
-                return <StudentTab formData={formData} handleInputChange={handleInputChange} setActiveTab={setActiveTab} />;
+                return (
+                    <div className="tab-content">
+                        <div className="form-section">
+                            <h3>Student Financial Information (NC)</h3>
+                            <h4>Income (National Currency)</h4>
+                            <div className="input-group">
+                                <label>Student's Annual Income:</label>
+                                <input type="number" name="pg2StudentAnnualIncome" value={formData.pg2StudentAnnualIncome} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <h4>Assets (National Currency)</h4>
+                            <div className="input-group">
+                                <label>Student's Cash and Savings:</label>
+                                <input type="number" name="pg2StudentCashSavings" value={formData.pg2StudentCashSavings} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Student's Other Assets:</label>
+                                <input type="number" name="pg2StudentOtherAssets" value={formData.pg2StudentOtherAssets} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Scholarship from National Committee (2 years) (USD):</label>
+                                <input type="number" name="ncScholarshipProvidedTwoYearsUSD" value={formData.ncScholarshipProvidedTwoYearsUSD} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Potential Loan Amount (2 years) (USD):</label>
+                                <input type="number" name="potentialLoanAmount" value={formData.potentialLoanAmount} onChange={handleInputChange} placeholder="Optional" />
+                            </div>
+                            <div className="input-group">
+                                <label>Unusual Circumstances / Notes:</label>
+                                <textarea name="unusualCircumstances" value={formData.unusualCircumstances} onChange={handleInputChange} rows="3" placeholder="e.g., 'Recent job loss due to economic changes,' or 'Significant medical expenses.'" />
+                            </div>
+                        </div>
+                        <div className="button-group">
+                            <button onClick={() => setActiveTab('parent')}>Back</button>
+                            <button onClick={() => setActiveTab('results')}>View Assessment Results</button>
+                        </div>
+                    </div>
+                );
             case 'results':
                 return (
                     <AssessmentResultsTab
