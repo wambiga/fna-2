@@ -302,8 +302,14 @@ const parseDateDdMmYyyy = (dateString) => {
 
 // Helper function to format a Date object or YYYY-MM-DD string to DD-MM-YYYY format for display
 const formatDateDdMmYyyy = (date) => {
-    if (!date) return '';
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (!date) return 'N/A';
+    const dateObj = typeof date === 'string' ? parseDateDdMmYyyy(date) : date;
+
+    // Check if the parsed date is valid before formatting
+    if (!dateObj || isNaN(dateObj.getTime())) {
+        return 'N/A';
+    }
+
     const day = String(dateObj.getDate()).padStart(2, '0');
     const month = String(dateObj.getMonth() + 1).padStart(2, '0');
     const year = dateObj.getFullYear();
@@ -504,7 +510,7 @@ const AssessmentResultsTab = ({ formData, allSchoolResults, onDownloadCsv, maxSc
                         <p><strong>Date of Birth:</strong> {formatDateDdMmYyyy(formData.applicantDob) || 'N/A'}</p>
                         <p><strong>National Currency Symbol:</strong> {formData.ncCurrencySymbol || 'N/A'}</p>
                         <p><strong>Exchange Rate (1 USD = X NC Currency):</strong> {formData.exchangeRateToUSD || 'N/A'}</p>
-                        <p><strong>Date of Exchange Rate:</strong> {formatDateDdMmYyyy(formData.exchangeRateDate) || 'N/A'}</p>
+                        <p><strong>Date of Exchange Rate:</strong> {formData.exchangeRateDate ? formatDateDdMmYyyy(formData.exchangeRateDate) : 'N/A'}</p>
                         <p><strong>Annual Return on Assets (%):</strong> {getNum(formData.annualReturnOnAssets * 100).toFixed(2) || '0.00'}%</p>
                         <p><strong>Annual Travel Cost (USD):</strong> ${getNum(formData.annualTravelCostUSD).toFixed(2) || '0.00'}</p>
                     </section>
