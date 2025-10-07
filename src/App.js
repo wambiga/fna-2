@@ -188,93 +188,93 @@ const currencyList = [
 const ageCriteriaData = [
     {
         "schoolName": "UWC Adriatic",
-        "minAgeCutoff": "2010-01-01",
-        "maxAgeCutoff": "2007-08-19"
+        "minAgeCutoff": "2010-12-31",
+        "maxAgeCutoff": "2008-01-01"
     },
     {
         "schoolName": "UWC Atlantic",
-        "minAgeCutoff": "2009-11-01",
-        "maxAgeCutoff": "2006-09-01"
+        "minAgeCutoff": "2010-10-31",
+        "maxAgeCutoff": "2007-09-02"
     },
     {
         "schoolName": "UWC Changshu China",
-        "minAgeCutoff": "2010-08-16",
-        "maxAgeCutoff": "2007-08-14"
+        "minAgeCutoff": "2011-08-15",
+        "maxAgeCutoff": "2008-08-15"
     },
     {
         "schoolName": "UWC Costa Rica",
-        "minAgeCutoff": "2009-08-08",
-        "maxAgeCutoff": "2007-08-06"
+        "minAgeCutoff": "2010-08-08",
+        "maxAgeCutoff": "2007-08-08"
     },
     {
         "schoolName": "UWC Dilijan",
-        "minAgeCutoff": "2009-09-01",
-        "maxAgeCutoff": "2007-08-31"
+        "minAgeCutoff": "2010-09-01",
+        "maxAgeCutoff": "2008-09-01"
     },
     {
         "schoolName": "UWC East Africa",
-        "minAgeCutoff": "2009-08-01",
-        "maxAgeCutoff": "2006-07-31"
+        "minAgeCutoff": "2010-08-01",
+        "maxAgeCutoff": "2007-08-01"
     },
     {
         "schoolName": "UWC ISAK Japan",
-        "minAgeCutoff": "2010-01-01",
-        "maxAgeCutoff": "2007-05-31"
+        "minAgeCutoff": "2011-01-01",
+        "maxAgeCutoff": "2008-05-31"
     },
     {
         "schoolName": "Li Po Chun United World College of Hong Kong",
-        "minAgeCutoff": "2009-09-02",
-        "maxAgeCutoff": "2007-08-31"
+        "minAgeCutoff": "2010-09-01",
+        "maxAgeCutoff": "2008-09-01"
     },
     {
         "schoolName": "UWC Maastricht",
-        "minAgeCutoff": "2009-09-01",
-        "maxAgeCutoff": "2007-08-06"
+        "minAgeCutoff": "2010-09-01",
+        "maxAgeCutoff": "2009-09-01"
     },
     {
         "schoolName": "UWC Mahindra College",
-        "minAgeCutoff": "2009-09-02",
-        "maxAgeCutoff": "2007-08-31"
+        "minAgeCutoff": "2010-09-01",
+        "maxAgeCutoff": "2008-06-01"
     },
     {
         "schoolName": "UWC Mostar",
-        "minAgeCutoff": "2009-08-02",
-        "maxAgeCutoff": "2007-07-31"
+        "minAgeCutoff": "2010-08-01",
+        "maxAgeCutoff": "2008-08-01"
     },
     {
         "schoolName": "Pearson College UWC",
-        "minAgeCutoff": "2009-09-02",
-        "maxAgeCutoff": "2006-08-31"
+        "minAgeCutoff": "2010-09-01",
+        "maxAgeCutoff": "2006-09-01"
     },
     {
         "schoolName": "UWC Red Cross Nordic",
-        "minAgeCutoff": "2009-08-02",
-        "maxAgeCutoff": "2007-07-31"
+        "minAgeCutoff": "2010-08-31",
+        "maxAgeCutoff": "2008-08-01"
     },
     {
         "schoolName": "UWC Robert Bosch College",
-        "minAgeCutoff": "2009-09-01",
-        "maxAgeCutoff": "2007-02-27"
+        "minAgeCutoff": "2010-09-01",
+        "maxAgeCutoff": "2008-02-29"
     },
     {
         "schoolName": "UWC South East Asia",
-        "minAgeCutoff": "2009-09-01",
-        "maxAgeCutoff": "2008-08-31"
+        "minAgeCutoff": "2010-08-31",
+        "maxAgeCutoff": "2008-09-01"
     },
     {
         "schoolName": "UWC Thailand",
-        "minAgeCutoff": "2009-08-02",
-        "maxAgeCutoff": "2007-05-31"
+        "minAgeCutoff": "2010-01-01",
+        "maxAgeCutoff": "2008-12-31"
     },
     {
         "schoolName": "UWC-USA",
-        "minAgeCutoff": "2009-09-02",
-        "maxAgeCutoff": "2007-08-31"
+        "minAgeCutoff": "2010-09-01",
+        "maxAgeCutoff": "2008-09-01"
     },
     {
         "schoolName": "Waterford Kamhlaba UWC of Southern Africa",
-        "minAgeCutoff": "2010-01-01",
-        "maxAgeCutoff": "2005-12-31"
+        "minAgeCutoff": "2010-12-31",
+        "maxAgeCutoff": "2007-12-31"
     }
 ];
 
