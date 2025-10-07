@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import './App.css';
 
 // Embedded data from "FEES AND COSTS.xlsx - Totals school costs.csv"
