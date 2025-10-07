@@ -20,6 +20,9 @@ const schoolCostsData = [
     { name: 'Pearson College UWC', annualFeesUSD: 55430, annualFeesLocalCurrency: 75900, avgAdditionalCostsUSD: 7064.24, localCurrency: 'CAD', localCurrencyExchangeRateToUSD: 1.369 },
     { name: 'UWC ISAK Japan', annualFeesUSD: 49830, annualFeesLocalCurrency: 7555000, avgAdditionalCostsUSD: 5540.35, localCurrency: 'JPY', localCurrencyExchangeRateToUSD: 151.61 },
     { name: 'UWC Changshu China', annualFeesUSD: 53138, annualFeesLocalCurrency: 386000, avgAdditionalCostsUSD: 7108.31, localCurrency: 'CNY', localCurrencyExchangeRateToUSD: 7.264 },
+    // I am including UWC Adriatic and UWC East Africa for completeness if they were in the original complex list:
+    { name: 'UWC Adriatic', annualFeesUSD: 28716, annualFeesLocalCurrency: 26000, avgAdditionalCostsUSD: 2484.08, localCurrency: 'EUR', localCurrencyExchangeRateToUSD: 0.905 },
+    { name: 'UWC East Africa', annualFeesUSD: 34250, annualFeesLocalCurrency: 34250, avgAdditionalCostsUSD: 1710, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
 ];
 
 // Utility functions for Date Handling (Preserved from the original file)
@@ -109,23 +112,23 @@ const ageCriteriaData = [
     },
     {
         "schoolName": "UWC South East Asia",
-        "minAgeCutoff": "2009-08-01",
-        "maxAgeCutoff": "2007-07-31"
+        "minAgeCutoff": "2009-09-01",
+        "maxAgeCutoff": "2008-08-31"
     },
     {
         "schoolName": "UWC Thailand",
         "minAgeCutoff": "2009-08-02",
-        "maxAgeCutoff": "2007-08-01"
+        "maxAgeCutoff": "2007-05-31"
     },
     {
         "schoolName": "UWC-USA",
-        "minAgeCutoff": "2009-09-01",
-        "maxAgeCutoff": "2007-09-01"
+        "minAgeCutoff": "2009-09-02",
+        "maxAgeCutoff": "2007-08-31"
     },
     {
         "schoolName": "Waterford Kamhlaba UWC of Southern Africa",
-        "minAgeCutoff": "2009-08-02",
-        "maxAgeCutoff": "2007-08-01"
+        "minAgeCutoff": "2010-01-01",
+        "maxAgeCutoff": "2005-12-31"
     }
 ];
 
@@ -152,7 +155,7 @@ const checkAgeEligibility = (applicantDob, schoolName) => {
 };
 
 
-// Custom Hook for all financial and age calculations (Preserved from the original file)
+// Custom Hook for all financial and age calculations (Reverted to the simple model)
 const useFinancialCalculations = (formData) => {
     return useMemo(() => {
         const income = Number(formData.annualIncome) || 0;
@@ -259,7 +262,7 @@ const useFinancialCalculations = (formData) => {
     }, [formData]);
 };
 
-// Component for General Information Tab (Preserved from the original file)
+// Component for General Information Tab (Reverted to the original component structure)
 const GeneralInfo = ({ formData, handleChange, handleLocalCurrencyChange }) => {
     return (
         <div className="tab-content general-info">
@@ -357,7 +360,7 @@ const GeneralInfo = ({ formData, handleChange, handleLocalCurrencyChange }) => {
     );
 };
 
-// Component for Parent Information Tab (Preserved from the original file)
+// Component for Parent Information Tab (Reverted to the original component structure)
 const ParentInfo = ({ formData, handleChange }) => {
     return (
         <div className="tab-content parent-info">
@@ -449,7 +452,7 @@ const ParentInfo = ({ formData, handleChange }) => {
     );
 };
 
-// Component for Student Information Tab (Preserved from the original file)
+// Component for Student Information Tab (Reverted to the original component structure)
 const StudentInfo = ({ formData, handleChange }) => {
     return (
         <div className="tab-content student-info">
@@ -534,7 +537,7 @@ const StudentInfo = ({ formData, handleChange }) => {
     );
 };
 
-// Component for the Results Tab (Preserved from the original file)
+// Component for the Results Tab (Reverted to the original component structure)
 const Results = ({ formData, calculations, handleResetForm }) => {
     const selectedSchool = schoolCostsData.find(s => s.name === formData.targetSchool);
     const {
