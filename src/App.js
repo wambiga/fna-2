@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react'; // FIXED: Removed unused 'useEffect'
+import React, { useState, useMemo } from 'react';
 import './App.css';
 
-// Embedded data from "FEES AND COSTS.xlsx - Totals school costs.csv"
+// Embedded data from "FEES AND COSTS.xlsx - Totals school costs.csv" (Updated from previous step)
 const schoolCostsData = [
     { name: 'UWC-USA', annualFeesUSD: 58970.00, annualFeesLocalCurrency: 58970.00, avgAdditionalCostsUSD: 4931.50, localCurrency: 'USD', localCurrencyExchangeRateToUSD: 1.0 },
     { name: 'UWC Red Cross Nordic', annualFeesUSD: 45575.40, annualFeesLocalCurrency: 452500.00, avgAdditionalCostsUSD: 3192.93, localCurrency: 'NOK', localCurrencyExchangeRateToUSD: 9.9286 },
@@ -77,32 +77,11 @@ const GeneralTab = ({ formData, handleFormChange, schoolCostsData }) => (
         {/* RE-ADD THE REST OF YOUR GENERAL INPUT FIELDS HERE */}
     </div>
 );
-// ... ParentTab, StudentTab, ResultsTab and App component structure ...
+
 const ParentTab = ({ formData, handleFormChange, updateParentData }) => {
     
-    // Function to add a new parent/guardian section
-    const addParent = () => {
-        const newParents = [...formData.parents, {
-            occupation: '',
-            income: 0,
-            assets: 0,
-            liabilities: 0,
-        }];
-        // Assuming there is an updateFormData function passed from App
-        updateParentData(newParents); 
-    };
-
-    // Function to handle changes in a specific parent's data
-    const handleParentChange = (index, e) => {
-        const { name, value } = e.target;
-        const newParents = formData.parents.map((parent, i) => 
-            i === index ? { ...parent, [name]: name === 'income' || name === 'assets' || name === 'liabilities' ? parseFloat(value) || 0 : value } : parent
-        );
-        // Assuming there is an updateFormData function passed from App
-        updateParentData(newParents);
-    };
-
-    // I will use a simple placeholder structure for ParentTab, as I cannot infer the user's complex logic for multi-parent input without the full code.
+    // The previously defined 'addParent' and 'handleParentChange' functions 
+    // were removed here to fix the 'no-unused-vars' ESLint error during the Netlify build.
     
     return (
         <div className="tab-content">
